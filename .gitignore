@@ -1,0 +1,51 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# 忽略CLion的系统文件
+.idea/
+
+# 忽略CMake产生的文件
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+*.cbp
+Makefile
+cmake-build-debug/
+cmake-*/
+
+# 忽略release文件
+/BerryMath
+
+build*
+
+.vscode/

@@ -210,6 +210,10 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = LET_TOKEN;
     } else if (t.s == "def") {
         t.t = DEF_TOKEN;
+    } else if (t.s == "null") {
+        t.t = NULL_TOKEN;
+    } else if (t.s == "undefined") {
+        t.t = UNDEFINED_TOKEN;
     } else if (t.s == "return") {
         t.t = RETURN_TOKEN;
     } else if (t.s == "in") {

@@ -1,168 +1,205 @@
-#include <iostream>
+#include <climits>
 #include <vector>
-#include <fstream>
-#include <sstream>
+#include <list>
 #include <regex>
-#include <tic.h>
 #include "ast.h"
 
-string Belish::AST::exportByString() {
-    if (!root) return "null";
-    return root->exportByString();
-}
-bool Belish::AST::Export(string filename) {
-    std::ofstream file(filename, std::ios::app);
-    if (!file) return false;
-    file << exportByString();
-    file.close();
-    return true;
-}
-string Belish::AST::node::exportByString() {
-    auto s = value();
-    std::regex p1("\'(.)");
-    std::regex p2("\"(.)");
-    s = std::regex_replace(s, p1, "\\\'$1");
-    s = std::regex_replace(s, p2, "\\\"$1");
-    string res("node \"" + s + "\" line " + std::to_string(line()) + " children ");
-    for (UL i = 0; i < children.size(); i++) {
-        res += children[i]->exportByString();
-    }
-    res += " end ";
-    return res;
-}
-
-void Belish::AST::importByString(string s) {
-    byCache = true;
-    astLexer.open(s);
-}
-void Belish::AST::import(string filename) {
-    std::ifstream file(filename);
-    string tmp;
-    string s;
-    while (getline(file, tmp)) {
-        s += tmp + "\n";
-    }
-    file.close();
-    importByString(s);
-}
 Belish::AST::~AST() {
     if (!child && root)
         delete root;
 }
 
 void Belish::AST::parse() {
-    // 解析cache内容
-    if (byCache) {
-        if (root) delete root;
-        root = nullptr;
-#define AGET token = astLexer.get()
-        auto AGET;
-        if (token.t == Lexer::PROGRAM_END) {
-            root = new node("PROGRAM-END", astLexer.l + baseLine);
-            return;
-        }
-        if (token.s != "node") {
-            root = new node("bad-tree", astLexer.l + baseLine);
-            root->insert("ASTCache Error: Unexpected token " + token.s, astLexer.l + baseLine);
-            return;
-        }
-        AGET;
-        string name(token.s);
-        trim(name);
-        UL findBase = 0;
-        while (true) {
-            auto i = name.find("\\", findBase);
-            if (i == name.npos) break;
-            name.erase(i, 1);
-            while (i < name.length() && name[i] == '\\') i++;
-            findBase = i;
-        }
-        AGET;
-        if (token.s != "line") {
-            root = new node("bad-tree", astLexer.l + baseLine);
-            root->insert("ASTCache Error: Unexpected token " + token.s, astLexer.l + baseLine);
-            return;
-        }
-        AGET;
-        if (token.t != Lexer::NUMBER_TOKEN) {
-            root = new node("bad-tree", astLexer.l + baseLine);
-            root->insert("ASTCache Error: Unexpected token " + token.s, astLexer.l + baseLine);
-            return;
-        }
-        std::stringstream ss;
-        UL line;
-        ss << token.s;
-        ss >> line;
-        AGET;
-        if (token.s != "children") {
-            delete root;
-            root = new node("bad-tree", astLexer.l + baseLine);
-            root->insert("ASTCache Error: Unexpected token " + token.s, astLexer.l + baseLine);
-            return;
-        }
-        UL indentCount = 1;
-        AGET;
-        string childrenContent;
-        root = new node(name, line);
-        while (true) {
-            if (token.s == "end") {
-                if (--indentCount < 1) break;
-                if (indentCount == 1) {
-                    childrenContent += " " + token.s;
-                    auto ast = new AST("", astLexer.l + baseLine);
-                    ast->importByString(childrenContent);
-                    ast->parse();
-                    CHECK(ast);
-                    CHANGELINES(ast);
-                    root->insert(ast->root);
-                    delete ast;
-                    childrenContent = "";
-                    AGET;
-                    continue;
-                }
-            }
-            else if (token.s == "children") indentCount++;
-            childrenContent += " " + token.s;
-            AGET;
-        }
-        return;
-    }
-
-    // 解析script内容
     if (!child && root) delete root;
     root = nullptr;
-    auto tmpIndex = lexer.i;
 #define GET token = lexer.get()
+    auto initialLine = lexer.line();
+    auto initialIndex = lexer.index();
     auto GET;
-    if (token.t == Lexer::NOTE_TOKEN) GET;
     switch (token.t) {
+        case Lexer::NUMBER_TOKEN:
+        case Lexer::STRING_TOKEN:
+        case Lexer::BRACKETS_LEFT_TOKEN:
+        case Lexer::UNKNOWN_TOKEN:
+        case Lexer::UNDEFINED_TOKEN:
+        case Lexer::NULL_TOKEN:
+        {
+            auto tmp_token = token;
+            GET;
+            if (token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN) {
+                root = new node(tmp_token.t, tmp_token.s, lexer.line() + baseLine);
+                break;
+            }
+            struct Operator {
+                Operator() : priority(UINT_MAX) { }
+                Lexer::Token token;
+                UL index;
+                UL line;
+                ULL priority;
+            } op;
+            bool preTokenIsUnknown = tmp_token.t == Lexer::UNKNOWN_TOKEN;// included left brackets
+            lexer.index(initialIndex);
+            lexer.line(initialLine);
+            ULL base = 1;
+            GET;
+            while (true) {
+                if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) break;
+                if (token.t > Lexer::NOTE_TOKEN) {
+                    if (token.t == Lexer::BRACKETS_LEFT_TOKEN || token.t == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
+                        base *= 14;
+                        if (preTokenIsUnknown) {// 说明是函数/取值符
+                            if (base <= (ULL)op.priority) {
+                                op.token = token;
+                                op.line = lexer.line();
+                                op.index = lexer.index();
+                                op.priority = base;
+                            }
+                        }
+                        preTokenIsUnknown = true;
+                    } else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN || token.t == Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN) {
+                        preTokenIsUnknown = true;
+                        base /= 14;
+                    }
+                    else {
+                        preTokenIsUnknown = false;
+                        if (base * (ULL)priority(token.t) <= (ULL)op.priority) {
+                            op.token = token;
+                            op.line = lexer.line();
+                            op.index = lexer.index();
+                            op.priority = base * (ULL)priority(token.t);
+                        }
+                    }
+                } else preTokenIsUnknown = true;
+                GET;
+            }
+            string left;
+            U bracketsCount(0);
+            auto lexerLine = lexer.line();
+            lexer.index(initialIndex);
+            lexer.line(initialLine);
+            GET;
+            while (lexer.index() < op.index) {
+                left += token.s + " ";
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bracketsCount++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) bracketsCount--;
+                GET;
+            }
+            while (bracketsCount--) {
+                left.erase(0, left.find('(') + 1);
+            }
+            root = new node(op.token.t, op.token.s, op.line + baseLine);
+            if (root->type() == Lexer::BRACKETS_LEFT_TOKEN || root->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
+                AST la(left, baseLine + initialIndex);
+                la.parse();
+                root->insert(la.root);
+
+                lexer.index(op.index);
+                string arg;
+                bracketsCount = 1;
+                while (true) {
+                    GET;
+                    if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) {
+                        break;
+                    }
+                    if (token.t == Lexer::BRACKETS_LEFT_TOKEN) {
+                        bracketsCount++;
+                        arg += token.s + " ";
+                    }
+                    else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                        bracketsCount--;
+                        if (!bracketsCount) {
+                            AST argA(arg, baseLine + initialIndex);
+                            argA.parse();
+                            root->insert(argA.root);
+                            break;
+                        }
+                        arg += token.s + " ";
+                    }
+                    else if (token.t == Lexer::COMMA_TOKEN && bracketsCount == 1) {
+                        AST argA(arg, baseLine + initialIndex);
+                        argA.parse();
+                        root->insert(argA.root);
+                        arg = "";
+                    } else arg += token.s + " ";
+                }
+                __asm("nop");
+            } else {
+                bracketsCount = 0;
+                string right;
+                lexer.index(op.index);
+                GET;
+                while (token.t != Lexer::END_TOKEN && token.t != Lexer::PROGRAM_END) {
+                    right += token.s + " ";
+                    if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) bracketsCount++;
+                    else if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bracketsCount--;
+                    GET;
+                }
+                while (bracketsCount--) {
+                    auto tmp = right.rfind(')');
+                    right.erase(right.length() - tmp - 1, tmp + 1);
+                }
+                AST la(left, baseLine + initialIndex);
+                AST ra(right, baseLine + initialIndex);
+                la.parse();
+                ra.parse();
+                root->insert(la.root);
+                root->insert(ra.root);
+            }
+            lexer.line(lexerLine);
+            break;
+        }
     }
-    if (!root) root = new node("pass", lexer.l + baseLine);
 }
 
-inline UL Belish::AST::priority(const string& op) {
-    if (op == "[" || op == ".") return 15;
-    if (op == "(") return 14;
-    if (op == "++" || op == "--" || op == "!" || op == "~" || op == "**") return 13;
-    if (op == "*" || op == "/" || op == "%") return 12;
-    if (op == "+" || op == "-") return 11;
-    if (op == "<<" || op == ">>") return 10;
-    if (op == ">" || op == ">=" || op == "<" || op == "<=") return 9;
-    if (op == "==" || op == "!=") return 8;
-    if (op == "&") return 7;
-    if (op == "^") return 6;
-    if (op == "|") return 5;
-    if (op == "&&") return 4;
-    if (op == "||" || op == "~~") return 3;
-    if (
-            op == "="
-            || op == "*=" || op == "/=" || op == "%="
-            || op == "+=" || op == "-="
-            || op == ">>=" || op == "<<="
-            || op == "^=" || op == "&=" || op == "|="
-            || op == "in" || op == "of"
-            )
-        return 2;
-    if (op == ",") return 1;
-    return 15;
+inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
+    switch (tk) {
+        case Lexer::BRACKETS_LEFT_TOKEN: return 14;
+        case Lexer::DADD_TOKEN:
+        case Lexer::DSUB_TOKEN:
+        case Lexer::LNOT_TOKEN:
+        case Lexer::MNOT_TOKEN:
+        case Lexer::POWER_TOKEN:
+            return 13;
+        case Lexer::MUL_TOKEN:
+        case Lexer::DIV_TOKEN:
+        case Lexer::MOD_TOKEN:
+            return 12;
+        case Lexer::ADD_TOKEN:
+        case Lexer::SUB_TOKEN:
+            return 11;
+        case Lexer::SLEFT_TOKEN:
+        case Lexer::SRIGHT_TOKEN:
+            return 10;
+        case Lexer::MORE_TOKEN:
+        case Lexer::MEQUAL_TOKEN:
+        case Lexer::LESS_TOKEN:
+        case Lexer::LEQUAL_TOKEN:
+            return 9;
+        case Lexer::EQUAL_TOKEN:
+        case Lexer::NOT_EQUAL_TOKEN:
+            return 8;
+        case Lexer::MAND_TOKEN: return 7;
+        case Lexer::MXOR_TOKEN: return 6;
+        case Lexer::MOR_TOKEN: return 5;
+        case Lexer::LAND_TOKEN: return 4;
+        case Lexer::LOR_TOKEN:
+        case Lexer::RANGE_TOKEN:
+            return 3;
+        case Lexer::SET_TOKEN:
+        case Lexer::ADD_TO_TOKEN:
+        case Lexer::SUB_TO_TOKEN:
+        case Lexer::MUL_TO_TOKEN:
+        case Lexer::DIV_TO_TOKEN:
+        case Lexer::MOD_TO_TOKEN:
+        case Lexer::SLEFT_TO_TOKEN:
+        case Lexer::SRIGHT_TO_TOKEN:
+        case Lexer::MOR_TO_TOKEN:
+        case Lexer::MXOR_TO_TOKEN:
+        case Lexer::MAND_TO_TOKEN:
+        case Lexer::IN_TOKEN:
+        case Lexer::OF_TOKEN:
+            return 2;
+//        case Lexer::COMMA_TOKEN: return 1;
+        default: return 15;
+    }
 }

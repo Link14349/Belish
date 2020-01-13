@@ -4,6 +4,7 @@
 #include "lex.h"
 #include "dylib.h"
 #include "types.h"
+#include "ast.h"
 
 namespace Belish {
 }

@@ -17,7 +17,7 @@ namespace Belish {
             // key words
             LET_TOKEN, DEF_TOKEN,
             RETURN_TOKEN,
-            NUMBER_TOKEN, STRING_TOKEN,
+            NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN,
             // 注释token
             NOTE_TOKEN,
             // 符号token
@@ -46,23 +46,20 @@ namespace Belish {
             TOKENS t;
             string s;
         };
-        Lexer() : script(""), i(0), l(0) {
-            script += ";pass";
-        }
-        Lexer(const string& s) : script(s), i(0), l(0) {
-            script += ";pass";
-        }
+        Lexer() : script(""), i(0), l(0) { }
+        Lexer(const string& s) : script(s), i(0), l(0) { }
         void open(const string& s) {
             script = s;
             i = 0;
             l = 0;
             updateLine = false;
-            script += ";pass";
         }
         Token get();
         Token token() { return t; }
         UL index() { return i; }
         UL line() { return l; }
+        void line(UL n) { l = n; }
+        void index(UL n) { i = n; }
     private:
         bool updateLine = false;
         UL i;

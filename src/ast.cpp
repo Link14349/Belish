@@ -4,6 +4,8 @@
 #include <regex>
 #include "ast.h"
 
+#define FINISH_GET token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN || token.t == Lexer::NO_STATUS
+
 Belish::AST::~AST() {
     if (!child && root)
         delete root;
@@ -26,7 +28,7 @@ void Belish::AST::parse() {
         {
             auto tmp_token = token;
             GET;
-            if (token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN) {
+            if (FINISH_GET) {
                 root = new node(tmp_token.t, tmp_token.s, lexer.line() + baseLine);
                 break;
             }
@@ -43,7 +45,7 @@ void Belish::AST::parse() {
             ULL base = 1;
             GET;
             while (true) {
-                if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) break;
+                if (FINISH_GET) break;
                 if (token.t > Lexer::NOTE_TOKEN) {
                     if (token.t == Lexer::BRACKETS_LEFT_TOKEN || token.t == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
                         base *= 14;
@@ -98,7 +100,7 @@ void Belish::AST::parse() {
                 bracketsCount = 1;
                 while (true) {
                     GET;
-                    if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) {
+                    if (FINISH_GET) {
                         break;
                     }
                     if (token.t == Lexer::BRACKETS_LEFT_TOKEN) {
@@ -122,7 +124,6 @@ void Belish::AST::parse() {
                         arg = "";
                     } else arg += token.s + " ";
                 }
-                __asm("nop");
             } else {
                 bracketsCount = 0;
                 string right;

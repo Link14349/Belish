@@ -2,7 +2,7 @@
 #include "Belish.h"
 
 int main(int argc, char* argv[]) {
-    Belish::AST ast("b(123)(1 + 2, c(12, 8));");
+    Belish::AST ast("a('123')");
     ast.parse();
     return 0;
 }

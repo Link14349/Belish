@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <regex>
-#include "types.h"
+#include "trans.h"
 using std::string;
 using std::map;
 

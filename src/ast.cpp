@@ -3,6 +3,8 @@
 #include <list>
 #include <regex>
 #include "ast.h"
+#include "trans.h"
+#include "trans.cpp"
 
 #define FINISH_GET token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN || token.t == Lexer::NO_STATUS
 
@@ -19,6 +21,45 @@ void Belish::AST::parse() {
     auto initialIndex = lexer.index();
     auto GET;
     switch (token.t) {
+        case Lexer::LET_TOKEN:
+        {
+            root = new node(Lexer::LET_TOKEN, "", initialIndex);
+            while (true) {
+                GET;
+                if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) break;
+                root->insert(Lexer::UNKNOWN_TOKEN, token.s, lexer.line() + baseLine);
+                GET;
+                if (token.t == Lexer::COMMA_TOKEN) {
+                    root->insert(Lexer::UNDEFINED_TOKEN, "", lexer.line() + baseLine);
+                    continue;
+                }
+                auto op = token;
+                string value;
+                ULL sbc = 0, mbc = 0, bbc = 0;
+                auto defLine = lexer.line();
+                while (true) {
+                    GET;
+                    if (token.t == Lexer::BRACKETS_LEFT_TOKEN) sbc++;
+                    else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) sbc--;
+                    else if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bbc++;
+                    else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) bbc--;
+                    else if (token.t == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) mbc++;
+                    else if (token.t == Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN) mbc--;
+                    else if ((token.t == Lexer::COMMA_TOKEN || FINISH_GET) && sbc == 0 && bbc == 0 && mbc == 0) break;
+                    value += token.s + " ";
+                }
+                switch (op.t) {
+                    case Lexer::SET_TOKEN:
+                    {
+                        AST ast(value, baseLine + defLine);
+                        ast.parse();
+                        root->insert(ast.root);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
         case Lexer::NUMBER_TOKEN:
         case Lexer::STRING_TOKEN:
         case Lexer::BRACKETS_LEFT_TOKEN:
@@ -29,6 +70,11 @@ void Belish::AST::parse() {
             auto tmp_token = token;
             GET;
             if (FINISH_GET) {
+                if (tmp_token.t == Lexer::STRING_TOKEN) {
+                    tmp_token.s.erase(0, 1);
+                    tmp_token.s.erase(tmp_token.s.length() - 1, 1);
+                    escape(tmp_token.s);
+                }
                 root = new node(tmp_token.t, tmp_token.s, lexer.line() + baseLine);
                 break;
             }
@@ -89,7 +135,7 @@ void Belish::AST::parse() {
             while (bracketsCount--) {
                 left.erase(0, left.find('(') + 1);
             }
-            root = new node(op.token.t, op.token.s, op.line + baseLine);
+            root = new node(op.token.t, "", op.line + baseLine);
             if (root->type() == Lexer::BRACKETS_LEFT_TOKEN || root->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
                 AST la(left, baseLine + initialIndex);
                 la.parse();
@@ -137,7 +183,7 @@ void Belish::AST::parse() {
                 }
                 while (bracketsCount--) {
                     auto tmp = right.rfind(')');
-                    right.erase(right.length() - tmp - 1, tmp + 1);
+                    right.erase(tmp - 1, tmp + 1);
                 }
                 AST la(left, baseLine + initialIndex);
                 AST ra(right, baseLine + initialIndex);
@@ -149,6 +195,9 @@ void Belish::AST::parse() {
             lexer.line(lexerLine);
             break;
         }
+        case Lexer::PROGRAM_END:
+            root = new node(Lexer::PROGRAM_END, "", lexer.line() + baseLine);
+            break;
     }
 }
 

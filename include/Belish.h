@@ -3,8 +3,10 @@
 
 #include "lex.h"
 #include "dylib.h"
-#include "types.h"
+#include "trans.h"
 #include "ast.h"
+#include "vm.h"
+#include "compiler.h"
 
 namespace Belish {
 }

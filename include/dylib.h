@@ -12,7 +12,7 @@
 #endif
 #include <string>
 #include <vector>
-#include "types.h"
+#include "trans.h"
 
 using std::string;
 

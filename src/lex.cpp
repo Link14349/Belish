@@ -23,7 +23,7 @@ Belish::Lexer::Token Belish::Lexer::get() {
                     updateLine = true;
                 break;
             }
-            if (script[i - 1] == '\n'/* && lastI < (i - 1)*/)
+            if (i > 0 && script[i - 1] == '\n'/* && lastI < (i - 1)*/)
                 l++;
             // 尚未有分割出来的token, 所以不做处理
             continue;
@@ -47,11 +47,11 @@ Belish::Lexer::Token Belish::Lexer::get() {
                 for (i++; i < script.length(); i++) {
                     t.s += script[i];
                     if (script[i] == s) {
-                        if (!trans) {
+                        if (trans) {
+                            trans = false;
+                        } else {
                             i++;
                             break;
-                        } else {
-                            trans = !trans;
                         }
                     }
                     if (script[i] == '\\') trans = !trans;

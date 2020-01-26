@@ -44,7 +44,7 @@ cmake-build-debug/
 cmake-*/
 
 # 忽略release文件
-/BerryMath
+/Belish
 
 build*
 

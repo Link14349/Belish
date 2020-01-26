@@ -33,6 +33,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 bytecode += (char) OPID::PUSH_UND;
                 break;
             }
+            case Lexer::ERROR_TOKEN: {
+                std::cerr << ast.root->value() << " at <" << filename << ">:" << ast.line() << std::endl;
+                return true;
+            }
             case Lexer::UNKNOWN_TOKEN: {
                 auto oi = sym.find(ast.root->value());
 //                std::cerr << (sym.find("a") == sym.end()) << ", " << (sym.find("b") == sym.end()) << std::endl;
@@ -52,7 +56,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     compiler.ast.root = ast.root->get(i + 1);
                     compiler.sym = sym;
                     if (compiler.compile_(bytecode)) {
-                        std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
                         return true;
                     }
                     sym.insert(std::pair<string, UL>(ast.root->get(i)->value(), stkOffset++));
@@ -64,16 +67,11 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 compiler.ast.child = true;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
-                if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN)) {
-                    std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
+                if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
-                }
                 compiler.ast.root = ast.root->get(1);
 //                compiler.sym = sym;
-                if (compiler.compile_(bytecode)) {
-                    std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
-                    return true;
-                }
+                if (compiler.compile_(bytecode)) return true;
                 switch (ast.root->type()) {
                     case Lexer::ADD_TOKEN:
                         bytecode += (char)OPID::ADD;

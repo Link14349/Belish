@@ -13,6 +13,12 @@ Belish::AST::~AST() {
         delete root;
 }
 
+#define AST_CHECK_PARSING_ERR(ast) if (ast.root->type() == Lexer::ERROR_TOKEN) { \
+delete root; \
+root = new node(Lexer::ERROR_TOKEN, ast.root->value(), ast.root->line()); \
+return; \
+}
+
 void Belish::AST::parse() {
     if (!child && root) delete root;
     root = nullptr;
@@ -21,9 +27,14 @@ void Belish::AST::parse() {
     auto initialIndex = lexer.index();
     auto GET;
     switch (token.t) {
+        case Lexer::UNKNOWN_OP_TOKEN:
+        {
+            root = new node(Lexer::ERROR_TOKEN, "BLE103: Unknown operator '" + token.s + "'", lexer.line() + baseLine);
+            break;
+        }
         case Lexer::LET_TOKEN:
         {
-            root = new node(Lexer::LET_TOKEN, "", initialIndex);
+            root = new node(Lexer::LET_TOKEN, "", initialLine);
             while (true) {
                 GET;
                 if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) break;
@@ -32,6 +43,10 @@ void Belish::AST::parse() {
                 if (token.t == Lexer::COMMA_TOKEN) {
                     root->insert(Lexer::UNDEFINED_TOKEN, "", lexer.line() + baseLine);
                     continue;
+                } else if (token.t != Lexer::SET_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE102: Incorrect assignment in declaration, unexpected token '" + token.s + "'", lexer.line() + baseLine);
+                    return;
                 }
                 auto op = token;
                 string value;
@@ -53,6 +68,7 @@ void Belish::AST::parse() {
                     {
                         AST ast(value, baseLine + defLine);
                         ast.parse();
+                        AST_CHECK_PARSING_ERR(ast)
                         root->insert(ast.root);
                         break;
                     }
@@ -86,6 +102,7 @@ void Belish::AST::parse() {
                 UL line;
                 ULL priority;
             } op;
+            bool hasOp = false;
             bool preTokenIsUnknown = tmp_token.t == Lexer::UNKNOWN_TOKEN;// included left brackets
             lexer.index(initialIndex);
             lexer.line(initialLine);
@@ -98,6 +115,7 @@ void Belish::AST::parse() {
                         base *= 14;
                         if (preTokenIsUnknown) {// 说明是函数/取值符
                             if (base <= (ULL)op.priority) {
+                                hasOp = true;
                                 op.token = token;
                                 op.line = lexer.line();
                                 op.index = lexer.index();
@@ -112,6 +130,7 @@ void Belish::AST::parse() {
                     else {
                         preTokenIsUnknown = false;
                         if (base * (ULL)priority(token.t) <= (ULL)op.priority) {
+                            hasOp = true;
                             op.token = token;
                             op.line = lexer.line();
                             op.index = lexer.index();
@@ -120,6 +139,10 @@ void Belish::AST::parse() {
                     }
                 } else preTokenIsUnknown = true;
                 GET;
+            }
+            if (!hasOp) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE101: Wrong expression", baseLine + lexer.line());
+                return;
             }
             string left;
             U bracketsCount(0);
@@ -136,13 +159,19 @@ void Belish::AST::parse() {
             while (bracketsCount--) {
                 left.erase(0, left.find('(') + 1);
             }
+            if (op.token.t == Lexer::UNKNOWN_OP_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE103: Unknown operator '" + op.token.s + "'", op.line + baseLine);
+                return;
+            }
             root = new node(op.token.t, "", op.line + baseLine);
             if (root->type() == Lexer::BRACKETS_LEFT_TOKEN || root->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
-                AST la(left, baseLine + initialIndex);
+                AST la(left, baseLine + initialLine);
                 la.parse();
+                AST_CHECK_PARSING_ERR(la)
                 root->insert(la.root);
 
                 lexer.index(op.index);
+                lexer.line(op.line);
                 string arg;
                 bracketsCount = 1;
                 while (true) {
@@ -157,16 +186,18 @@ void Belish::AST::parse() {
                     else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
                         bracketsCount--;
                         if (!bracketsCount) {
-                            AST argA(arg, baseLine + initialIndex);
+                            AST argA(arg, baseLine + initialLine);
                             argA.parse();
+                            AST_CHECK_PARSING_ERR(argA)
                             root->insert(argA.root);
                             break;
                         }
                         arg += token.s + " ";
                     }
                     else if (token.t == Lexer::COMMA_TOKEN && bracketsCount == 1) {
-                        AST argA(arg, baseLine + initialIndex);
+                        AST argA(arg, baseLine + initialLine);
                         argA.parse();
+                        AST_CHECK_PARSING_ERR(argA)
                         root->insert(argA.root);
                         arg = "";
                     } else arg += token.s + " ";
@@ -175,6 +206,7 @@ void Belish::AST::parse() {
                 bracketsCount = 0;
                 string right;
                 lexer.index(op.index);
+                lexer.line(op.line);
                 GET;
                 while (token.t != Lexer::END_TOKEN && token.t != Lexer::PROGRAM_END) {
                     right += token.s + " ";
@@ -186,10 +218,12 @@ void Belish::AST::parse() {
                     auto tmp = right.rfind(')');
                     right.erase(tmp - 1, tmp + 1);
                 }
-                AST la(left, baseLine + initialIndex);
-                AST ra(right, baseLine + initialIndex);
+                AST la(left, baseLine + initialLine);
+                AST ra(right, baseLine + initialLine);
                 la.parse();
+                AST_CHECK_PARSING_ERR(la)
                 ra.parse();
+                AST_CHECK_PARSING_ERR(ra)
                 root->insert(la.root);
                 root->insert(ra.root);
             }

@@ -3,6 +3,10 @@
 #include <fstream>
 #include <sys/time.h>
 #include <cstdlib>
+#include <sstream>
+using std::fstream;
+using std::ios;
+
 int64_t getCurrentTime()
 {
     struct timeval tv;
@@ -29,23 +33,8 @@ void operator delete(void* p) {
 }
 #endif
 
-int main(int argc, char* argv[]) {
-    auto s = getCurrentTime();
-//    Belish::Compiler compiler("test.bel", "let a \n= (1 + 15) ** \n(2 * (1 + 3) / 8\n) / 2, \nb = 'Haha -- \\'ZYH\\'' * 10 ; a += 10;b += '123';a + 1000;");
-    Belish::Compiler compiler("test.bel", "let a \n= 8, \nb = 'Haha -- \\'ZYH\\'' * 10 ; a += 10;b += '123';a + 1000;");
-    std::ofstream fs;
-    fs.open("test.belc", std::ios::out);
-    string bc;
-    auto state = compiler.compile(bc);
-    if (state) {
-        std::cerr << "[Stop compiling, error-code: " << state << "]\n";
-        return 1;
-    }
-    fs << bc;
-    fs.close();
-    std::cout << "finish compiling" << std::endl;
+char* readFileCPTR(const string& filename, ULL& length) {
     std::ifstream t;
-    ULL length;
     char* buffer;
     t.open("test.belc");
     t.seekg(0, std::ios::end);
@@ -54,6 +43,40 @@ int main(int argc, char* argv[]) {
     buffer = new char[length];
     t.read(buffer, length);
     t.close();
+    return buffer;
+}
+void openFile(const string& filename, string& content) {
+    fstream file(filename, ios::in | ios::out);
+    if(!file)
+    {
+        std::cerr << "Failed.\n";
+        file.close();
+        exit(1);
+    }
+    std::stringstream buf;
+    buf << file.rdbuf();
+    content = buf.str();
+    file.close();
+}
+
+int main(int argc, char* argv[]) {
+    auto s = getCurrentTime();
+    string script;
+    openFile("test.bel", script);
+    Belish::Compiler compiler("test.bel", script);
+    std::ofstream fs;
+    fs.open("test.belc", std::ios::out);
+    string bc;
+    auto state = compiler.compile(bc);
+    if (state) {
+        std::cerr << "[Stop compiling]\n";
+        return 1;
+    }
+    fs << bc;
+    fs.close();
+    std::cout << "finish compiling" << std::endl;
+    ULL length;
+    auto buffer = readFileCPTR("test.belc", length);
     Belish::BVM bvm(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;

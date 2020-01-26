@@ -1,1 +1,0 @@
-- In the syntax tree construction, all intermediate variables storing the number of lines/indexes of code must not be added with baseline

@@ -2,7 +2,6 @@
 
 Belish::Lexer::Token Belish::Lexer::get() {
     auto preIndex = i;
-    sIndex = i;
     if (updateLine) {
         l++;
         updateLine = false;
@@ -92,6 +91,7 @@ Belish::Lexer::Token Belish::Lexer::get() {
     if (t.s == ";") {
         t.t = END_TOKEN;
         i++;
+        if (script[i] == '\n') updateLine = true;
     } else if (t.s == "=") {
         t.t = SET_TOKEN;
     } else if (t.s == ":") {
@@ -232,6 +232,7 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.s = "/*";
         while (true) {
             if (script[i] == '*' && script[i + 1] == '/') break;
+            if (script[i] == '\n') l++;
             t.s += script[i];
             i++;
         }
@@ -240,7 +241,10 @@ Belish::Lexer::Token Belish::Lexer::get() {
         if (t.t == UNKNOWN_OP_TOKEN) {
             auto tmp = i;
             auto nowP = t.s.length();
-            for (; tmp >= preIndex && script[tmp] != '='; tmp--, nowP--) ;
+            for (; tmp >= preIndex && ~tmp && script[tmp] != '='; tmp--, nowP--) ;
+            if (!(~tmp)) {
+                return t;
+            }
             if (script[tmp] == '=') {
                 i = tmp + 1;
                 t.s.erase(nowP);

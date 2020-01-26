@@ -1,0 +1,4 @@
+- In the syntax tree construction, all intermediate variables storing the number of lines/indexes of code must not be added with baseline
+- All operations on the script to be parsed in the syntax tree should be done through the Lexer class(Can be done indirectly)
+- Every time you modify the index of the lexer, you should also modify its line value
+- When defining a macro that replaces a procedure, the naming method is: class name / function name + role (no more than three words, you cannot write an accurate explanation, you must write a document)

@@ -6,10 +6,12 @@ void Belish::Stack::push(Belish::Value *v) {
         val.push_back(v);
         len++;
     }
+    v->linked++;
 }
 
 void Belish::Stack::dbg() {
-    for (ULL i = 0; i < len; i++) {
-        std::cout << "$" << i << "\t" << val[i]->toStringHL() << std::endl;
-    }
+    std::cout << "[STACK(" << len << ")]" << std::endl;
+    for (ULL i = 0; i < len; i++)
+        std::cout << "$" << i << "(" << val[i] << ")\t" << val[i]->toStringHL() << std::endl;
+    std::cout << "===========" << std::endl;
 }

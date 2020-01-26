@@ -2,17 +2,19 @@
 #include "trans.cpp"
 #include "compiler.h"
 #include <ctime>
+#include <iostream>
 
-void Belish::Compiler::compile(string &bytecode) {
+bool Belish::Compiler::compile(string &bytecode) {
     bytecode = "\x9a\xd0\x75\x5c";// 魔数
     bytecode += MBDKV;
     bytecode += SBDKV;
     bytecode += transI64S_bin(time(nullptr));
-    compile_(bytecode);
-    bytecode += "\x06";
+    auto state = compile_(bytecode);
+    bytecode += "\x06";// 测试用，输出栈中情况
+    return state;
 }
 
-void Belish::Compiler::compile_(string &bytecode) {
+bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
     while (true) {
         if (!ast.child) ast.parse();
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
@@ -31,23 +33,47 @@ void Belish::Compiler::compile_(string &bytecode) {
                 bytecode += (char) OPID::PUSH_UND;
                 break;
             }
+            case Lexer::UNKNOWN_TOKEN: {
+                auto oi = sym.find(ast.root->value());
+//                std::cerr << (sym.find("a") == sym.end()) << ", " << (sym.find("b") == sym.end()) << std::endl;
+                if (oi == sym.end()) {
+                    std::cerr << "BLE100: Undefined symbol '" << ast.root->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
+                auto offset = oi->second;
+                if (inOPTOEXPR) bytecode += (char)OPID::REFER + transI32S_bin(offset);
+                else bytecode += (char)OPID::PUSH + transI32S_bin(offset);
+                break;
+            }
             case Lexer::LET_TOKEN: {
                 for (auto i = 0; i < ast.root->length(); i += 2) {
-                    Compiler compiler;
+                    Compiler compiler(filename);
                     compiler.ast.child = true;
                     compiler.ast.root = ast.root->get(i + 1);
-                    compiler.compile_(bytecode);
-                    sym[ast.root->get(i)->value()] = stkOffset++;
+                    compiler.sym = sym;
+                    if (compiler.compile_(bytecode)) {
+                        std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    }
+                    sym.insert(std::pair<string, UL>(ast.root->get(i)->value(), stkOffset++));
                 }
                 break;
             }
             default: {// 表达式
-                Compiler compiler;
+                Compiler compiler(filename);
                 compiler.ast.child = true;
                 compiler.ast.root = ast.root->get(0);
-                compiler.compile_(bytecode);
+                compiler.sym = sym;
+                if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN)) {
+                    std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
                 compiler.ast.root = ast.root->get(1);
-                compiler.compile_(bytecode);
+//                compiler.sym = sym;
+                if (compiler.compile_(bytecode)) {
+                    std::cerr << "\tat <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
                 switch (ast.root->type()) {
                     case Lexer::ADD_TOKEN:
                         bytecode += (char)OPID::ADD;
@@ -106,10 +132,49 @@ void Belish::Compiler::compile_(string &bytecode) {
                     case Lexer::POWER_TOKEN:
                         bytecode += (char)OPID::POW;
                         break;
+                    case Lexer::ADD_TO_TOKEN:
+                        bytecode += (char)OPID::ADD;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::SUB_TO_TOKEN:
+                        bytecode += (char)OPID::SUB;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::MUL_TO_TOKEN:
+                        bytecode += (char) OPID::MUL;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::DIV_TO_TOKEN:
+                        bytecode += (char) OPID::DIV;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::MOD_TO_TOKEN:
+                        bytecode += (char) OPID::MOD;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::MAND_TO_TOKEN:
+                        bytecode += (char)OPID::MAND;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::MOR_TO_TOKEN:
+                        bytecode += (char)OPID::MOR;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::MXOR_TO_TOKEN:
+                        bytecode += (char)OPID::MXOR;
+//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::POWER_TO_TOKEN:
+                        bytecode += (char)OPID::POW;
+//                        bytecode += (char)OPID::POP;
+                        break;
                 }
+                if (!ast.child/* && ast.root->type() < Lexer::ADD_TO_TOKEN*/)
+                    bytecode += (char)OPID::POP;
                 break;
             }
         }
         if (ast.child) break;
     }
+    return false;
 }

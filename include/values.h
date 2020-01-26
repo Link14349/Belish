@@ -11,9 +11,11 @@ namespace Belish {
     enum TYPE {
         NUMBER, STRING, OBJECT, NULL_, UNDEFINED
     };
+    // ***该类的引用计数只有Stack类有权操作它***
     class Value {
     public:
         virtual TYPE type() = 0;
+        virtual Value* copy() = 0;
         virtual string toString() = 0;
         virtual string toStringHL() = 0;// 高亮、缩进显示
         virtual void add(Value*) = 0;
@@ -33,14 +35,18 @@ namespace Belish {
         virtual void land(Value*) = 0;
         virtual void lor(Value*) = 0;
         virtual void pow(Value*) = 0;
-    private:
+        UL count() { return linked; }
+    protected:
+        friend class Stack;
+        UL linked;
     };
     class Number : public Value {
     public:
-        Number(double n = 0) : val(n) { }
+        Number(double n = 0) : val(n) { linked = 0;  }
         TYPE type() { return NUMBER; }
         string toString() { return std::to_string(val); }
         string toStringHL() { return "\033[33m" + std::to_string(val) + "\033[0m"; }
+        Value* copy() override { return new Number(val); }
         void add(Value* n) override { val += ((Number*)n)->val; }
         void sub(Value* n) override { val -= ((Number*)n)->val; }
         void mul(Value* n) override { val *= ((Number*)n)->val; }
@@ -64,11 +70,12 @@ namespace Belish {
     };
     class String : public Value {
     public:
-        String(const string& n = "") : val(n) { }
+        String(const string& n = "") : val(n) { linked = 0; }
         TYPE type() { return STRING; }
         string toString() { return val; }
-        string toStringHL() { return "\033[36m" + val + "\033[0m"; }
+        string toStringHL() { return "\033[36m\"" + val + "\"\033[0m"; }
         string& value() { return val; }
+        Value* copy() override { return new String(val); }
         void add(Value* n) override { val += ((String*)n)->val; }
         void sub(Value* n) override { ; }
         void mul(Value* n) override {
@@ -97,10 +104,11 @@ namespace Belish {
     };
     class Undefined : public Value {
     public:
-        Undefined() { }
+        Undefined() { linked = 0; }
         TYPE type() { return UNDEFINED; }
         string toString() { return "undefined"; }
         string toStringHL() { return "\033[35mundefined\033[0m"; }
+        Value* copy() override { return new Undefined; }
         void add(Value* n) override { ; }
         void sub(Value* n) override { ; }
         void mul(Value* n) override { ; }
@@ -124,18 +132,28 @@ namespace Belish {
     class Stack {
     public:
         Stack() : len(0) { val.resize(1024); }
-        Value* get(ULL offset) { return val[offset < 0 ? 0 : offset]; }
-        void set(ULL offset, Value* v) { val[offset] = v; }
+        Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
+        void set(UL offset, Value* v) {
+            if (val[offset]) delete val[offset];
+            val[offset] = v;
+        }
         void push(Value* v);
-        void pop(ULL offset) {
+        void pop(UL offset) {
             len -= offset;
-            if (val[len]->type() == NUMBER) delete val[len];
+            for (UL i = 0; i < offset; i++) {
+                if (!(--val[len + i]->linked)) delete val[len + i];
+                val[len + i] = nullptr;
+            }
         }
         void dbg();
-        ULL length() { return len; }
+        UL length() { return len; }
+        ~Stack() {
+            for (UL i = 0; i < len; i++)
+                if (!(--val[i]->linked)) delete val[i];
+        }
     private:
         vector<Value*> val;
-        ULL len;
+        UL len;
     };
 }
 

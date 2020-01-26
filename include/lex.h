@@ -17,6 +17,9 @@ namespace Belish {
             // key words
             LET_TOKEN, DEF_TOKEN,
             RETURN_TOKEN,
+            IF_TOKEN,
+            ELIF_TOKEN,
+            ELSE_TOKEN,
             NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN,
             // 注释token
             NOTE_TOKEN,
@@ -37,7 +40,7 @@ namespace Belish {
             SLEFT_TO_TOKEN, SRIGHT_TO_TOKEN,
             MAND_TO_TOKEN, MOR_TO_TOKEN, MXOR_TO_TOKEN,
             DADD_TOKEN, DSUB_TOKEN,// double add & double sub
-            IN_TOKEN, OF_TOKEN, PN_DREFER_TOKEN, PN_PREFER_TOKEN,
+            IN_TOKEN, OF_TOKEN, PN_DREFER_TOKEN, PN_PREFER_TOKEN, IS_TOKEN, 
             RANGE_TOKEN, 
             END_TOKEN,// 语句结束
             PROGRAM_END

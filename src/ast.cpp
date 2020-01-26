@@ -57,6 +57,7 @@ void Belish::AST::parse() {
                         break;
                     }
                 }
+                if (FINISH_GET) break;
             }
             break;
         }

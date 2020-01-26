@@ -12,41 +12,6 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     ULL i = 0;
-#define GETBYTE byte = bytecode[i++]
-#define GETDBYTE \
-    GETBYTE; \
-    dbyte = 0; \
-    dbyte = dbyte << 8 | byte; \
-    GETBYTE; \
-    dbyte = dbyte << 8 | byte;
-#define GETQBYTE \
-    qbyte = 0; \
-    GETBYTE; \
-    qbyte = qbyte << 8 | byte; \
-    GETBYTE; \
-    qbyte = qbyte << 8 | byte; \
-    GETBYTE; \
-    qbyte = qbyte << 8 | byte; \
-    GETBYTE; \
-    qbyte = qbyte << 8 | byte;
-#define GETEBYTE \
-    ebyte = 0; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte; \
-    GETBYTE; \
-    ebyte = ebyte << 8 | byte;
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
         std::cerr << "Wrong magic code" << std::endl;
@@ -58,10 +23,15 @@ void Belish::BVM::run() {
     for (; i < len; ) {
         GETBYTE;
         auto op = (OPID)byte;
+//        if (stk.length() < 2) {
+//            std::cerr << "Cannot perform binocular operation" << std::endl;
+//            return;
+//        }
         auto a = stk.get(stk.length() - 2);
         auto b = stk.get(stk.length() - 1);
         switch (op) {
             case ADD: {
+//                stk.dbg();
                 if (a->type() == b->type()) a->add(b);
                 else { std::cerr << "Wrong type" << std::endl; return; }
                 stk.pop(1);
@@ -181,9 +151,29 @@ void Belish::BVM::run() {
                 stk.push(new Undefined);
                 break;
             }
+            case REFER: {
+                GETQBYTE
+                stk.push(stk.get(qbyte));
+                break;
+            }
+            case PUSH: {
+                GETQBYTE
+                stk.push(stk.get(qbyte)->copy());
+                break;
+            }
+            case POP: {
+                stk.pop(1);
+//                stk.dbg();
+                break;
+            }
+            case POPC: {
+                GETQBYTE
+                stk.pop(qbyte);
+                break;
+            }
             case DEB:
                 stk.dbg();
                 break;
-        }
+        }// 1, a += 10, b += 123, a + 1000
     }
 }

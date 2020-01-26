@@ -186,6 +186,8 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = PN_DREFER_TOKEN;
     } else if (t.s == "=>") {
         t.t = PN_PREFER_TOKEN;
+    } else if (t.s == "is") {
+        t.t = IS_TOKEN;
     }
     // 特判
     else if (t.s[0] == '0' && t.t != NUMBER_TOKEN && t.s.length() > 2) {

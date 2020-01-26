@@ -7,6 +7,7 @@
 #include "ast.h"
 #include "vm.h"
 #include "compiler.h"
+#include "decompile.h"
 
 namespace Belish {
 }

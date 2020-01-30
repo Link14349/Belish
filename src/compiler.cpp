@@ -40,14 +40,18 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 scCompiler.ast.child = true;
                 std::list<UL> tags;
                 const auto ASTL = ast.root->length();
+                bool isLast(false);
                 for (UL i = 0; i < ASTL; i += 2) {
+                    if (ast.root->get(i)->type() == Lexer::NUMBER_TOKEN) {
+                        if (ast.root->get(i)->value() != "0") {
+                            isLast = true;
+                        }
+                    }
                     scCompiler.ast.root = ast.root->get(i);
                     scCompiler.compile_(bytecode);
                     bytecode += (char) OPID::JF;
                     auto adr = bytecode.length();
                     bytecode += "0000";// 先占位
-                    bytecode += (char) OPID::POP;
-                    bytecode += (char) OPID::POP;
                     bytecode += (char) OPID::POP;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
@@ -57,12 +61,14 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     bytecode += (char) OPID::JMP;
                     tags.push_back(bytecode.length());
                     bytecode += "0000";// 先占位
+                    if (isLast) break;
                     // 将之前占的位的正确的值填回去
                     auto targetStr = transI32S_bin(bytecode.length());
                     bytecode[adr] = targetStr[0];
                     bytecode[adr + 1] = targetStr[1];
                     bytecode[adr + 2] = targetStr[2];
                     bytecode[adr + 3] = targetStr[3];
+                    bytecode += (char) OPID::POP;
                 }
                 auto targetAdr = transI32S_bin(bytecode.length());
                 for (auto i = tags.begin(); i != tags.end(); i++) {

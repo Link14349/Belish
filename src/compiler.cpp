@@ -2,6 +2,7 @@
 #include "trans.cpp"
 #include "compiler.h"
 #include <ctime>
+#include <list>
 #include <iostream>
 
 bool Belish::Compiler::compile(string &bytecode) {
@@ -31,6 +32,45 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
             }
             case Lexer::UNDEFINED_TOKEN: {
                 bytecode += (char) OPID::PUSH_UND;
+                break;
+            }
+            case Lexer::IF_TOKEN: {
+                Compiler scCompiler(filename);
+                scCompiler.sym = sym;
+                scCompiler.ast.child = true;
+                std::list<UL> tags;
+                const auto ASTL = ast.root->length();
+                for (UL i = 0; i < ASTL; i += 2) {
+                    scCompiler.ast.root = ast.root->get(i);
+                    scCompiler.compile_(bytecode);
+                    bytecode += (char) OPID::JF;
+                    auto adr = bytecode.length();
+                    bytecode += "0000";// 先占位
+                    bytecode += (char) OPID::POP;
+                    bytecode += (char) OPID::POP;
+                    bytecode += (char) OPID::POP;
+                    for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
+                        scCompiler.ast.root = ast.root->get(i + 1)->get(j);
+                        scCompiler.compile_(bytecode);
+                    }
+                    // 跳到最后
+                    bytecode += (char) OPID::JMP;
+                    tags.push_back(bytecode.length());
+                    bytecode += "0000";// 先占位
+                    // 将之前占的位的正确的值填回去
+                    auto targetStr = transI32S_bin(bytecode.length());
+                    bytecode[adr] = targetStr[0];
+                    bytecode[adr + 1] = targetStr[1];
+                    bytecode[adr + 2] = targetStr[2];
+                    bytecode[adr + 3] = targetStr[3];
+                }
+                auto targetAdr = transI32S_bin(bytecode.length());
+                for (auto i = tags.begin(); i != tags.end(); i++) {
+                    bytecode[*i] = targetAdr[0];
+                    bytecode[*i + 1] = targetAdr[1];
+                    bytecode[*i + 2] = targetAdr[2];
+                    bytecode[*i + 3] = targetAdr[3];
+                }
                 break;
             }
             case Lexer::ERROR_TOKEN: {

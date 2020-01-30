@@ -11,7 +11,7 @@ void Belish::BVM::run() {
     Dbyte dbyte;
     Qbyte qbyte;
     Ebyte ebyte;
-    ULL i = 0;
+    UL i = 0;
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
         std::cerr << "Wrong magic code" << std::endl;
@@ -171,9 +171,24 @@ void Belish::BVM::run() {
                 stk.pop(qbyte);
                 break;
             }
+            case JT: {
+                GETQBYTE
+                if (stk.top()->isTrue()) i = qbyte;
+                break;
+            }
+            case JF: {
+                GETQBYTE
+                if (stk.top()->isFalse()) i = qbyte;
+                break;
+            }
+            case JMP: {
+                GETQBYTE
+                i = qbyte;
+                break;
+            }
             case DEB:
                 stk.dbg();
                 break;
-        }// 1, a += 10, b += 123, a + 1000
+        }
     }
 }

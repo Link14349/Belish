@@ -188,6 +188,12 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = PN_PREFER_TOKEN;
     } else if (t.s == "is") {
         t.t = IS_TOKEN;
+    } else if (t.s == "if") {
+        t.t = IF_TOKEN;
+    } else if (t.s == "elif") {
+        t.t = ELIF_TOKEN;
+    } else if (t.s == "else") {
+        t.t = ELSE_TOKEN;
     }
     // 特判
     else if (t.s[0] == '0' && t.t != NUMBER_TOKEN && t.s.length() > 2) {

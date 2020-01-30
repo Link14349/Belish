@@ -14,7 +14,7 @@ namespace Belish {
         EQ, NEQ, LEQ, MEQ, LESS, MORE,
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
-        MOV, POP, POPC
+        MOV, POP, POPC, JT, JF, JMP
     };
     class Compiler {
     public:

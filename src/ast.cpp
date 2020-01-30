@@ -77,6 +77,148 @@ void Belish::AST::parse() {
             }
             break;
         }
+        case Lexer::IF_TOKEN:
+        {
+            GET;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            root = new node(Lexer::IF_TOKEN, "", lexer.line() + baseLine);
+            UL bcc = 1;
+            auto conLine = lexer.line();
+            string con;
+            GET;
+            while (true) {
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                con += token.s + " ";
+                GET;
+            }
+            AST conAst(con, baseLine + conLine);
+            conAst.parse();
+            root->insert(conAst.root);
+            GET;
+            if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            bcc = 1;
+            string ifScript;
+            auto ifSL = lexer.line();
+            GET;
+            while (true) {
+                if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                ifScript += token.s + " ";
+                GET;
+            }
+            root->insert(Lexer::NO_STATUS, "", ifSL + baseLine);
+            AST bodyParser(ifScript, ifSL + baseLine);
+            while (true) {
+                bodyParser.parse();
+                if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->get(1)->insert(bodyParser.root);
+                else break;
+            }
+            while (true) {
+                auto nowI = lexer.index();
+                auto nowL = lexer.line();
+                GET;
+                if (token.t != Lexer::ELIF_TOKEN) {
+                    lexer.index(nowI);
+                    lexer.line(nowL);
+                    break;
+                }
+                GET;
+                if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                    return;
+                }
+                bcc = 1;
+                conLine = lexer.line();
+                con = "";
+                GET;
+                while (true) {
+                    if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bcc++;
+                    else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                        bcc--;
+                        if (bcc == 0) break;
+                    }
+                    con += token.s + " ";
+                    GET;
+                }
+                conAst.open(con);
+                conAst.baseLine = baseLine + conLine;
+                conAst.parse();
+                root->insert(conAst.root);
+                GET;
+                if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                    return;
+                }
+                bcc = 1;
+                ifScript = "";
+                ifSL = lexer.line();
+                GET;
+                while (true) {
+                    if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                    else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                        bcc--;
+                        if (bcc == 0) break;
+                    }
+                    ifScript += token.s + " ";
+                    GET;
+                }
+                root->insert(Lexer::NO_STATUS, "", ifSL + baseLine);
+                bodyParser.open(ifScript);
+                bodyParser.baseLine = ifSL + baseLine;
+                while (true) {
+                    bodyParser.parse();
+                    if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->get(-1)->insert(bodyParser.root);
+                    else break;
+                }
+            }
+            if (token.t == Lexer::ELSE_TOKEN) {
+                ifScript = "";
+                ifSL = lexer.line();
+                GET;
+                GET;
+                if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                    return;
+                }
+                GET;
+                bcc = 1;
+                while (true) {
+                    if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                    else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                        bcc--;
+                        if (bcc == 0) break;
+                    }
+                    ifScript += token.s + " ";
+                    GET;
+                }
+                root->insert(Lexer::NUMBER_TOKEN, "1", ifSL + baseLine);
+                root->insert(Lexer::NO_STATUS, "", ifSL + baseLine);
+                bodyParser.open(ifScript);
+                bodyParser.baseLine = ifSL + baseLine;
+                while (true) {
+                    bodyParser.parse();
+                    if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->get(-1)->insert(bodyParser.root);
+                    else break;
+                }
+            }
+            break;
+        }
         case Lexer::NUMBER_TOKEN:
         case Lexer::STRING_TOKEN:
         case Lexer::BRACKETS_LEFT_TOKEN:

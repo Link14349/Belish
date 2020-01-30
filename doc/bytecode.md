@@ -34,6 +34,9 @@
 | 1d | mov | mov <offset> | Move the element at the top of stack into the position that is <offset> pointed |
 | 1e | pop | pop | Back 1 |
 | 1f | popc | popc <unsigned int> | Back <unsigned int> |
+| 20 | jt | jt <unsigned int> | Jump to <unsigned int> if the top is true |
+| 21 | jf | jf <unsigned int> | Jump to <unsigned int> if the top is false |
+| 22 | jmp | jmp <unsigned int> | Jump to <unsigned int> |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

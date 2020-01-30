@@ -44,19 +44,23 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 for (UL i = 0; i < ASTL; i += 2) {
                     if (ast.root->get(i)->type() == Lexer::NUMBER_TOKEN) {
                         if (ast.root->get(i)->value() != "0") {
-                            isLast = true;
+                            isLast = true;// 说明该elif条件必然为true，接下来的elif/else是不可能执行了
                         }
                     }
-                    scCompiler.ast.root = ast.root->get(i);
-                    scCompiler.compile_(bytecode);
-                    bytecode += (char) OPID::JF;
-                    auto adr = bytecode.length();
-                    bytecode += "0000";// 先占位
-                    bytecode += (char) OPID::POP;
+                    UL adr;
+                    if (!isLast) {
+                        scCompiler.ast.root = ast.root->get(i);
+                        scCompiler.compile_(bytecode);
+                        bytecode += (char) OPID::JF;
+                        adr = bytecode.length();
+                        bytecode += "0000";// 先占位
+                        bytecode += (char) OPID::POP;
+                    }
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
                         scCompiler.compile_(bytecode);
                     }
+                    if (isLast) break;
                     // 跳到最后
                     bytecode += (char) OPID::JMP;
                     tags.push_back(bytecode.length());
@@ -68,7 +72,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     bytecode[adr + 1] = targetStr[1];
                     bytecode[adr + 2] = targetStr[2];
                     bytecode[adr + 3] = targetStr[3];
-                    bytecode += (char) OPID::POP;
+                    bytecode += (char) OPID::POP;// 这里的pop是用来删除上一个if/elif判断时剩下的0/1
                 }
                 auto targetAdr = transI32S_bin(bytecode.length());
                 for (auto i = tags.begin(); i != tags.end(); i++) {

@@ -43,9 +43,13 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 bool isLast(false);
                 for (UL i = 0; i < ASTL; i += 2) {
                     if (ast.root->get(i)->type() == Lexer::NUMBER_TOKEN) {
-                        if (ast.root->get(i)->value() != "0") {
-                            isLast = true;// 说明该elif条件必然为true，接下来的elif/else是不可能执行了
-                        }
+                        // 恒真条件的判断在前面是因为恒真条件出现的可能性远大于恒假条件，可以有轻微的加速
+                        if (ast.root->get(i)->value() != "0") isLast = true;// 说明该elif条件必然为true，接下来的elif/else是不可能执行了
+                        else continue;// 条件恒为false的elif是不可能执行的
+                    } else if (ast.root->get(i)->type() == Lexer::STRING_TOKEN) {
+                        // 恒真条件的判断在前面是因为恒真条件出现的可能性远大于恒假条件，可以有轻微的加速
+                        if (!ast.root->get(i)->value().empty()) isLast = true;// 说明该elif条件必然为true，接下来的elif/else是不可能执行了
+                        else continue;// 条件恒为false的elif是不可能执行的
                     }
                     UL adr;
                     if (!isLast) {
@@ -65,7 +69,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     bytecode += (char) OPID::JMP;
                     tags.push_back(bytecode.length());
                     bytecode += "0000";// 先占位
-                    if (isLast) break;
                     // 将之前占的位的正确的值填回去
                     auto targetStr = transI32S_bin(bytecode.length());
                     bytecode[adr] = targetStr[0];

@@ -1,0 +1,1 @@
+- Change the method to check the token-type into the switch statement, not the if-else statement(use hashcode)

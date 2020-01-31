@@ -132,6 +132,33 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 }
                 break;
             }
+            case Lexer::WHILE_TOKEN: {
+                Compiler scCompiler(filename);
+                scCompiler.sym = sym;
+                scCompiler.ast.child = true;
+                scCompiler.independent = false;
+                scCompiler.ast.root = ast.root->get(0);
+                UL conAdr = bytecode.length();
+                scCompiler.compile_(bytecode);
+                bytecode += (char) OPID::JF;
+                UL JLastAdr = bytecode.length();
+                bytecode += "0000";// 先占位
+                bytecode += (char) OPID::POP;
+                scCompiler.independent = true;
+                for (UL i = 1; i < ast.root->length(); i++) {
+                    scCompiler.ast.root = ast.root->get(i);
+                    scCompiler.compile_(bytecode);
+                }
+                bytecode += (char) OPID::JMP;
+                bytecode += transI32S_bin(conAdr);
+                auto lastAdrS = transI32S_bin(bytecode.length());
+                bytecode[JLastAdr] = lastAdrS[0];
+                bytecode[JLastAdr + 1] = lastAdrS[1];
+                bytecode[JLastAdr + 2] = lastAdrS[2];
+                bytecode[JLastAdr + 3] = lastAdrS[3];
+                bytecode += (char) OPID::POP;
+                break;
+            }
             default: {// 表达式
                 Compiler compiler(filename);
                 compiler.ast.child = true;

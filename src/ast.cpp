@@ -364,7 +364,7 @@ void Belish::AST::parse() {
                 AST la(left, baseLine + initialLine);
                 AST ra(right, baseLine + initialLine);
                 la.parse();
-                if (!la.root) {
+                if (!la.root || la.root->type() == Lexer::PROGRAM_END || la.root->type() == Lexer::END_TOKEN) {
                     // 说明该运算符是单目运算符且是在操作数左边比如：++a
                     string expr(op.token.s + right);
                     AST parser(expr, baseLine + initialLine);
@@ -376,7 +376,7 @@ void Belish::AST::parse() {
                 }
                 AST_CHECK_PARSING_ERR(la)
                 ra.parse();
-                if (!ra.root) {
+                if (!ra.root || ra.root->type() == Lexer::PROGRAM_END || ra.root->type() == Lexer::END_TOKEN) {
                     // 说明该运算符是单目运算符且是在操作数右边比如：a++
                     root->insert(la.root);
                     lexer.line(lexerLine);
@@ -405,6 +405,58 @@ void Belish::AST::parse() {
             parser.parse();
             root->insert(parser.root);
             root->insert(Lexer::NUMBER_TOKEN, "1", baseLine + sl);
+            break;
+        }
+        case Lexer::WHILE_TOKEN:
+        {
+            GET;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            root = new node(Lexer::WHILE_TOKEN, "", lexer.line() + baseLine);
+            UL bcc = 1;
+            auto conLine = lexer.line();
+            string con;
+            GET;
+            while (true) {
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                con += token.s + " ";
+                GET;
+            }
+            AST conAst(con, baseLine + conLine);
+            conAst.parse();
+            root->insert(conAst.root);
+            GET;
+            if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            bcc = 1;
+            string whileScript;
+            auto whileSL = lexer.line();
+            GET;
+            while (true) {
+                if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                whileScript += token.s + " ";
+                GET;
+            }
+            AST bodyParser(whileScript, whileSL + baseLine);
+            while (true) {
+                bodyParser.parse();
+                if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->insert(bodyParser.root);
+                else break;
+            }
+            __asm("nop");
             break;
         }
         case Lexer::END_TOKEN:

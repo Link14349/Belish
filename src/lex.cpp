@@ -186,14 +186,6 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = PN_DREFER_TOKEN;
     } else if (t.s == "=>") {
         t.t = PN_PREFER_TOKEN;
-    } else if (t.s == "is") {
-        t.t = IS_TOKEN;
-    } else if (t.s == "if") {
-        t.t = IF_TOKEN;
-    } else if (t.s == "elif") {
-        t.t = ELIF_TOKEN;
-    } else if (t.s == "else") {
-        t.t = ELSE_TOKEN;
     }
     // 特判
     else if (t.s[0] == '0' && t.t != NUMBER_TOKEN && t.s.length() > 2) {
@@ -228,6 +220,16 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = IN_TOKEN;
     } else if (t.s == "of") {
         t.t = OF_TOKEN;
+    } else if (t.s == "is") {
+        t.t = IS_TOKEN;
+    } else if (t.s == "if") {
+        t.t = IF_TOKEN;
+    } else if (t.s == "elif") {
+        t.t = ELIF_TOKEN;
+    } else if (t.s == "else") {
+        t.t = ELSE_TOKEN;
+    } else if (t.s == "while") {
+        t.t = WHILE_TOKEN;
     } else if (t.s == "//" || t.s == "#") {
         t.t = NOTE_TOKEN;
         while (true) {

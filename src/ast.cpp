@@ -363,8 +363,24 @@ void Belish::AST::parse() {
                 AST la(left, baseLine + initialLine);
                 AST ra(right, baseLine + initialLine);
                 la.parse();
+                if (!la.root) {
+                    // 说明该运算符是单目运算符且是在操作数左边比如：++a
+                    string expr(op.token.s + right);
+                    AST parser(expr, baseLine + initialLine);
+                    parser.parse();
+                    delete root;
+                    root = parser.root;
+                    lexer.line(lexerLine);
+                    break;
+                }
                 AST_CHECK_PARSING_ERR(la)
                 ra.parse();
+                if (!ra.root) {
+                    // 说明该运算符是单目运算符且是在操作数右边比如：a++
+                    root->insert(la.root);
+                    lexer.line(lexerLine);
+                    break;
+                }
                 AST_CHECK_PARSING_ERR(ra)
                 root->insert(la.root);
                 root->insert(ra.root);
@@ -372,6 +388,27 @@ void Belish::AST::parse() {
             lexer.line(lexerLine);
             break;
         }
+        case Lexer::DADD_TOKEN:
+            root = new node(Lexer::ADD_TO_TOKEN, "", baseLine + lexer.line());
+        case Lexer::DSUB_TOKEN:
+        {
+            auto sl = lexer.line();
+            if (!root) root = new node(Lexer::SUB_TO_TOKEN, "", baseLine + lexer.line());
+            string v;
+            GET;
+            while (!(FINISH_GET)) {
+                v += token.s + " ";
+                GET;
+            }
+            AST parser(v, baseLine + sl);
+            parser.parse();
+            root->insert(parser.root);
+            root->insert(Lexer::NUMBER_TOKEN, "1", baseLine + sl);
+            break;
+        }
+        case Lexer::END_TOKEN:
+            root = new node(Lexer::END_TOKEN, "", lexer.line() + baseLine);
+            break;
         case Lexer::PROGRAM_END:
             root = new node(Lexer::PROGRAM_END, "", lexer.line() + baseLine);
             break;

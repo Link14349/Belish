@@ -37,6 +37,8 @@
 | 20 | jt | jt <unsigned int> | Jump to <unsigned int> if the top is true |
 | 21 | jf | jf <unsigned int> | Jump to <unsigned int> if the top is false |
 | 22 | jmp | jmp <unsigned int> | Jump to <unsigned int> |
+| 23 | sav | sav | Cache the value (copy) at the top of the stack into the register |
+| 24 | bac | bac | Fetches cached values from registers back to the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

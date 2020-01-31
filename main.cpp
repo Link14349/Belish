@@ -61,6 +61,7 @@ void openFile(const string& filename, string& content) {
 
 int main(int argc, char* argv[]) {
     auto s = getCurrentTime();
+    ULL c;
     string script;
     openFile("test.bel", script);
     Belish::Compiler compiler("test.bel", script);
@@ -75,13 +76,16 @@ int main(int argc, char* argv[]) {
     fs << bc;
     fs.close();
     std::cout << "finish compiling" << std::endl;
+    auto now = getCurrentTime();
+    c = now - s;
+    s = now;
     ULL length;
     auto buffer = readFileCPTR("test.belc", length);
     Belish::BVM bvm(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;
     auto e = getCurrentTime();
-    std::cout << "used " << (e - s) << "ms" << std::endl;
+    std::cout << "vm used " << (e - s) << "ms, compiler used " << c << "ms" << std::endl;
     delete buffer;
     return 0;
 }

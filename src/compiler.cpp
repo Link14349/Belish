@@ -53,6 +53,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     }
                     UL adr;
                     if (!isLast) {
+                        scCompiler.independent = false;
                         scCompiler.ast.root = ast.root->get(i);
                         scCompiler.compile_(bytecode);
                         bytecode += (char) OPID::JF;
@@ -60,6 +61,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                         bytecode += "0000";// 先占位
                         bytecode += (char) OPID::POP;
                     }
+                    scCompiler.independent = true;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
                         scCompiler.compile_(bytecode);
@@ -90,6 +92,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 std::cerr << ast.root->value() << " at <" << filename << ">:" << ast.line() << std::endl;
                 return true;
             }
+            case Lexer::END_TOKEN: {
+                break;
+            }
             case Lexer::UNKNOWN_TOKEN: {
                 auto oi = sym.find(ast.root->value());
 //                std::cerr << (sym.find("a") == sym.end()) << ", " << (sym.find("b") == sym.end()) << std::endl;
@@ -106,6 +111,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 for (auto i = 0; i < ast.root->length(); i += 2) {
                     Compiler compiler(filename);
                     compiler.ast.child = true;
+                    compiler.independent = false;
                     compiler.ast.root = ast.root->get(i + 1);
                     compiler.sym = sym;
                     if (compiler.compile_(bytecode)) {
@@ -118,13 +124,15 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
             default: {// 表达式
                 Compiler compiler(filename);
                 compiler.ast.child = true;
+                compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
-                compiler.ast.root = ast.root->get(1);
-//                compiler.sym = sym;
-                if (compiler.compile_(bytecode)) return true;
+                if (ast.root->length() == 2) {
+                    compiler.ast.root = ast.root->get(1);
+                    if (compiler.compile_(bytecode)) return true;
+                }
                 switch (ast.root->type()) {
                     case Lexer::ADD_TOKEN:
                         bytecode += (char)OPID::ADD;
@@ -185,42 +193,43 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                         break;
                     case Lexer::ADD_TO_TOKEN:
                         bytecode += (char)OPID::ADD;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::SUB_TO_TOKEN:
                         bytecode += (char)OPID::SUB;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::MUL_TO_TOKEN:
                         bytecode += (char) OPID::MUL;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::DIV_TO_TOKEN:
                         bytecode += (char) OPID::DIV;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::MOD_TO_TOKEN:
                         bytecode += (char) OPID::MOD;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::MAND_TO_TOKEN:
                         bytecode += (char)OPID::MAND;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::MOR_TO_TOKEN:
                         bytecode += (char)OPID::MOR;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::MXOR_TO_TOKEN:
                         bytecode += (char)OPID::MXOR;
-//                        bytecode += (char)OPID::POP;
                         break;
                     case Lexer::POWER_TO_TOKEN:
                         bytecode += (char)OPID::POW;
-//                        bytecode += (char)OPID::POP;
+                        break;
+                    case Lexer::DADD_TOKEN:
+                    case Lexer::DSUB_TOKEN:
+                        bytecode += (char)OPID::SAV;
+                        bytecode += (char)OPID::PUSH_NUM;
+                        bytecode += transI64S_bin(transDI64_bin(1));
+                        if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
+                        else bytecode += (char)OPID::SUB;
+                        bytecode += (char)OPID::POP;
+                        bytecode += (char)OPID::BAC;
                         break;
                 }
-                if (!ast.child/* && ast.root->type() < Lexer::ADD_TO_TOKEN*/)
+                if (independent)
                     bytecode += (char)OPID::POP;
                 break;
             }

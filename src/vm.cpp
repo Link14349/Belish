@@ -11,6 +11,7 @@ void Belish::BVM::run() {
     Dbyte dbyte;
     Qbyte qbyte;
     Ebyte ebyte;
+    Value* cache = nullptr;
     UL i = 0;
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
@@ -184,6 +185,14 @@ void Belish::BVM::run() {
             case JMP: {
                 GETQBYTE
                 i = qbyte;
+                break;
+            }
+            case SAV: {
+                cache = stk.top()->copy();
+                break;
+            }
+            case BAC: {
+                stk.push(cache);
                 break;
             }
             case DEB:

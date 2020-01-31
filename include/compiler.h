@@ -14,7 +14,8 @@ namespace Belish {
         EQ, NEQ, LEQ, MEQ, LESS, MORE,
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
-        MOV, POP, POPC, JT, JF, JMP
+        MOV, POP, POPC, JT, JF, JMP,
+        SAV, BAC
     };
     class Compiler {
     public:
@@ -29,6 +30,7 @@ namespace Belish {
         string script;
         AST ast;
         map<string, UL> sym;
+        bool independent = true;
     };
 }
 

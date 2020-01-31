@@ -19,8 +19,8 @@ bool Belish::Compiler::compile(string &bytecode) {
     return state;
 }
 
-bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
-    ULL st = 0, ed = 0;
+bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>* brTab, std::list<UL>* ctTab) {
+//    ULL st = 0, ed = 0;
     while (true) {
 //        st = getCurrentTime();
         if (!ast.child) ast.parse();
@@ -71,7 +71,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     scCompiler.independent = true;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
-                        scCompiler.compile_(bytecode);
+                        scCompiler.compile_(bytecode, false, brTab, ctTab);
                     }
                     if (isLast) break;
                     // 跳到最后
@@ -142,9 +142,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 UL JLastAdr = bytecode.length();
                 bytecode += "0000";// 先占位
                 scCompiler.independent = true;
+                std::list<UL> breakTab, continueTab;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
-                    scCompiler.compile_(bytecode);
+                    scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
                 }
                 bytecode += (char) OPID::JMP;
                 bytecode += transI32S_bin(conAdr);
@@ -153,22 +154,47 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 bytecode[JLastAdr + 1] = lastAdrS[1];
                 bytecode[JLastAdr + 2] = lastAdrS[2];
                 bytecode[JLastAdr + 3] = lastAdrS[3];
+                for (auto i = breakTab.begin(); i != breakTab.end(); i++) {
+                    bytecode[*i] = lastAdrS[0];
+                    bytecode[*i + 1] = lastAdrS[1];
+                    bytecode[*i + 2] = lastAdrS[2];
+                    bytecode[*i + 3] = lastAdrS[3];
+                }
                 break;
+            }
+            case Lexer::BREAK_TOKEN:
+            {
+                if (brTab) {
+                    bytecode += (char) OPID::JMP;
+                    brTab->push_back(bytecode.length());
+                    bytecode += "0000";// 占位
+                } else {
+                    std::cerr << "BLE200: Unexpected break at <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
             }
             case Lexer::DO_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
                 scCompiler.ast.child = true;
                 UL bodyAdr = bytecode.length();
+                std::list<UL> breakTab, continueTab;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
-                    scCompiler.compile_(bytecode);
+                    scCompiler.compile_(bytecode, false, brTab, ctTab);
                 }
                 scCompiler.independent = false;
                 scCompiler.ast.root = ast.root->get(0);
                 scCompiler.compile_(bytecode);
                 bytecode += (char) OPID::JT;
                 bytecode += transI32S_bin(bodyAdr);
+                auto lastAdrS = transI32S_bin(bytecode.length());
+                for (auto i = breakTab.begin(); i != breakTab.end(); i++) {
+                    bytecode[*i] = lastAdrS[0];
+                    bytecode[*i + 1] = lastAdrS[1];
+                    bytecode[*i + 2] = lastAdrS[2];
+                    bytecode[*i + 3] = lastAdrS[3];
+                }
                 break;
             }
             default: {// 表达式

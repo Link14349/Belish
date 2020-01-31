@@ -6,6 +6,9 @@ do {
 
 while (a < 30) {
     a++;
+    if (a == 20) {
+        break;
+    }
 }
 
 if (a < 30) {

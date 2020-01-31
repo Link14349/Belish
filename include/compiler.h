@@ -2,6 +2,7 @@
 #define BELISH_COMPILER_H
 
 #include <map>
+#include <list>
 #include "ast.h"
 using std::map;
 
@@ -23,7 +24,7 @@ namespace Belish {
         Compiler(const string& fn) : filename(fn) { }
         Compiler(const string& fn, const string& s) : script(s), ast(s), filename(fn) { }
         bool compile(string&);
-        bool compile_(string&, bool = false);
+        bool compile_(string&, bool = false, std::list<UL>* = nullptr, std::list<UL>* = nullptr);
     private:
         UL stkOffset = 0;
         string filename;

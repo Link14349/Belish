@@ -5,6 +5,9 @@
 | BLE102 | Incorrect assignment in declaration | If you need to define a variable but do not assign a value, delete the token indicated by the error; if you need to define and assign a value, change the token indicated by the error to '=' or 'is' |
 | BLE103 | Unknown operator | Modified to the correct operator |
 | BLE104 | Unexpected token | Delete or modify the token |
+| BLE200 | Unexpected break | Delete it |
 
 ## BLE1
 _About expression/variable/function defining errors_
+## BLE2
+_About process errors_

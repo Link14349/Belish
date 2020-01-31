@@ -232,6 +232,10 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = WHILE_TOKEN;
     } else if (t.s == "do") {
         t.t = DO_TOKEN;
+    } else if (t.s == "break") {
+        t.t = BREAK_TOKEN;
+    } else if (t.s == "continue") {
+        t.t = CONTINUE_TOKEN;
     } else if (t.s == "//" || t.s == "#") {
         t.t = NOTE_TOKEN;
         while (true) {

@@ -20,7 +20,7 @@ namespace Belish {
             IF_TOKEN,
             ELIF_TOKEN,
             ELSE_TOKEN,
-            WHILE_TOKEN, DO_TOKEN,
+            WHILE_TOKEN, DO_TOKEN, BREAK_TOKEN, CONTINUE_TOKEN,
             NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN,
             // 注释token
             NOTE_TOKEN,

@@ -518,6 +518,12 @@ void Belish::AST::parse() {
         case Lexer::END_TOKEN:
             root = new node(Lexer::END_TOKEN, "", lexer.line() + baseLine);
             break;
+        case Lexer::BREAK_TOKEN:
+            root = new node(Lexer::BREAK_TOKEN, "", lexer.line() + baseLine);
+            break;
+        case Lexer::CONTINUE_TOKEN:
+            root = new node(Lexer::CONTINUE_TOKEN, "", lexer.line() + baseLine);
+            break;
         case Lexer::PROGRAM_END:
             root = new node(Lexer::PROGRAM_END, "", lexer.line() + baseLine);
             break;

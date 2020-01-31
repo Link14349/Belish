@@ -37,6 +37,7 @@ namespace Belish {
         virtual void pow(Value*) = 0;
         virtual bool isTrue() = 0;
         virtual bool isFalse() = 0;
+        virtual void set(Value*) = 0;
         UL count() { return linked; }
     protected:
         friend class Stack;
@@ -66,6 +67,7 @@ namespace Belish {
         void land(Value* n) override { val = val && ((Number*)n)->val; }
         void lor(Value* n) override { val = val || ((Number*)n)->val; }
         void pow(Value* n) override { val = std::pow(val, ((Number*)n)->val); }
+        void set(Value* n) override { val = ((Number*)n)->val; }
         bool isTrue() override { return val != 0; }
         bool isFalse() override { return val == 0; }
         double& value() { return val; }
@@ -103,6 +105,7 @@ namespace Belish {
         void land(Value* n) override { ; }
         void lor(Value* n) override { ; }
         void pow(Value* n) override { ; }
+        void set(Value* n) override { val = ((String*)n)->val; }
         bool isTrue() override { return !val.empty(); }
         bool isFalse() override { return val.empty(); }
     private:
@@ -132,6 +135,7 @@ namespace Belish {
         void land(Value* n) override { ; }
         void lor(Value* n) override { ; }
         void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
         bool isTrue() override { return false; }
         bool isFalse() override { return true; }
     private:

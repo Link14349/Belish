@@ -1,9 +1,12 @@
 #include "trans.h"
 #include "trans.cpp"
 #include "compiler.h"
+#include "timestamp.h"
 #include <ctime>
 #include <list>
 #include <iostream>
+
+//UL astTime = 0;
 
 bool Belish::Compiler::compile(string &bytecode) {
     bytecode = "\x9a\xd0\x75\x5c";// 魔数
@@ -12,12 +15,17 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode += transI64S_bin(time(nullptr));
     auto state = compile_(bytecode);
     bytecode += "\x06";// 测试用，输出栈中情况
+//    std::cout << "ast time: " << astTime << "ms" << std::endl;
     return state;
 }
 
 bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
+    ULL st = 0, ed = 0;
     while (true) {
+//        st = getCurrentTime();
         if (!ast.child) ast.parse();
+//        ed = getCurrentTime();
+//        astTime += ed - st;
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
         switch (ast.root->type()) {
             case Lexer::NUMBER_TOKEN:
@@ -95,6 +103,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
             case Lexer::END_TOKEN: {
                 break;
             }
+            case Lexer::NO_STATUS: {
+                break;
+            }
             case Lexer::UNKNOWN_TOKEN: {
                 auto oi = sym.find(ast.root->value());
 //                std::cerr << (sym.find("a") == sym.end()) << ", " << (sym.find("b") == sym.end()) << std::endl;
@@ -108,7 +119,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 break;
             }
             case Lexer::LET_TOKEN: {
-                for (auto i = 0; i < ast.root->length(); i += 2) {
+                for (UL i = 0; i < ast.root->length(); i += 2) {
                     Compiler compiler(filename);
                     compiler.ast.child = true;
                     compiler.independent = false;
@@ -217,6 +228,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                         break;
                     case Lexer::POWER_TO_TOKEN:
                         bytecode += (char)OPID::POW;
+                        break;
+                    case Lexer::SET_TOKEN:
+                        bytecode += (char)OPID::MOV;
                         break;
                     case Lexer::DADD_TOKEN:
                     case Lexer::DSUB_TOKEN:

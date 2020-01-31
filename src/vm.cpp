@@ -195,6 +195,13 @@ void Belish::BVM::run() {
                 stk.push(cache);
                 break;
             }
+            case MOV: {
+                auto v = stk.get(stk.length() - 2);
+                if (stk.top()->type() == v->type()) v->set(stk.top());
+                else { std::cerr << "Wrong type to mov" << std::endl; return; }
+                stk.pop(1);
+                break;
+            }
             case DEB:
                 stk.dbg();
                 break;

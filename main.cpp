@@ -1,18 +1,10 @@
 #include <iostream>
 #include <Belish.h>
 #include <fstream>
-#include <sys/time.h>
-#include <cstdlib>
+#include "timestamp.h"
 #include <sstream>
 using std::fstream;
 using std::ios;
-
-int64_t getCurrentTime()
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
-}
 
 #define DEBUG 0
 

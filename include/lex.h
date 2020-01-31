@@ -25,7 +25,7 @@ namespace Belish {
             NOTE_TOKEN,
             // 符号token
             UNKNOWN_OP_TOKEN,
-            SET_TOKEN, COLON_TOKEN,
+            COLON_TOKEN,
             EQUAL_TOKEN, NOT_EQUAL_TOKEN, LEQUAL_TOKEN, MEQUAL_TOKEN,
             LESS_TOKEN, MORE_TOKEN,
             BRACKETS_LEFT_TOKEN, BRACKETS_RIGHT_TOKEN,
@@ -38,7 +38,7 @@ namespace Belish {
             SLEFT_TOKEN, SRIGHT_TOKEN,
             ADD_TO_TOKEN, SUB_TO_TOKEN, MUL_TO_TOKEN, DIV_TO_TOKEN, MOD_TO_TOKEN, POWER_TO_TOKEN,
             SLEFT_TO_TOKEN, SRIGHT_TO_TOKEN,
-            MAND_TO_TOKEN, MOR_TO_TOKEN, MXOR_TO_TOKEN,
+            MAND_TO_TOKEN, MOR_TO_TOKEN, MXOR_TO_TOKEN, SET_TOKEN,
             DADD_TOKEN, DSUB_TOKEN,// double add & double sub
             IN_TOKEN, OF_TOKEN, PN_DREFER_TOKEN, PN_PREFER_TOKEN, IS_TOKEN,
             RANGE_TOKEN, 

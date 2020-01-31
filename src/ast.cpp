@@ -358,7 +358,8 @@ void Belish::AST::parse() {
                 }
                 while (bracketsCount--) {
                     auto tmp = right.rfind(')');
-                    right.erase(tmp - 1, tmp + 1);
+                    if (tmp == 0) right.erase(0, tmp + 1);
+                    else right.erase(tmp - 1, tmp + 1);
                 }
                 AST la(left, baseLine + initialLine);
                 AST ra(right, baseLine + initialLine);

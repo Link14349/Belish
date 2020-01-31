@@ -31,7 +31,7 @@
 | 1a | lor | lor | The result of lor two elements at the top of stack |
 | 1b | lnot | lnot | The result of lnot two elements at the top of stack |
 | 1c | pow | pow | The result of pow two elements at the top of stack |
-| 1d | mov | mov <offset> | Move the element at the top of stack into the position that is <offset> pointed |
+| 1d | mov | mov | Move the element at the top of stack into the second element of stack |
 | 1e | pop | pop | Back 1 |
 | 1f | popc | popc <unsigned int> | Back <unsigned int> |
 | 20 | jt | jt <unsigned int> | Jump to <unsigned int> if the top is true |

@@ -42,13 +42,14 @@ namespace Belish {
                 return children[index % children.size()];
             }
             inline void set(long index, node* n) {
-                if (index < 0) index += children.size();
                 if (children.empty()) return;
+                while (index < 0) index += children.size();
+                delete children[index % children.size()];
                 children[index % children.size()] = n;
             }
             inline UL length() { return children.size(); }
             node& operator[](long index) { return *get(index); }
-            void insert(node* n) { if (n) children.push_back(n); }
+            void insert(node* n) { children.push_back(n); }
             void insert(Lexer::TOKENS y, const string& v, UL l) { children.push_back(new node(y, v, l)); }
             void clear() { children.clear(); }
             ~node() {

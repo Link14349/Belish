@@ -67,7 +67,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                         bytecode += (char) OPID::JF;
                         adr = bytecode.length();
                         bytecode += "0000";// 先占位
-                        bytecode += (char) OPID::POP;
                     }
                     scCompiler.independent = true;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
@@ -85,7 +84,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                     bytecode[adr + 1] = targetStr[1];
                     bytecode[adr + 2] = targetStr[2];
                     bytecode[adr + 3] = targetStr[3];
-                    bytecode += (char) OPID::POP;// 这里的pop是用来删除上一个if/elif判断时剩下的0/1
                 }
                 auto targetAdr = transI32S_bin(bytecode.length());
                 for (auto i = tags.begin(); i != tags.end(); i++) {
@@ -143,7 +141,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 bytecode += (char) OPID::JF;
                 UL JLastAdr = bytecode.length();
                 bytecode += "0000";// 先占位
-                bytecode += (char) OPID::POP;
                 scCompiler.independent = true;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
@@ -156,7 +153,22 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR) {
                 bytecode[JLastAdr + 1] = lastAdrS[1];
                 bytecode[JLastAdr + 2] = lastAdrS[2];
                 bytecode[JLastAdr + 3] = lastAdrS[3];
-                bytecode += (char) OPID::POP;
+                break;
+            }
+            case Lexer::DO_TOKEN: {
+                Compiler scCompiler(filename);
+                scCompiler.sym = sym;
+                scCompiler.ast.child = true;
+                UL bodyAdr = bytecode.length();
+                for (UL i = 1; i < ast.root->length(); i++) {
+                    scCompiler.ast.root = ast.root->get(i);
+                    scCompiler.compile_(bytecode);
+                }
+                scCompiler.independent = false;
+                scCompiler.ast.root = ast.root->get(0);
+                scCompiler.compile_(bytecode);
+                bytecode += (char) OPID::JT;
+                bytecode += transI32S_bin(bodyAdr);
                 break;
             }
             default: {// 表达式

@@ -456,7 +456,63 @@ void Belish::AST::parse() {
                 if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->insert(bodyParser.root);
                 else break;
             }
-            __asm("nop");
+            break;
+        }
+        case Lexer::DO_TOKEN:
+        {
+            root = new node(Lexer::DO_TOKEN, "", lexer.line() + baseLine);
+            root->insert(nullptr);// 先占位(给条件用)
+            UL bcc = 1;
+            GET;
+            if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            string whileScript;
+            auto whileSL = lexer.line();
+            GET;
+            while (true) {
+                if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                whileScript += token.s + " ";
+                GET;
+            }
+            AST bodyParser(whileScript, whileSL + baseLine);
+            while (true) {
+                bodyParser.parse();
+                if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->insert(bodyParser.root);
+                else break;
+            }
+            GET;
+            if (token.t != Lexer::WHILE_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            GET;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }bcc = 1;
+            auto conLine = lexer.line();
+            string con;
+            GET;
+            while (true) {
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                con += token.s + " ";
+                GET;
+            }
+            AST conAst(con, baseLine + conLine);
+            conAst.parse();
+            root->set(0, conAst.root);
             break;
         }
         case Lexer::END_TOKEN:

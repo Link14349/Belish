@@ -175,11 +175,13 @@ void Belish::BVM::run() {
             case JT: {
                 GETQBYTE
                 if (stk.top()->isTrue()) i = qbyte;
+                stk.pop(1);
                 break;
             }
             case JF: {
                 GETQBYTE
                 if (stk.top()->isFalse()) i = qbyte;
+                stk.pop(1);
                 break;
             }
             case JMP: {

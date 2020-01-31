@@ -6,6 +6,7 @@
 | BLE103 | Unknown operator | Modified to the correct operator |
 | BLE104 | Unexpected token | Delete or modify the token |
 | BLE200 | Unexpected break | Delete it |
+| BLE201 | Unexpected continue | Delete it |
 
 ## BLE1
 _About expression/variable/function defining errors_

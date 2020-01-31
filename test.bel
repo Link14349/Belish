@@ -1,20 +1,6 @@
 let a = 0;
 
-do {
+while (a < 10) {
+    if (a == 5) { a = 100; continue; }
     a++;
-} while (a < 10);
-
-while (a < 30) {
-    a++;
-    if (a == 20) {
-        break;
-    }
-}
-
-if (a < 30) {
-    a *= 10;
-} elif (a == 30) {
-    a /= 10;
-} else {
-    a -= 100;
 }

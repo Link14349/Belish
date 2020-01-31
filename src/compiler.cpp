@@ -147,8 +147,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     scCompiler.ast.root = ast.root->get(i);
                     scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
                 }
+                auto conAdrS = transI32S_bin(conAdr);
                 bytecode += (char) OPID::JMP;
-                bytecode += transI32S_bin(conAdr);
+                bytecode += conAdrS;
                 auto lastAdrS = transI32S_bin(bytecode.length());
                 bytecode[JLastAdr] = lastAdrS[0];
                 bytecode[JLastAdr + 1] = lastAdrS[1];
@@ -159,6 +160,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode[*i + 1] = lastAdrS[1];
                     bytecode[*i + 2] = lastAdrS[2];
                     bytecode[*i + 3] = lastAdrS[3];
+                }
+                for (auto i = continueTab.begin(); i != continueTab.end(); i++) {
+                    bytecode[*i] = conAdrS[0];
+                    bytecode[*i + 1] = conAdrS[1];
+                    bytecode[*i + 2] = conAdrS[2];
+                    bytecode[*i + 3] = conAdrS[3];
                 }
                 break;
             }
@@ -173,6 +180,17 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     return true;
                 }
             }
+            case Lexer::CONTINUE_TOKEN:
+            {
+                if (ctTab) {
+                    bytecode += (char) OPID::JMP;
+                    ctTab->push_back(bytecode.length());
+                    bytecode += "0000";// 占位
+                } else {
+                    std::cerr << "BLE201: Unexpected continue at <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
+            }
             case Lexer::DO_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
@@ -181,10 +199,11 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 std::list<UL> breakTab, continueTab;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
-                    scCompiler.compile_(bytecode, false, brTab, ctTab);
+                    scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
                 }
                 scCompiler.independent = false;
                 scCompiler.ast.root = ast.root->get(0);
+                auto conAdrS = transI32S_bin(bytecode.length());
                 scCompiler.compile_(bytecode);
                 bytecode += (char) OPID::JT;
                 bytecode += transI32S_bin(bodyAdr);
@@ -194,6 +213,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode[*i + 1] = lastAdrS[1];
                     bytecode[*i + 2] = lastAdrS[2];
                     bytecode[*i + 3] = lastAdrS[3];
+                }
+                for (auto i = continueTab.begin(); i != continueTab.end(); i++) {
+                    bytecode[*i] = conAdrS[0];
+                    bytecode[*i + 1] = conAdrS[1];
+                    bytecode[*i + 2] = conAdrS[2];
+                    bytecode[*i + 3] = conAdrS[3];
                 }
                 break;
             }

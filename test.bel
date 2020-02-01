@@ -1,6 +1,7 @@
-let a = 0;
+let a = 1;
 
-while (a < 10) {
-    if (a == 5) { a = 100; continue; }
-    a++;
+for (let i = 1; i <= 10; i++) {
+    a *= i;
 }
+
+a <<= 2;

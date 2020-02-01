@@ -35,6 +35,8 @@ namespace Belish {
         virtual void land(Value*) = 0;
         virtual void lor(Value*) = 0;
         virtual void pow(Value*) = 0;
+        virtual void shiftl(Value*) = 0;
+        virtual void shiftr(Value*) = 0;
         virtual bool isTrue() = 0;
         virtual bool isFalse() = 0;
         virtual void set(Value*) = 0;
@@ -68,6 +70,8 @@ namespace Belish {
         void lor(Value* n) override { val = val || ((Number*)n)->val; }
         void pow(Value* n) override { val = std::pow(val, ((Number*)n)->val); }
         void set(Value* n) override { val = ((Number*)n)->val; }
+        void shiftl(Value* n) override { val = (((ULL)val) << ((ULL)((Number*)n)->value())); }
+        void shiftr(Value* n) override { val = (((ULL)val) >> ((ULL)((Number*)n)->value())); }
         bool isTrue() override { return val != 0; }
         bool isFalse() override { return val == 0; }
         double& value() { return val; }
@@ -106,6 +110,14 @@ namespace Belish {
         void lor(Value* n) override { ; }
         void pow(Value* n) override { ; }
         void set(Value* n) override { val = ((String*)n)->val; }
+        void shiftl(Value* n) override {
+            ULL count = ((Number*)n)->value();
+            val.erase(0, count);
+        }
+        void shiftr(Value* n) override {
+            ULL count = ((Number*)n)->value();
+            val.erase(val.length() - count, count);
+        }
         bool isTrue() override { return !val.empty(); }
         bool isFalse() override { return val.empty(); }
     private:
@@ -136,6 +148,8 @@ namespace Belish {
         void lor(Value* n) override { ; }
         void pow(Value* n) override { ; }
         void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
         bool isTrue() override { return false; }
         bool isFalse() override { return true; }
     private:

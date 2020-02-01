@@ -7,6 +7,7 @@
 | BLE104 | Unexpected token | Delete or modify the token |
 | BLE200 | Unexpected break | Delete it |
 | BLE201 | Unexpected continue | Delete it |
+| BLE202 | Unexpected condition | Check it |
 
 ## BLE1
 _About expression/variable/function defining errors_

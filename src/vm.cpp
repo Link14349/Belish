@@ -38,6 +38,18 @@ void Belish::BVM::run() {
                 stk.pop(1);
                 break;
             }
+            case SL: {
+                if (b->type() == NUMBER) a->shiftl(b);
+                else { std::cerr << "Wrong type" << std::endl; return; }
+                stk.pop(1);
+                break;
+            }
+            case SR: {
+                if (b->type() == NUMBER) a->shiftr(b);
+                else { std::cerr << "Wrong type" << std::endl; return; }
+                stk.pop(1);
+                break;
+            }
             case SUB: {
                 if (a->type() == b->type()) a->sub(b);
                 else { std::cerr << "Wrong type" << std::endl; return; }

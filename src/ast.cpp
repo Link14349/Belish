@@ -458,6 +458,56 @@ void Belish::AST::parse() {
             }
             break;
         }
+        case Lexer::FOR_TOKEN:
+        {
+            GET;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            root = new node(Lexer::FOR_TOKEN, "", lexer.line() + baseLine);
+            UL bcc = 1;
+            auto conLine = lexer.line();
+            string con;
+            GET;
+            while (true) {
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                con += token.s + " ";
+                GET;
+            }
+            root->insert(Lexer::NO_STATUS, "", lexer.line() + baseLine);
+            AST conAst(con, baseLine + conLine);
+            while (true) {
+                conAst.parse();
+                if (conAst.root->type() == Lexer::PROGRAM_END) break;
+                root->get(0)->insert(conAst.root);
+            }
+            bcc = 1;
+            string forScript;
+            auto forSL = lexer.line();
+            GET;
+            GET;
+            while (true) {
+                if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bcc++;
+                else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                    bcc--;
+                    if (bcc == 0) break;
+                }
+                forScript += token.s + " ";
+                GET;
+            }
+            AST bodyParser(forScript, forSL + baseLine);
+            while (true) {
+                bodyParser.parse();
+                if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->insert(bodyParser.root);
+                else break;
+            }
+            break;
+        }
         case Lexer::DO_TOKEN:
         {
             root = new node(Lexer::DO_TOKEN, "", lexer.line() + baseLine);

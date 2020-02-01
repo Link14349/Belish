@@ -30,13 +30,13 @@ namespace Belish {
             node() : v(""), l(0) {  }
             node(Lexer::TOKENS y, const string& s) : v(s), t(y), l(0) {  }
             node(Lexer::TOKENS y, const string& s, UL i) : v(s), t(y), l(i) {  }
-            inline string value() { return v; }
+            inline string value() const { return v; }
             inline void value(string c) { v = c; }
-            inline Lexer::TOKENS type() { return t; }
+            inline Lexer::TOKENS type() const { return t; }
             inline void type(Lexer::TOKENS c) { t = c; }
-            inline UL line() { return l; }
+            inline UL line() const { return l; }
             inline void line(UL t) { l = t; }
-            inline node* get(long index) {
+            inline node* get(long index) const {
                 if (index < 0) index += children.size();
                 if (children.empty()) return nullptr;
                 return children[index % children.size()];
@@ -47,7 +47,7 @@ namespace Belish {
                 delete children[index % children.size()];
                 children[index % children.size()] = n;
             }
-            inline UL length() { return children.size(); }
+            inline UL length() const { return children.size(); }
             node& operator[](long index) { return *get(index); }
             void insert(node* n) { children.push_back(n); }
             void insert(Lexer::TOKENS y, const string& v, UL l) { children.push_back(new node(y, v, l)); }

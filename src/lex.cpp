@@ -228,6 +228,8 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = ELIF_TOKEN;
     } else if (t.s == "else") {
         t.t = ELSE_TOKEN;
+    } else if (t.s == "for") {
+        t.t = FOR_TOKEN;
     } else if (t.s == "while") {
         t.t = WHILE_TOKEN;
     } else if (t.s == "do") {

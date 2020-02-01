@@ -16,7 +16,7 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC
+        SAV, BAC, SL, SR
     };
     class Compiler {
     public:
@@ -31,6 +31,7 @@ namespace Belish {
         string script;
         AST ast;
         map<string, UL> sym;
+        std::list<string> newVars;
         bool independent = true;
     };
 }

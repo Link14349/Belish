@@ -1,7 +1,11 @@
 let a = 1;
 
 for (let i = 1; i <= 10; i++) {
+    if (i == 2) {
+        continue;
+    }
     a *= i;
+    if (a > 10) {
+        break;
+    }
 }
-
-a <<= 2;

@@ -131,6 +131,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
                 }
 //                bytecode += "\x06";
+                auto lastConAdrS = transI32S_bin(bytecode.length());
                 scCompiler.ast.root = conAsts->get(2);
                 scCompiler.compile_(bytecode);
                 bytecode += (char) JMP;
@@ -140,6 +141,18 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode[conFAdr + 1] = lastAdrS[1];
                 bytecode[conFAdr + 2] = lastAdrS[2];
                 bytecode[conFAdr + 3] = lastAdrS[3];
+                for (auto i = breakTab.begin(); i != breakTab.end(); i++) {
+                    bytecode[*i] = lastAdrS[0];
+                    bytecode[*i + 1] = lastAdrS[1];
+                    bytecode[*i + 2] = lastAdrS[2];
+                    bytecode[*i + 3] = lastAdrS[3];
+                }
+                for (auto i = continueTab.begin(); i != continueTab.end(); i++) {
+                    bytecode[*i] = lastConAdrS[0];
+                    bytecode[*i + 1] = lastConAdrS[1];
+                    bytecode[*i + 2] = lastConAdrS[2];
+                    bytecode[*i + 3] = lastConAdrS[3];
+                }
                 bytecode += (char) POPC;
                 bytecode += transI32S_bin(loopVars.size());
                 stkOffset -= loopVars.size();

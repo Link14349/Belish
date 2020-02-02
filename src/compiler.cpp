@@ -176,10 +176,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     Compiler compiler(filename);
                     compiler.ast.child = true;
                     compiler.independent = false;
-                    compiler.ast.root = ast.root->get(i + 1);
+                    compiler.ast.root = ast.root->get(i + 1)->get(0);
                     compiler.sym = sym;
                     compiler.stkOffset = stkOffset;
-                    if (compiler.compile_(bytecode)) {
+                    if (compiler.compile_(bytecode, ast.root->get(i + 1)->type() == Lexer::PN_DREFER_TOKEN)) {
                         return true;
                     }
                     newVars.push_back(ast.root->get(i)->value());

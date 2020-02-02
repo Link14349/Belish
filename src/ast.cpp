@@ -43,7 +43,7 @@ void Belish::AST::parse() {
                 if (token.t == Lexer::COMMA_TOKEN) {
                     root->insert(Lexer::UNDEFINED_TOKEN, "", lexer.line() + baseLine);
                     continue;
-                } else if (token.t != Lexer::SET_TOKEN) {
+                } else if (token.t != Lexer::SET_TOKEN && token.t != Lexer::PN_DREFER_TOKEN) {
                     delete root;
                     root = new node(Lexer::ERROR_TOKEN, "BLE102: Incorrect assignment in declaration, unexpected token '" + token.s + "'", lexer.line() + baseLine);
                     return;
@@ -63,16 +63,11 @@ void Belish::AST::parse() {
                     else if ((token.t == Lexer::COMMA_TOKEN || FINISH_GET) && sbc == 0 && bbc == 0 && mbc == 0) break;
                     value += token.s + " ";
                 }
-                switch (op.t) {
-                    case Lexer::SET_TOKEN:
-                    {
-                        AST ast(value, baseLine + defLine);
-                        ast.parse();
-                        AST_CHECK_PARSING_ERR(ast)
-                        root->insert(ast.root);
-                        break;
-                    }
-                }
+                AST ast(value, baseLine + defLine);
+                ast.parse();
+                AST_CHECK_PARSING_ERR(ast)
+                root->insert(op.t, "", baseLine + defLine);
+                root->get(-1)->insert(ast.root);
                 if (FINISH_GET) break;
             }
             break;

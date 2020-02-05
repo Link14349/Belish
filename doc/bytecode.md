@@ -58,3 +58,37 @@
 - 0x00 v1
 ### Sub BDK(Belish Development Kits) version
 - 0x00 0.1-beta
+
+## File Contents
+```text
+MAIN:
+[magic-code: 0x9ad0755c]
+header {
+    [version: Main BDK]
+    [version: SUB BDK]
+    [timestamp: Last edit time]
+}
+body {
+    [opcode] [argv]
+}
+footer {
+    [array: function list]
+    {function} -> [0:]
+}
+
+INTRUDE:
+magic-code: 4
+version: 1
+timestamp: 8
+opcode: 1
+argv: [0:]
+array: [0:]
+length: 4
+string: length + array + 1 -> [length] [array] $00
+bytecode: [0:]
+function: {
+    [string: Function name]
+    [bytecode: body]
+}
+
+```

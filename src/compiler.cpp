@@ -46,6 +46,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::IF_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 std::list<UL> tags;
@@ -112,6 +113,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 Compiler scCompiler(filename);
                 scCompiler.ast.child = true;
                 scCompiler.sym = sym;
+                scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.root = conAsts->get(0);
                 scCompiler.compile_(bytecode);
@@ -161,10 +163,20 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::UNKNOWN_TOKEN: {
                 auto oi = sym.find(ast.root->value());
-//                std::cerr << (sym.find("a") == sym.end()) << ", " << (sym.find("b") == sym.end()) << std::endl;
                 if (oi == sym.end()) {
-                    std::cerr << "BLE100: Undefined symbol '" << ast.root->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
-                    return true;
+                    auto om = macro.find(ast.root->value());
+                    if (om == macro.end()) {
+                        std::cerr << "BLE100: Undefined symbol '" << ast.root->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    } else {
+                        auto val = om->second;
+                        Compiler compiler(filename, val);
+                        compiler.sym = sym;
+                        compiler.macro = macro;
+                        compiler.independent = false;
+                        compiler.compile_(bytecode);
+                        break;
+                    }
                 }
                 auto offset = oi->second;
                 if (inOPTOEXPR) bytecode += (char)OPID::REFER + transI32S_bin(offset);
@@ -173,11 +185,16 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::LET_TOKEN: {
                 for (UL i = 0; i < ast.root->length(); i += 2) {
+                    if (ast.root->get(i + 1)->type() == Lexer::PN_IREFER_TOKEN) {
+                        macro[ast.root->get(i)->value()] = ast.root->get(i + 1)->get(0)->value();
+                        continue;
+                    }
                     Compiler compiler(filename);
                     compiler.ast.child = true;
                     compiler.independent = false;
                     compiler.ast.root = ast.root->get(i + 1)->get(0);
                     compiler.sym = sym;
+                    compiler.macro = macro;
                     compiler.stkOffset = stkOffset;
                     if (compiler.compile_(bytecode, ast.root->get(i + 1)->type() == Lexer::PN_DREFER_TOKEN)) {
                         return true;
@@ -190,6 +207,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::WHILE_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 scCompiler.independent = false;
@@ -252,6 +270,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::DO_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 UL bodyAdr = bytecode.length();
@@ -287,6 +306,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
+                compiler.macro = macro;
                 compiler.stkOffset = stkOffset;
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;

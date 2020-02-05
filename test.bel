@@ -1,11 +1,2 @@
-let a = 1, b -> a;
-
-for (let i = 1; i <= 10; i++) {
-    if (i == 2) {
-        continue;
-    }
-    a *= i;
-    if (a > 10) {
-        break;
-    }
-}
+let a = 1, b -> a, c => a + 1;
+a = c;

@@ -31,6 +31,7 @@ namespace Belish {
         string script;
         AST ast;
         map<string, UL> sym;
+        map<string, string> macro;
         std::list<string> newVars;
         bool independent = true;
     };

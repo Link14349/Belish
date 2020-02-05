@@ -64,10 +64,10 @@ let `noun` = `value`;
 ```
 ### Declare Pronoun
 ```
-let `pronoun` -> `value`;# Direct reference
+let `pronoun` -> `value`;# Direct reference(Refers to the address of its value)
 ```
 ```
-let `pronoun` => `value`;# Proprietor reference
+let `pronoun` => `value`;# Indirect reference(For a macro, it refers to the text 'value`)
 ```
 ### Literals
 Number(/(0[xob])?d+(.d+)?/), String(/".*"/ or /'.*'/), Null(null), Undefined(null), Object(/{.*}/)

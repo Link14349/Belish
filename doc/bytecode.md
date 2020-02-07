@@ -67,12 +67,13 @@ header {
     [version: Main BDK]
     [version: SUB BDK]
     [timestamp: Last edit time]
+    [address: Footer address]
 }
 body {
     [opcode] [argv]
 }
 footer {
-    [array: function list]
+    [array<[address: function addresses]>: function list]
     {function} -> [0:]
 }
 
@@ -82,9 +83,10 @@ version: 1
 timestamp: 8
 opcode: 1
 argv: [0:]
-array: [0:]
+array: length + {4...} -> [length] [0:]
+address: 4
 length: 4
-string: length + array + 1 -> [length] [array] $00
+string: array
 bytecode: [0:]
 function: {
     [string: Function name]

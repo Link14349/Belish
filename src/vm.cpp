@@ -20,8 +20,11 @@ void Belish::BVM::run() {
     }
     GETDBYTE
     GETEBYTE
+    GETQBYTE
+    i = footerAdr = qbyte;
+    // 关于定义函数、类等的处理
     Stack stk;
-    for (; i < len; ) {
+    for (i = 18; i < footerAdr; ) {
         GETBYTE;
         auto op = (OPID)byte;
 //        if (stk.length() < 2) {
@@ -221,4 +224,6 @@ void Belish::BVM::run() {
                 break;
         }
     }
+    // 测试
+    stk.dbg();
 }

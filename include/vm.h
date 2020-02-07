@@ -13,6 +13,7 @@ namespace Belish {
     private:
         char* bytecode;
         ULL len;
+        UL footerAdr;
     };
 }
 

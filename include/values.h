@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <map>
 using std::vector;
 
 namespace Belish {
@@ -43,6 +44,7 @@ namespace Belish {
         UL count() { return linked; }
     protected:
         friend class Stack;
+        friend class Object;
         UL linked;
     };
     class Number : public Value {
@@ -153,6 +155,74 @@ namespace Belish {
         bool isTrue() override { return false; }
         bool isFalse() override { return true; }
     private:
+    };
+#define CLASS_TYPE_PROP_NAME "__type__"
+    class Object : public Value {
+    public:
+        Object() { linked = 0; }
+        TYPE type() { return OBJECT; }
+        string toString() {
+            auto type_i = prop.find(CLASS_TYPE_PROP_NAME);
+            if (type_i == prop.end() || type_i->second->type() != STRING) return "<Object>";
+            return "<" + type_i->second->toString() + ">";
+        }
+        string toStringHL() {
+            auto type_i = prop.find(CLASS_TYPE_PROP_NAME);
+            if (type_i == prop.end() || type_i->second->type() != STRING) return "<Object>";
+            return "<" + type_i->second->toString() + ">";
+        }
+        Value* copy() override {
+            auto obj = new Object;
+            for (auto i = prop.begin(); i != prop.end(); i++) {
+                obj->set(i->first, i->second);
+            }
+            return obj;
+        }
+        void add(Value* n) override { ; }
+        void sub(Value* n) override { ; }
+        void mul(Value* n) override { ; }
+        void div(Value* n) override { ; }
+        void mod(Value* n) override { ; }
+        void eq(Value* n) override { ; }
+        void neq(Value* n) override { ; }
+        void leq(Value* n) override { ; }
+        void meq(Value* n) override { ; }
+        void less(Value* n) override { ; }
+        void more(Value* n) override { ; }
+        void mand(Value* n) override { ; }
+        void mor(Value* n) override { ; }
+        void mxor(Value* n) override { ; }
+        void land(Value* n) override { ; }
+        void lor(Value* n) override { ; }
+        void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
+        bool isTrue() override { return !prop.empty(); }
+        bool isFalse() override { return prop.empty(); }
+        Value* operator[](const string& k) {
+            return prop[k];
+        }
+        Value* get(const string& k) {
+            return prop[k];
+        }
+        void set(const string& k, Value* val) {
+            auto i = prop.find(k);
+            if (i != prop.end()) {
+                i->second->linked--;
+                if (i->second->linked == 0) delete i->second;
+            }
+            prop[k] = val;
+            val->linked++;
+        }
+        ~Object() {
+            for (auto & i : prop) {
+                i.second->linked--;
+                if (i.second->linked == 0) delete i.second;
+            }
+        }
+    private:
+        std::map<string, Value*> prop;
     };
 
     class Stack {

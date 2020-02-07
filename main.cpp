@@ -10,16 +10,12 @@ using std::ios;
 
 #if DEBUG
 
-UL c = 0;
-
 void* operator new(size_t s) {
-    c++;
     auto p = malloc(s);
     std::clog << "n" << p << std::endl;
     return p;
 }
 void operator delete(void* p) {
-    c++;
     std::clog << "d" << p << std::endl;
     free(p);
 }
@@ -53,7 +49,7 @@ void openFile(const string& filename, string& content) {
 
 int main(int argc, char* argv[]) {
     auto s = getCurrentTime();
-    ULL c;
+    ULL ct;
     string script;
     openFile("test.bel", script);
     Belish::Compiler compiler("test.bel", script);
@@ -69,7 +65,7 @@ int main(int argc, char* argv[]) {
     fs.close();
     std::cout << "finish compiling" << std::endl;
     auto now = getCurrentTime();
-    c = now - s;
+    ct = now - s;
     s = now;
     ULL length;
     auto buffer = readFileCPTR("test.belc", length);
@@ -77,7 +73,7 @@ int main(int argc, char* argv[]) {
     bvm.run();
     std::cout << "finish running" << std::endl;
     auto e = getCurrentTime();
-    std::cout << "vm used " << (e - s) << "ms, compiler used " << c << "ms" << std::endl;
+    std::cout << "vm used " << (e - s) << "ms, compiler used " << ct << "ms" << std::endl;
     delete buffer;
     return 0;
 }

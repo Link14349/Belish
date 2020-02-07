@@ -30,8 +30,12 @@ namespace Belish {
         string filename;
         string script;
         AST ast;
+        UL footerAdr;
+        bool isRoot = false;
         map<string, UL> sym;
         map<string, string> macro;
+        map<string, UL> functionAdrTab;
+        vector<string> functionsBcs;
         std::list<string> newVars;
         bool independent = true;
     };

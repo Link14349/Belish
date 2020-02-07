@@ -13,8 +13,15 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode += MBDKV;
     bytecode += SBDKV;
     bytecode += transI64S_bin(time(nullptr));
+    UL footerAdr_ = bytecode.length();
+    bytecode += "0000";// 占位
     auto state = compile_(bytecode);
-    bytecode += "\x06";// 测试用，输出栈中情况
+    auto footerAdrS = transI32S_bin(footerAdr);
+    bytecode[footerAdr_] = footerAdrS[0];
+    bytecode[footerAdr_ + 1] = footerAdrS[1];
+    bytecode[footerAdr_ + 2] = footerAdrS[2];
+    bytecode[footerAdr_ + 3] = footerAdrS[3];
+    isRoot = true;
 //    std::cout << "ast time: " << astTime << "ms" << std::endl;
     return state;
 }
@@ -409,6 +416,20 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
         }
         if (ast.child) break;
+    }
+    footerAdr = bytecode.length();
+    if (!isRoot) return false;
+    auto startAdr = bytecode.length();
+    for (auto i = functionsBcs.begin(); i != functionsBcs.end(); i++) {
+        bytecode += "0000";
+    }
+    for (UL i = 0; i < functionsBcs.size(); i++) {
+        auto adrS = transI32S_bin(bytecode.length());
+        bytecode[startAdr + i * 4] = adrS[0];
+        bytecode[startAdr + i * 4 + 1] = adrS[1];
+        bytecode[startAdr + i * 4 + 2] = adrS[2];
+        bytecode[startAdr + i * 4 + 3] = adrS[3];
+        bytecode += functionsBcs[i];
     }
     return false;
 }

@@ -561,6 +561,59 @@ void Belish::AST::parse() {
             root->set(0, conAst.root);
             break;
         }
+        case Lexer::BIG_BRACKETS_LEFT_TOKEN:
+        {
+            root = new node(Lexer::OBJECT_TOKEN, "", lexer.line() + baseLine);
+            while (true) {
+                GET;
+                if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) break;
+                if (token.t != Lexer::STRING_TOKEN && token.t != Lexer::UNKNOWN_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", lexer.line() + baseLine);
+                    break;
+                }
+                if (token.t == Lexer::STRING_TOKEN) {
+                    token.s.erase(0, 1);
+                    token.s.erase(token.s.length() - 1, 1);
+                    escape(token.s);
+                }
+                root->insert(Lexer::STRING_TOKEN, token.s, lexer.line() + baseLine);
+                GET;
+                if (token.t != Lexer::COLON_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", lexer.line() + baseLine);
+                    break;
+                }
+                UL bbc = 0, mbc = 0, sbc = 0;
+                string val;
+                auto valLine = lexer.line();
+                while (true) {
+                    GET;
+                    switch (token.t) {
+                        case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; val += token.s; break;
+                        case Lexer::BIG_BRACKETS_RIGHT_TOKEN: {
+                            if (!bbc) goto FINISH_LOOP;
+                            bbc--;
+                            val += token.s;
+                            break;
+                        }
+                        case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; val += token.s; break;
+                        case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; val += token.s; break;
+                        case Lexer::BRACKETS_LEFT_TOKEN: sbc++; val += token.s; break;
+                        case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; val += token.s; break;
+                        case Lexer::COMMA_TOKEN: if (!(bbc || mbc || sbc)) goto FINISH_LOOP;
+                        default: val += token.s;
+                    }
+                }
+                FINISH_LOOP:
+                AST parser(val, valLine + baseLine);
+                parser.parse();
+                root->insert(parser.root);
+                if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) break;
+            }
+            __asm("nop");
+            break;
+        }
         case Lexer::END_TOKEN:
             root = new node(Lexer::END_TOKEN, "", lexer.line() + baseLine);
             break;

@@ -611,7 +611,6 @@ void Belish::AST::parse() {
                 root->insert(parser.root);
                 if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) break;
             }
-            __asm("nop");
             break;
         }
         case Lexer::END_TOKEN:

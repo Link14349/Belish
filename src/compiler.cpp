@@ -15,13 +15,13 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode += transI64S_bin(time(nullptr));
     UL footerAdr_ = bytecode.length();
     bytecode += "0000";// 占位
+    isRoot = true;
     auto state = compile_(bytecode);
     auto footerAdrS = transI32S_bin(footerAdr);
     bytecode[footerAdr_] = footerAdrS[0];
     bytecode[footerAdr_ + 1] = footerAdrS[1];
     bytecode[footerAdr_ + 2] = footerAdrS[2];
     bytecode[footerAdr_ + 3] = footerAdrS[3];
-    isRoot = true;
 //    std::cout << "ast time: " << astTime << "ms" << std::endl;
     return state;
 }
@@ -188,6 +188,25 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 auto offset = oi->second;
                 if (inOPTOEXPR) bytecode += (char)OPID::REFER + transI32S_bin(offset);
                 else bytecode += (char)OPID::PUSH + transI32S_bin(offset);
+                if (independent) bytecode += (char) POP;
+                break;
+            }
+            case Lexer::OBJECT_TOKEN:
+            {
+                bytecode += (char) PUSH_OBJ;
+                for (UL i = 0; i < ast.root->length(); i += 2) {
+                    string attr_name(ast.root->get(i)->value());
+                    Compiler compiler(filename);
+                    compiler.ast.child = true;
+                    compiler.independent = false;
+                    compiler.sym = sym;
+                    compiler.macro = macro;
+                    compiler.ast.root = ast.root->get(i + 1);
+                    compiler.compile_(bytecode);
+                    bytecode += (char) SET_ATTR;
+                    bytecode += transI32S_bin(attr_name.length()) + attr_name;
+                }
+                if (independent) bytecode += (char) POP;
                 break;
             }
             case Lexer::LET_TOKEN: {
@@ -425,10 +444,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
     }
     for (UL i = 0; i < functionsBcs.size(); i++) {
         auto adrS = transI32S_bin(bytecode.length());
-        bytecode[startAdr + i * 4] = adrS[0];
-        bytecode[startAdr + i * 4 + 1] = adrS[1];
-        bytecode[startAdr + i * 4 + 2] = adrS[2];
-        bytecode[startAdr + i * 4 + 3] = adrS[3];
+        bytecode[footerAdr + i * 4] = adrS[0];
+        bytecode[footerAdr + i * 4 + 1] = adrS[1];
+        bytecode[footerAdr + i * 4 + 2] = adrS[2];
+        bytecode[footerAdr + i * 4 + 3] = adrS[3];
         bytecode += functionsBcs[i];
     }
     return false;

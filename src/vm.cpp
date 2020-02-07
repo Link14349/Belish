@@ -219,6 +219,22 @@ void Belish::BVM::run() {
                 stk.pop(1);
                 break;
             }
+            case PUSH_OBJ: {
+                stk.push(new Object);
+                break;
+            }
+            case SET_ATTR: {
+                GETQBYTE
+                auto attr_len = qbyte;
+                string attr_name;
+                for (UL j = 0; j < attr_len; j++, i++) attr_name += bytecode[i];
+                auto obj_ = stk.get(stk.length() - 2);
+                if (obj_->type() != OBJECT) { std::cerr << "Wrong type to set attr" << std::endl; return; }
+                auto obj = (Object*)obj_;
+                obj->set(attr_name, stk.top());
+                stk.pop(1);
+                break;
+            }
             case DEB:
                 stk.dbg();
                 break;

@@ -39,11 +39,12 @@
 | 22 | jmp | jmp <unsigned int> | Jump to <unsigned int> |
 | 23 | sav | sav | Cache the value (copy) at the top of the stack into the register |
 | 24 | bac | bac | Fetches cached values from registers back to the stack |
+| 25 | set_attr | set_attr string | Assign the value at the top of the stack to the attribute<string> of the second element in the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
 - \<double\>: 64bits(is the storage method of C++ double precision floating-point number)
-- \<str\>: <Arbitrarily-Length>bits format: 00 \<content\> 00
+- \<string\>: <Arbitrarily-Length>bits format: 00 \<content\>
 - \<offset\>: 32bits
 - \<unsigned int\>: 32bits
 

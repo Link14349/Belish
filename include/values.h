@@ -162,14 +162,30 @@ namespace Belish {
         Object() { linked = 0; }
         TYPE type() { return OBJECT; }
         string toString() {
-            auto type_i = prop.find(CLASS_TYPE_PROP_NAME);
-            if (type_i == prop.end() || type_i->second->type() != STRING) return "<Object>";
-            return "<" + type_i->second->toString() + ">";
+            return "\n" + toString("");
+        }
+        string toString(const string& tab) {
+            string res(tab + "{");
+            for (auto i = prop.begin(); i != prop.end(); i++) {
+                res += "\n" + tab + "\t'" + i->first + "': ";
+                if (i->second->type() == OBJECT) res += ((Object*)i->second)->toString(tab + "\t");
+                else res += i->second->toString();
+            }
+            res += "\n" + tab + "}";
+            return res;
+        }
+        string toStringHL(const string& tab) {
+            string res(tab + "{");
+            for (auto i = prop.begin(); i != prop.end(); i++) {
+                res += "\n" + tab + "\t\033[35m'" + i->first + "'\033[0m: ";
+                if (i->second->type() == OBJECT) res += ((Object*)i->second)->toStringHL(tab + "\t");
+                else res += i->second->toStringHL();
+            }
+            res += "\n" + tab + "}";
+            return res;
         }
         string toStringHL() {
-            auto type_i = prop.find(CLASS_TYPE_PROP_NAME);
-            if (type_i == prop.end() || type_i->second->type() != STRING) return "<Object>";
-            return "<" + type_i->second->toString() + ">";
+            return "\n" + toStringHL("");
         }
         Value* copy() override {
             auto obj = new Object;

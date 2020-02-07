@@ -16,7 +16,7 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC, SL, SR
+        SAV, BAC, SL, SR, SET_ATTR
     };
     class Compiler {
     public:

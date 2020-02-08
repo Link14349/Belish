@@ -210,6 +210,28 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 if (independent) bytecode += (char) POP;
                 break;
             }
+            case Lexer::DOT_TOKEN:
+            {
+                std::list<string> attrs;
+                auto dotNode = ast.root;
+                while (dotNode->type() == Lexer::DOT_TOKEN) {
+                    attrs.push_front(dotNode->get(1)->value());
+                    dotNode = dotNode->get(0);
+                }
+                Compiler compiler(filename);
+                compiler.ast.root = dotNode;
+                compiler.ast.child = true;
+                compiler.independent = false;
+                compiler.sym = sym;
+                compiler.macro = macro;
+                compiler.compile_(bytecode);
+                for (auto i = attrs.begin(); i != attrs.end(); i++) {
+                    bytecode += (char) PUSH_STR;
+                    bytecode += transI32S_bin((*i).length()) + *i;
+                    bytecode += (char) GET_ATTR;
+                }
+                break;
+            }
             case Lexer::LET_TOKEN: {
                 for (UL i = 0; i < ast.root->length(); i += 2) {
                     if (ast.root->get(i + 1)->type() == Lexer::PN_IREFER_TOKEN) {

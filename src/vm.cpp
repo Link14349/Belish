@@ -233,6 +233,16 @@ void Belish::BVM::run() {
                 stk.pop(1);
                 break;
             }
+            case GET_ATTR: {
+                string attr_name(((String*)stk.top())->value());
+                auto obj_ = stk.get(stk.length() - 2);
+                if (obj_->type() != OBJECT) { std::cerr << "Wrong type to set attr" << std::endl; return; }
+                stk.pop(1);
+                stk.pop(1);
+                auto obj = (Object*)obj_;
+                stk.push(obj->get(attr_name));
+                break;
+            }
             case DEB:
                 stk.dbg();
                 break;

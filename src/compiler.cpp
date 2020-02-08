@@ -230,6 +230,11 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += transI32S_bin((*i).length()) + *i;
                     bytecode += (char) GET_ATTR;
                 }
+                if (!inOPTOEXPR) {
+                    bytecode += (char) SAV;
+                    bytecode += (char) POP;
+                    bytecode += (char) BAC;
+                }
                 break;
             }
             case Lexer::LET_TOKEN: {

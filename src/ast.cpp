@@ -264,8 +264,7 @@ void Belish::AST::parse() {
                     } else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN || token.t == Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN) {
                         preTokenIsUnknown = true;
                         base /= 14;
-                    }
-                    else {
+                    } else {
                         preTokenIsUnknown = false;
                         if (base * (ULL)priority(token.t) <= (ULL)op.priority) {
                             hasOp = true;
@@ -302,7 +301,7 @@ void Belish::AST::parse() {
                 return;
             }
             root = new node(op.token.t, "", op.line + baseLine);
-            if (root->type() == Lexer::BRACKETS_LEFT_TOKEN || root->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
+            if (root->type() == Lexer::BRACKETS_LEFT_TOKEN) {
                 AST la(left, baseLine + initialLine);
                 la.parse();
                 AST_CHECK_PARSING_ERR(la)
@@ -340,6 +339,38 @@ void Belish::AST::parse() {
                         arg = "";
                     } else arg += token.s + " ";
                 }
+            } else if (root->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
+                AST la(left, baseLine + initialLine);
+                la.parse();
+                AST_CHECK_PARSING_ERR(la)
+                root->insert(la.root);
+
+                lexer.index(op.index);
+                lexer.line(op.line);
+                string attr;
+                bracketsCount = 1;
+                while (true) {
+                    GET;
+                    if (FINISH_GET) {
+                        break;
+                    }
+                    if (token.t == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
+                        bracketsCount++;
+                        attr += token.s + " ";
+                    }
+                    else if (token.t == Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN) {
+                        bracketsCount--;
+                        if (!bracketsCount) {
+                            AST attrA(attr, baseLine + initialLine);
+                            attrA.parse();
+                            AST_CHECK_PARSING_ERR(attrA)
+                            root->insert(attrA.root);
+                            break;
+                        }
+                        attr += token.s + " ";
+                    } else attr += token.s + " ";
+                }
+                __asm("nop");
             } else {
                 bracketsCount = 0;
                 string right;

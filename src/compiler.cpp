@@ -50,6 +50,24 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode += (char) OPID::PUSH_UND;
                 break;
             }
+            case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: {
+                Compiler compiler(filename);
+                compiler.sym = sym;
+                compiler.macro = macro;
+                compiler.independent = false;
+                compiler.ast.child = true;
+                compiler.ast.root = ast.root->get(0);
+                compiler.compile_(bytecode);
+                compiler.ast.root = ast.root->get(1);
+                compiler.compile_(bytecode);
+                bytecode += (char) GET_ATTR;
+                if (!inOPTOEXPR) {
+                    bytecode += (char) SAV;
+                    bytecode += (char) POP;
+                    bytecode += (char) BAC;
+                }
+                break;
+            }
             case Lexer::IF_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;

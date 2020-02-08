@@ -224,14 +224,12 @@ void Belish::BVM::run() {
                 break;
             }
             case SET_ATTR: {
-                GETQBYTE
-                auto attr_len = qbyte;
-                string attr_name;
-                for (UL j = 0; j < attr_len; j++, i++) attr_name += bytecode[i];
-                auto obj_ = stk.get(stk.length() - 2);
+                string attr_name(((String*)stk.top())->value());
+                auto obj_ = stk.get(stk.length() - 3);
                 if (obj_->type() != OBJECT) { std::cerr << "Wrong type to set attr" << std::endl; return; }
                 auto obj = (Object*)obj_;
-                obj->set(attr_name, stk.top());
+                obj->set(attr_name, stk.get(stk.length() - 2));
+                stk.pop(1);
                 stk.pop(1);
                 break;
             }

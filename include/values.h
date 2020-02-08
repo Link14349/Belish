@@ -165,7 +165,7 @@ namespace Belish {
             return "\n" + toString("");
         }
         string toString(const string& tab) {
-            string res(tab + "{");
+            string res("{");
             for (auto i = prop.begin(); i != prop.end(); i++) {
                 res += "\n" + tab + "\t'" + i->first + "': ";
                 if (i->second->type() == OBJECT) res += ((Object*)i->second)->toString(tab + "\t");

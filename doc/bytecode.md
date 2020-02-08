@@ -39,7 +39,8 @@
 | 22 | jmp | jmp <unsigned int> | Jump to <unsigned int> |
 | 23 | sav | sav | Cache the value (copy) at the top of the stack into the register |
 | 24 | bac | bac | Fetches cached values from registers back to the stack |
-| 25 | set_attr | set_attr string | Assign the value at the top of the stack to the attribute<string> of the second element in the stack |
+| 25 | set_attr | set_attr | Assign the second element in the stack to the attribute(the first element in the stack) of the third element in the stack |
+| 26 | get_attr | get_attr | get the attribute(the first element in the stack) of the second element in the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

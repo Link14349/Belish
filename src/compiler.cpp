@@ -203,8 +203,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.macro = macro;
                     compiler.ast.root = ast.root->get(i + 1);
                     compiler.compile_(bytecode);
-                    bytecode += (char) SET_ATTR;
+                    bytecode += (char) PUSH_STR;
                     bytecode += transI32S_bin(attr_name.length()) + attr_name;
+                    bytecode += (char) SET_ATTR;
                 }
                 if (independent) bytecode += (char) POP;
                 break;

@@ -1,13 +1,4 @@
-let a = {
-    a: 0,
-    "test": 2,
-    b: {
-        t: "123",
-        c: {
-            e: 0,
-        }
-    }
-};
-
-a["b"]["c"]["e"] = 1;
-a["b"]["c"]["e"]++;
+def fun(a, b) {
+    let t = a + b;
+    return t * t;
+}

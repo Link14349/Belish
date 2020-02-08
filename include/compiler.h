@@ -27,6 +27,7 @@ namespace Belish {
         bool compile_(string&, bool = false, std::list<UL>* = nullptr, std::list<UL>* = nullptr);
     private:
         UL stkOffset = 0;
+        UL funOffset = 0;
         string filename;
         string script;
         AST ast;

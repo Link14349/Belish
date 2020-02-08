@@ -6,7 +6,11 @@
 #include "trans.h"
 #include "trans.cpp"
 
+#define FINISH_PRO token.t == Lexer::PROGRAM_END
 #define FINISH_GET token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN || token.t == Lexer::NO_STATUS
+#define FINISH_GET_ERROR { delete root; \
+root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token PROGRAM_END"); \
+return; }
 
 Belish::AST::~AST() {
     if (!child && root)
@@ -215,6 +219,95 @@ void Belish::AST::parse() {
             }
             break;
         }
+        case Lexer::DEF_TOKEN:
+        {
+            auto defLine = lexer.line();
+            GET;
+            string name = token.s;
+            GET;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            root = new node(Lexer::DEF_TOKEN, name, defLine + baseLine);
+            root->insert(Lexer::NO_STATUS, "", defLine + baseLine);
+            UL bc(1);
+            UL argLine = lexer.line();
+            string arg;
+            while (true) {
+                GET;
+                if (FINISH_GET) FINISH_GET_ERROR
+                if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bc++;
+                else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                    bc--;
+                    if (!bc) goto ARG_DEF;
+                } else if (token.t == Lexer::COMMA_TOKEN) {
+                    if (bc == 1) {
+                        ARG_DEF:
+                        AST ast(arg, argLine + baseLine);
+                        ast.parse();
+                        root->get(0)->insert(ast.root);
+                        arg = "";
+                        argLine = lexer.line();
+                        if (!bc) break;
+                        continue;
+                    }
+                }
+                arg += token.s + " ";
+            }
+            GET;
+            if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'");
+                return;
+            }
+            bc = 1;
+            string body;
+            UL bodyLine = lexer.line();
+            while (true) {
+                GET;
+                if (FINISH_PRO) FINISH_GET_ERROR
+                if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) bc++;
+                else if (token.t == Lexer::BIG_BRACKETS_RIGHT_TOKEN) {
+                    bc--;
+                    if (!bc) break;
+                }
+                body += token.s + " ";
+            }
+            AST bodyParser(body, bodyLine + baseLine);
+            while (true) {
+                bodyParser.parse();
+                if (bodyParser.root && bodyParser.root->type() != Lexer::PROGRAM_END) root->insert(bodyParser.root);
+                else break;
+            }
+            break;
+        }
+        case Lexer::RETURN_TOKEN:
+        {
+            auto defLine = lexer.line();
+            root = new node(Lexer::RETURN_TOKEN, "", defLine + baseLine);
+            UL bbc = 0, mbc = 0, sbc = 0;
+            string expr;
+            while (true) {
+                GET;
+                switch (token.t) {
+                    case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++;break;
+                    case Lexer::BIG_BRACKETS_RIGHT_TOKEN: bbc--;break;
+                    case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++;break;
+                    case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--;break;
+                    case Lexer::BRACKETS_LEFT_TOKEN: sbc++;break;
+                    case Lexer::BRACKETS_RIGHT_TOKEN: sbc--;break;
+                    case Lexer::END_TOKEN: if (!(bbc || mbc || sbc)) goto FINISH_RET_LOOP; break;
+                }
+                expr += token.s;
+            }
+            FINISH_RET_LOOP:
+            AST ast(expr, defLine + baseLine);
+            ast.parse();
+            root->insert(ast.root);
+            break;
+        }
         case Lexer::NUMBER_TOKEN:
         case Lexer::STRING_TOKEN:
         case Lexer::BRACKETS_LEFT_TOKEN:
@@ -313,9 +406,7 @@ void Belish::AST::parse() {
                 bracketsCount = 1;
                 while (true) {
                     GET;
-                    if (FINISH_GET) {
-                        break;
-                    }
+                    if (FINISH_GET) break;
                     if (token.t == Lexer::BRACKETS_LEFT_TOKEN) {
                         bracketsCount++;
                         arg += token.s + " ";
@@ -351,9 +442,6 @@ void Belish::AST::parse() {
                 bracketsCount = 1;
                 while (true) {
                     GET;
-                    if (FINISH_GET) {
-                        break;
-                    }
                     if (token.t == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN) {
                         bracketsCount++;
                         attr += token.s + " ";
@@ -370,7 +458,6 @@ void Belish::AST::parse() {
                         attr += token.s + " ";
                     } else attr += token.s + " ";
                 }
-                __asm("nop");
             } else {
                 bracketsCount = 0;
                 string right;
@@ -621,19 +708,19 @@ void Belish::AST::parse() {
                 while (true) {
                     GET;
                     switch (token.t) {
-                        case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; val += token.s; break;
+                        case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; val += token.s + " "; break;
                         case Lexer::BIG_BRACKETS_RIGHT_TOKEN: {
                             if (!bbc) goto FINISH_LOOP;
                             bbc--;
-                            val += token.s;
+                            val += token.s + " ";
                             break;
                         }
-                        case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; val += token.s; break;
-                        case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; val += token.s; break;
-                        case Lexer::BRACKETS_LEFT_TOKEN: sbc++; val += token.s; break;
-                        case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; val += token.s; break;
+                        case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; val += token.s + " "; break;
+                        case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; val += token.s + " "; break;
+                        case Lexer::BRACKETS_LEFT_TOKEN: sbc++; val += token.s + " "; break;
+                        case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; val += token.s + " "; break;
                         case Lexer::COMMA_TOKEN: if (!(bbc || mbc || sbc)) goto FINISH_LOOP;
-                        default: val += token.s;
+                        default: val += token.s + " ";
                     }
                 }
                 FINISH_LOOP:

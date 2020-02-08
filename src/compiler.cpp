@@ -36,6 +36,18 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
 //        astTime += ed - st;
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
         switch (ast.root->type()) {
+            case Lexer::DEF_TOKEN:
+            {
+                functionAdrTab[ast.root->value()] = funOffset++;
+                string funBytecode;
+                Compiler compiler(filename);
+                compiler.sym = sym;
+                compiler.stkOffset = stkOffset;
+                compiler.macro = macro;
+                for (auto i = 0; i < ast.root->get(0)->length(); i++)
+                    compiler.sym[ast.root->get(0)->get(i)->value()] = compiler.stkOffset++;
+                break;
+            }
             case Lexer::NUMBER_TOKEN:
                 bytecode += (char) OPID::PUSH_NUM;
                 bytecode += transI64S_bin(transDI64_bin(transSD(ast.root->value())));

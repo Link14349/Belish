@@ -217,6 +217,12 @@ void Belish::BVM::run() {
                 i = qbyte;
                 break;
             }
+            case CHANGE: {
+                GETQBYTE
+                stk->set(qbyte, stk->top());
+                stk->pop(1);
+                break;
+            }
             case SAV: {
                 cache = stk->top()->copy();
                 break;

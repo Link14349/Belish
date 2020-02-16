@@ -312,8 +312,9 @@ namespace Belish {
         Stack() : len(0) { val.reserve(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
         void set(UL offset, Value* v) {
-            if (val[offset]) delete val[offset];
+            if (!(--val[offset]->linked)) delete val[offset];
             val[offset] = v;
+            v->linked++;
         }
         void push(Value* v);
         void pop(UL offset) {

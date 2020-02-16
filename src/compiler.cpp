@@ -59,8 +59,26 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.sym = sym;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
-                compiler.compile_(bytecode);
-                bytecode += (char) BACK;
+                if (ast.root->get(0)->type() == Lexer::BRACKETS_LEFT_TOKEN && funName == ast.root->get(0)->get(0)->value()) {
+                    if (ast.root->get(0)->length() - 1 < argCount) {
+                        for (UL i = 0; i < argCount - ast.root->get(0)->length() + 1; i++) {
+                            ast.root->get(0)->insert(Lexer::UNDEFINED_TOKEN, "", ast.root->line());
+                        }
+                    }
+                    for (UL i = 1; i < ast.root->get(0)->length() && i <= argCount; i++) {
+                        compiler.ast.root = ast.root->get(0)->get(i);
+                        compiler.compile_(bytecode, true);
+                    }
+                    for (UL i = 1; i < ast.root->get(0)->length() && i <= argCount; i++) {
+                        bytecode += (char) CHANGE;
+                        bytecode += transI32S_bin(argCount - i);
+                    }
+                    bytecode += (char) JMP;
+                    bytecode += transI32S_bin(funStart);
+                } else {
+                    compiler.compile_(bytecode);
+                    bytecode += (char) BACK;
+                }
                 break;
             }
             case Lexer::DEF_TOKEN:
@@ -565,10 +583,11 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
 //        compiler.sym = sym;
 //        compiler.stkOffset = stkOffset;
         compiler.ast.child = true;
-        compiler.isCompilingFun = true;
+        compiler.argCount = ast.root->get(0)->length();
         compiler.funName = ast.root->value();
         compiler.macro = macro;
         compiler.functionAdrTab = functionAdrTab;
+        compiler.funStart = bytecode.length();
         for (auto k = 0; k < ast.root->get(0)->length(); k++)
             compiler.sym[ast.root->get(0)->get(k)->value()] = compiler.stkOffset++;
         bytecode += (char) RESIZE;

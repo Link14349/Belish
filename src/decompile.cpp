@@ -96,6 +96,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(JT) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(JF) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(JMP) goto DECOM_SWITCH_REFER_PUSH_CASE;
+            CASE_OP(CHANGE) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(PUSH)
             {
                 DECOM_SWITCH_REFER_PUSH_CASE:
@@ -105,6 +106,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             }
             CASE_OP(POPC) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
+            CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(NEW_FRAME)
             {
                 DECOM_SWITCH_POPC_NEW_FRAME_CASE:

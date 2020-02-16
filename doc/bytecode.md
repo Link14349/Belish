@@ -44,6 +44,7 @@
 | 27 | new_frame | new_frame <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame |
 | 28 | call | call <unsigned int> | Call function with index n |
 | 29 | back | back | End function call |
+| 2a | change | change <unsigned int> | Move the stack top element to <unsigned int> |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

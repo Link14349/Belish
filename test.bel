@@ -1,4 +1,11 @@
-def fun(a, b) {
-    let t = a + b;
-    return t * t;
+def add(a, b) {
+    return a + b;
 }
+def mul(a, b) {
+    return a * b;
+}
+def pow(a) {
+    return mul(a, a);
+}
+
+let a = pow(add(1, 2));

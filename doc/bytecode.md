@@ -40,7 +40,10 @@
 | 23 | sav | sav | Cache the value (copy) at the top of the stack into the register |
 | 24 | bac | bac | Fetches cached values from registers back to the stack |
 | 25 | set_attr | set_attr | Assign the second element in the stack to the attribute(the first element in the stack) of the third element in the stack |
-| 26 | get_attr | get_attr | get the attribute(the first element in the stack) of the second element in the stack |
+| 26 | get_attr | get_attr | Get the attribute(the first element in the stack) of the second element in the stack |
+| 27 | new_frame | new_frame <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame |
+| 28 | call | call <unsigned int> | Call function with index n |
+| 29 | back | back | End function call |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
@@ -57,9 +60,9 @@
 
 ## Versions (1byte + 1byte)
 ### Main BDK(Belish Development Kits) version
-- 0x00 v1
+- 0x01 v1
 ### Sub BDK(Belish Development Kits) version
-- 0x00 0.1-beta
+- 0x01 0.1-beta
 
 ## File Contents
 ```text
@@ -85,7 +88,7 @@ version: 1
 timestamp: 8
 opcode: 1
 argv: [0:]
-array: length + {4...} -> [length] [0:]
+array<size>: length + {[size]...} -> [length] [0:]
 address: 4
 length: 4
 string: array

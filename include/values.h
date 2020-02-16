@@ -10,7 +10,7 @@ using std::vector;
 
 namespace Belish {
     enum TYPE {
-        NUMBER, STRING, OBJECT, NULL_, UNDEFINED
+        NUMBER, STRING, OBJECT, NULL_, UNDEFINED, FUNCTION, INT
     };
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
@@ -44,6 +44,7 @@ namespace Belish {
         UL count() { return linked; }
     protected:
         friend class Stack;
+        friend class BVM;
         friend class Object;
         UL linked;
     };
@@ -79,6 +80,39 @@ namespace Belish {
         double& value() { return val; }
     private:
         double val;
+    };
+    class Int : public Value {
+    public:
+        Int(double n = 0) : val(n) { linked = 0;  }
+        TYPE type() { return INT; }
+        string toString() { return std::to_string(val); }
+        string toStringHL() { return "\033[33m" + std::to_string(val) + "\033[0m"; }
+        Value* copy() override { return new Number(val); }
+        void add(Value* n) override { val += ((Int*)n)->val; }
+        void sub(Value* n) override { val -= ((Int*)n)->val; }
+        void mul(Value* n) override { val *= ((Int*)n)->val; }
+        void div(Value* n) override { val /= ((Int*)n)->val; }
+        void mod(Value* n) override { val %= ((Int*)n)->val; }
+        void eq(Value* n) override { val = val == ((Int*)n)->val; }
+        void neq(Value* n) override { val = val != ((Int*)n)->val; }
+        void leq(Value* n) override { val = val <= ((Int*)n)->val; }
+        void meq(Value* n) override { val = val >= ((Int*)n)->val; }
+        void less(Value* n) override { val = val < ((Int*)n)->val; }
+        void more(Value* n) override { val = val > ((Int*)n)->val; }
+        void mand(Value* n) override { val &= ((Int*)n)->val; }
+        void mor(Value* n) override { val |= ((Int*)n)->val; }
+        void mxor(Value* n) override { val ^= ((Int*)n)->val; }
+        void land(Value* n) override { val = val && ((Int*)n)->val; }
+        void lor(Value* n) override { val = val || ((Int*)n)->val; }
+        void pow(Value* n) override { val = std::pow(val, ((Int*)n)->val); }
+        void set(Value* n) override { val = ((Int*)n)->val; }
+        void shiftl(Value* n) override { val = (((ULL)val) << ((ULL)((Number*)n)->value())); }
+        void shiftr(Value* n) override { val = (((ULL)val) >> ((ULL)((Number*)n)->value())); }
+        bool isTrue() override { return val != 0; }
+        bool isFalse() override { return val == 0; }
+        uint64_t& value() { return val; }
+    private:
+        uint64_t val;
     };
     class String : public Value {
     public:
@@ -240,10 +274,42 @@ namespace Belish {
     private:
         std::map<string, Value*> prop;
     };
+    class Function : public Value {
+    public:
+        Function(const string& bc = "") : bytecode(bc) { linked = 0; }
+        TYPE type() { return FUNCTION; }
+        string toString() { return "<function>"; }
+        string toStringHL() { return "\033[33m<function>\033[0m"; }
+        Value* copy() override { return new Function(bytecode); }
+        void add(Value* n) override { ; }
+        void sub(Value* n) override { ; }
+        void mul(Value* n) override { ; }
+        void div(Value* n) override { ; }
+        void mod(Value* n) override { ; }
+        void eq(Value* n) override { ; }
+        void neq(Value* n) override { ; }
+        void leq(Value* n) override { ; }
+        void meq(Value* n) override { ; }
+        void less(Value* n) override { ; }
+        void more(Value* n) override { ; }
+        void mand(Value* n) override { ; }
+        void mor(Value* n) override { ; }
+        void mxor(Value* n) override { ; }
+        void land(Value* n) override { ; }
+        void lor(Value* n) override { ; }
+        void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
+        bool isTrue() override { return false; }
+        bool isFalse() override { return true; }
+    private:
+        string bytecode;
+    };
 
     class Stack {
     public:
-        Stack() : len(0) { val.resize(1024); }
+        Stack() : len(0) { val.reserve(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
         void set(UL offset, Value* v) {
             if (val[offset]) delete val[offset];

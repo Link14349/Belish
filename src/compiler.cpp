@@ -36,16 +36,38 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
 //        astTime += ed - st;
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
         switch (ast.root->type()) {
+            case Lexer::RETURN_TOKEN:
+            {
+                Compiler compiler(filename);
+                compiler.ast.child = true;
+                compiler.independent = false;
+                compiler.ast.root = ast.root->get(0);
+                compiler.sym = sym;
+                compiler.functionAdrTab = functionAdrTab;
+                compiler.macro = macro;
+                compiler.compile_(bytecode);
+                bytecode += (char) BACK;
+                break;
+            }
             case Lexer::DEF_TOKEN:
             {
                 functionAdrTab[ast.root->value()] = funOffset++;
                 string funBytecode;
                 Compiler compiler(filename);
-                compiler.sym = sym;
-                compiler.stkOffset = stkOffset;
+                // 这里注释掉的内容是关于函数对定义处变量使用的实现的，这个再后再填回去
+//                compiler.sym = sym;
+//                compiler.stkOffset = stkOffset;
+                compiler.ast.child = true;
                 compiler.macro = macro;
+                compiler.functionAdrTab = functionAdrTab;
                 for (auto i = 0; i < ast.root->get(0)->length(); i++)
                     compiler.sym[ast.root->get(0)->get(i)->value()] = compiler.stkOffset++;
+                for (auto i = 1; i < ast.root->length(); i++) {
+                    compiler.ast.root = ast.root->get(i);
+                    compiler.compile_(funBytecode);
+                }
+                funBytecode += (char) BACK;
+                functionsBcs.push_back(funBytecode);
                 break;
             }
             case Lexer::NUMBER_TOKEN:
@@ -65,6 +87,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: {
                 Compiler compiler(filename);
                 compiler.sym = sym;
+                compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.independent = false;
                 compiler.ast.child = true;
@@ -83,6 +106,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::IF_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
@@ -150,6 +174,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 Compiler scCompiler(filename);
                 scCompiler.ast.child = true;
                 scCompiler.sym = sym;
+                scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.root = conAsts->get(0);
@@ -209,6 +234,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         auto val = om->second;
                         Compiler compiler(filename, val);
                         compiler.sym = sym;
+                        compiler.functionAdrTab = functionAdrTab;
                         compiler.macro = macro;
                         compiler.independent = false;
                         compiler.compile_(bytecode);
@@ -230,6 +256,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.ast.child = true;
                     compiler.independent = false;
                     compiler.sym = sym;
+                    compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.ast.root = ast.root->get(i + 1);
                     compiler.compile_(bytecode);
@@ -253,6 +280,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.ast.child = true;
                 compiler.independent = false;
                 compiler.sym = sym;
+                compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.compile_(bytecode);
                 for (auto i = attrs.begin(); i != attrs.end(); i++) {
@@ -278,6 +306,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.independent = false;
                     compiler.ast.root = ast.root->get(i + 1)->get(0);
                     compiler.sym = sym;
+                    compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.stkOffset = stkOffset;
                     if (compiler.compile_(bytecode, ast.root->get(i + 1)->type() == Lexer::PN_DREFER_TOKEN)) {
@@ -291,6 +320,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::WHILE_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
@@ -354,6 +384,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::DO_TOKEN: {
                 Compiler scCompiler(filename);
                 scCompiler.sym = sym;
+                scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
@@ -390,8 +421,25 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
+                compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.stkOffset = stkOffset;
+                if (ast.root->type() == Lexer::BRACKETS_LEFT_TOKEN) {
+                    auto oi = functionAdrTab.find(ast.root->get(0)->value());
+                    if (oi == functionAdrTab.end()) {
+                        std::cerr << "BLE100: Undefined symbol '" << ast.root->get(0)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    }
+                    for (UL i = 1; i < ast.root->length(); i++) {
+                        compiler.ast.root = ast.root->get(i);
+                        compiler.compile_(bytecode);
+                    }
+                    bytecode += (char) NEW_FRAME;
+                    bytecode += transI32S_bin(ast.root->length() - 1);
+                    bytecode += (char) CALL;
+                    bytecode += transI32S_bin(oi->second);
+                    break;
+                }
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
                 if (ast.root->length() == 2) {
@@ -496,16 +544,16 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
     }
     footerAdr = bytecode.length();
     if (!isRoot) return false;
-    auto startAdr = bytecode.length();
+    bytecode += transI32S_bin(functionsBcs.size());
     for (auto i = functionsBcs.begin(); i != functionsBcs.end(); i++) {
         bytecode += "0000";
     }
     for (UL i = 0; i < functionsBcs.size(); i++) {
         auto adrS = transI32S_bin(bytecode.length());
-        bytecode[footerAdr + i * 4] = adrS[0];
-        bytecode[footerAdr + i * 4 + 1] = adrS[1];
-        bytecode[footerAdr + i * 4 + 2] = adrS[2];
-        bytecode[footerAdr + i * 4 + 3] = adrS[3];
+        bytecode[footerAdr + i * 4 + 4] = adrS[0];
+        bytecode[footerAdr + i * 4 + 5] = adrS[1];
+        bytecode[footerAdr + i * 4 + 6] = adrS[2];
+        bytecode[footerAdr + i * 4 + 7] = adrS[3];
         bytecode += functionsBcs[i];
     }
     return false;

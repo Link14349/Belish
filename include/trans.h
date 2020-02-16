@@ -25,13 +25,13 @@ namespace Belish {
     inline void escape(string& str);// escape sequence
 
 #define GETBYTE byte = bytecode[i++]
-#define GETDBYTE \
+#define GETDBYTE { \
     GETBYTE; \
     dbyte = 0; \
     dbyte = dbyte << 8 | byte; \
     GETBYTE; \
-    dbyte = dbyte << 8 | byte;
-#define GETQBYTE \
+    dbyte = dbyte << 8 | byte; }
+#define GETQBYTE { \
     qbyte = 0; \
     GETBYTE; \
     qbyte = qbyte << 8 | byte; \
@@ -40,8 +40,8 @@ namespace Belish {
     GETBYTE; \
     qbyte = qbyte << 8 | byte; \
     GETBYTE; \
-    qbyte = qbyte << 8 | byte;
-#define GETEBYTE \
+    qbyte = qbyte << 8 | byte; }
+#define GETEBYTE { \
     ebyte = 0; \
     GETBYTE; \
     ebyte = ebyte << 8 | byte; \
@@ -58,7 +58,7 @@ namespace Belish {
     GETBYTE; \
     ebyte = ebyte << 8 | byte; \
     GETBYTE; \
-    ebyte = ebyte << 8 | byte;
+    ebyte = ebyte << 8 | byte; }
 }
 
 #endif //BELISH_TRANS_H

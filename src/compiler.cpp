@@ -242,12 +242,20 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 break;
             }
             case Lexer::UNKNOWN_TOKEN: {
+                bool isNotFun = true;
                 auto oi = sym.find(ast.root->value());
                 if (oi == sym.end()) {
                     auto om = macro.find(ast.root->value());
                     if (om == macro.end()) {
-                        std::cerr << "BLE100: Undefined symbol '" << ast.root->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
-                        return true;
+                        auto of = functionAdrTab.find(ast.root->value());
+                        if (of == functionAdrTab.end()) {
+                            std::cerr << "BLE100: Undefined symbol '" << ast.root->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                            return true;
+                        } else {
+                            isNotFun = false;
+                            bytecode += (char) PUSH_FUN;
+                            bytecode += transI32S_bin(of->second);
+                        }
                     } else {
                         auto val = om->second;
                         Compiler compiler(filename, val);
@@ -261,7 +269,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 }
                 auto offset = oi->second;
                 if (inOPTOEXPR) bytecode += (char)OPID::REFER + transI32S_bin(offset);
-                else bytecode += (char)OPID::PUSH + transI32S_bin(offset);
+                else if (isNotFun) bytecode += (char)OPID::PUSH + transI32S_bin(offset);
                 if (independent) bytecode += (char) POP;
                 break;
             }
@@ -448,18 +456,29 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.stkOffset = stkOffset;
                 if (ast.root->type() == Lexer::BRACKETS_LEFT_TOKEN) {
                     auto oi = functionAdrTab.find(ast.root->get(0)->value());
-                    if (oi == functionAdrTab.end()) {
-                        std::cerr << "BLE100: Undefined symbol '" << ast.root->get(0)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
-                        return true;
+                    UL index = -1;
+                    if (oi != functionAdrTab.end()) {
+                        index = oi->second;
                     }
                     for (UL i = 1; i < ast.root->length(); i++) {
                         compiler.ast.root = ast.root->get(i);
                         compiler.compile_(bytecode);
                     }
-                    bytecode += (char) NEW_FRAME;
-                    bytecode += transI32S_bin(ast.root->length() - 1);
-                    bytecode += (char) CALL;
-                    bytecode += transI32S_bin(oi->second);
+                    if (~index) {
+                        bytecode += (char) NEW_FRAME;
+                        bytecode += transI32S_bin(ast.root->length() - 1);
+                        bytecode += (char) CALL;
+                        bytecode += transI32S_bin(index);
+                    } else {
+                        compiler.ast.root = ast.root->get(0);
+                        compiler.compile_(bytecode);
+                        bytecode += (char) SAV;
+                        bytecode += (char) POP;
+                        bytecode += (char) NEW_FRAME;
+                        bytecode += transI32S_bin(ast.root->length() - 1);
+                        bytecode += (char) BAC;
+                        bytecode += (char) CALL_FUN;
+                    }
                     if (independent)
                         bytecode += (char)OPID::POP;
                     break;

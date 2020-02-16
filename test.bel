@@ -1,7 +1,9 @@
-def factorial(x, count, res)
-{
-    if (x > count) { return res; }
-    return factorial(x + 1, count, res * x);
+def add(a, b) {
+    return a + b;
+}
+def y(fun, a, b) {
+    return fun(a, b);
 }
 
-let x = factorial(1, 5, 1);
+let a = y(add, 1, 2), f = add;
+let b = f(2, 3);

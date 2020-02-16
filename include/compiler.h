@@ -16,7 +16,7 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, BACK, RESIZE, CHANGE
+        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, BACK, RESIZE, CHANGE, PUSH_FUN, CALL_FUN
     };
     class Compiler {
     public:
@@ -33,6 +33,8 @@ namespace Belish {
         AST ast;
         UL footerAdr;
         bool isRoot = false;
+        bool pushedFun = false;
+        UL pushedFunID;
         UL argCount = 0;
         string funName;
         UL funStart;

@@ -223,6 +223,11 @@ void Belish::BVM::run() {
                 stk->pop(1);
                 break;
             }
+            case PUSH_FUN: {
+                GETQBYTE
+                stk->push(new Function(qbyte));
+                break;
+            }
             case SAV: {
                 cache = stk->top()->copy();
                 break;
@@ -286,6 +291,15 @@ void Belish::BVM::run() {
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
                 inFun++;
+                break;
+            }
+            case CALL_FUN: {
+                UL funIndex(((Function*)stk->top())->id());
+                if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value" << std::endl; return; }
+                frames[frames.size() - 2]->push(new Int(i));
+                i = functions[funIndex];
+                inFun++;
+                stk->pop(1);
                 break;
             }
             case BACK: {

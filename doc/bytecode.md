@@ -45,6 +45,8 @@
 | 28 | call | call <unsigned int> | Call function with index n |
 | 29 | back | back | End function call |
 | 2a | change | change <unsigned int> | Move the stack top element to <unsigned int> |
+| 2b | push_fun | push_fun <unsigned int> | Stack the function with number <unsigned int> |
+| 2c | call_fun | call_fun | Call the function at the top of the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

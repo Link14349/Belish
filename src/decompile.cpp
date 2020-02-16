@@ -87,6 +87,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(SET_ATTR) printf("\n"); break;
             CASE_OP(GET_ATTR) printf("\n"); break;
             CASE_OP(BACK) printf("\n"); break;
+            CASE_OP(CALL_FUN) printf("\n"); break;
             CASE_OP(PUSH_NUM) {
                 GETEBYTE
                 printf("%lf\n", transI64D_bin(ebyte));
@@ -105,6 +106,7 @@ void Belish::decompile(char* bytecode, ULL len) {
                 break;
             }
             CASE_OP(POPC) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
+            CASE_OP(PUSH_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(NEW_FRAME)

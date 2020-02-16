@@ -276,11 +276,12 @@ namespace Belish {
     };
     class Function : public Value {
     public:
-        Function(const string& bc = "") : bytecode(bc) { linked = 0; }
+        Function(UL i = 0) : index(i) { linked = 0; }
+        UL id() { return index; }
         TYPE type() { return FUNCTION; }
-        string toString() { return "<function>"; }
-        string toStringHL() { return "\033[33m<function>\033[0m"; }
-        Value* copy() override { return new Function(bytecode); }
+        string toString() { return "<function #" + std::to_string(index) + ">"; }
+        string toStringHL() { return "\033[35m<function #" + std::to_string(index) + ">\033[0m"; }
+        Value* copy() override { return new Function(index); }
         void add(Value* n) override { ; }
         void sub(Value* n) override { ; }
         void mul(Value* n) override { ; }
@@ -301,10 +302,10 @@ namespace Belish {
         void set(Value* n) override { ; }
         void shiftl(Value* n) override { ; }
         void shiftr(Value* n) override { ; }
-        bool isTrue() override { return false; }
-        bool isFalse() override { return true; }
+        bool isTrue() override { return true; }
+        bool isFalse() override { return false; }
     private:
-        string bytecode;
+        uint32_t index;
     };
 
     class Stack {

@@ -1,14 +1,9 @@
-def add(a, b) {
-    return a + b;
-}
-def mul(a, b) {
-    return a * b;
-}
-def pow(a) {
-    return mul(a, a);
+def fun(a) {
+    if (a == 0) {
+        return 10;
+    } else {
+        return 0;
+    }
 }
 
-let a = pow(add(1, 2));
-let b = mul(2, 3);
-a += b;
-b *= a;
+let a = fun(2);

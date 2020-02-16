@@ -6,7 +6,7 @@
 using std::string;
 
 namespace Belish {
-    void decompile(char*, ULL, string&);
+    void decompile(char*, ULL);
 }
 
 #endif //BELISH_DECOMPILE_H

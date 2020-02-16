@@ -438,6 +438,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += transI32S_bin(ast.root->length() - 1);
                     bytecode += (char) CALL;
                     bytecode += transI32S_bin(oi->second);
+                    if (independent)
+                        bytecode += (char)OPID::POP;
                     break;
                 }
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))

@@ -23,7 +23,7 @@ void Belish::decompile(char* bytecode, ULL len) {
     printf("Version: 0x%04x\n", dbyte);
     GETEBYTE
     auto timer = gmtime(reinterpret_cast<const time_t *>(&ebyte));
-    printf("Built time: %lld(timestamp), %d/%02d/%02d %02d:%02d:%02d\n", ebyte, timer->tm_year + 1900, timer->tm_mon + 1, timer->tm_mday, timer->tm_hour, timer->tm_min, timer->tm_sec);
+    printf("Built time: %lld(timestamp), %d/%02d/%02d %02d:%02d:%02d\n", ebyte, timer->tm_year + 1900, timer->tm_mon + 1, timer->tm_mday, timer->tm_hour + 8, timer->tm_min, timer->tm_sec);
     GETQBYTE
     UL footerAdr = i = qbyte;
     printf("Footer address: 0x%08x\n", footerAdr);
@@ -52,9 +52,9 @@ void Belish::decompile(char* bytecode, ULL len) {
         if (i == functions[functionsOffset]) {
             std::cout << "----[FUNCTION: #" << (functionsOffset++) << "]----" << std::endl;
         }
+        printf("0x%08x\t", i);
         GETBYTE;
         auto op = (OPID)byte;
-        printf("0x%08x\t", i);
 #define CASE_OP(name) case name: printf("%s ", #name);
         switch (op) {
             CASE_OP(ADD) printf("\n"); break;

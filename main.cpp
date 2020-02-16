@@ -70,8 +70,8 @@ int main(int argc, char* argv[]) {
     ULL length;
     auto buffer = readFileCPTR("test.belc", length);
     Belish::decompile(buffer, length);
-//    Belish::BVM bvm(buffer, length);
-//    bvm.run();
+    Belish::BVM bvm(buffer, length);
+    bvm.run();
     std::cout << "finish running" << std::endl;
     auto e = getCurrentTime();
     std::cout << "vm used " << (e - s) << "ms, compiler used " << ct << "ms" << std::endl;

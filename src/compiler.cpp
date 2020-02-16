@@ -28,6 +28,7 @@ bool Belish::Compiler::compile(string &bytecode) {
 
 bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>* brTab, std::list<UL>* ctTab) {
 //    ULL st = 0, ed = 0;
+    std::list<AST::node*> functionAsts;
     newVars.clear();
     while (true) {
 //        st = getCurrentTime();
@@ -52,22 +53,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::DEF_TOKEN:
             {
                 functionAdrTab[ast.root->value()] = funOffset++;
-                string funBytecode;
-                Compiler compiler(filename);
-                // 这里注释掉的内容是关于函数对定义处变量使用的实现的，这个再后再填回去
-//                compiler.sym = sym;
-//                compiler.stkOffset = stkOffset;
-                compiler.ast.child = true;
-                compiler.macro = macro;
-                compiler.functionAdrTab = functionAdrTab;
-                for (auto i = 0; i < ast.root->get(0)->length(); i++)
-                    compiler.sym[ast.root->get(0)->get(i)->value()] = compiler.stkOffset++;
-                for (auto i = 1; i < ast.root->length(); i++) {
-                    compiler.ast.root = ast.root->get(i);
-                    compiler.compile_(funBytecode);
-                }
-                funBytecode += (char) BACK;
-                functionsBcs.push_back(funBytecode);
+                functionAsts.push_back(ast.root);
+                ast.root = nullptr;
                 break;
             }
             case Lexer::NUMBER_TOKEN:
@@ -546,17 +533,30 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
     }
     footerAdr = bytecode.length();
     if (!isRoot) return false;
-    bytecode += transI32S_bin(functionsBcs.size());
-    for (auto i = functionsBcs.begin(); i != functionsBcs.end(); i++) {
-        bytecode += "0000";
-    }
-    for (UL i = 0; i < functionsBcs.size(); i++) {
+    bytecode += transI32S_bin(functionAsts.size());
+    for (UL i = 0; i < functionAsts.size(); i++) bytecode += "0000";
+    UL j = 0;
+    for (auto i = functionAsts.begin(); i != functionAsts.end(); i++, j++) {
         auto adrS = transI32S_bin(bytecode.length());
-        bytecode[footerAdr + i * 4 + 4] = adrS[0];
-        bytecode[footerAdr + i * 4 + 5] = adrS[1];
-        bytecode[footerAdr + i * 4 + 6] = adrS[2];
-        bytecode[footerAdr + i * 4 + 7] = adrS[3];
-        bytecode += functionsBcs[i];
+        bytecode[footerAdr + j * 4 + 4] = adrS[0];
+        bytecode[footerAdr + j * 4 + 5] = adrS[1];
+        bytecode[footerAdr + j * 4 + 6] = adrS[2];
+        bytecode[footerAdr + j * 4 + 7] = adrS[3];
+        ast.root = *i;
+        Compiler compiler(filename);
+        // 这里注释掉的内容是关于函数对定义处变量使用的实现的，这个再后再填回去
+//        compiler.sym = sym;
+//        compiler.stkOffset = stkOffset;
+        compiler.ast.child = true;
+        compiler.macro = macro;
+        compiler.functionAdrTab = functionAdrTab;
+        for (auto k = 0; k < ast.root->get(0)->length(); k++)
+            compiler.sym[ast.root->get(0)->get(k)->value()] = compiler.stkOffset++;
+        for (auto k = 1; k < ast.root->length(); k++) {
+            compiler.ast.root = ast.root->get(k);
+            compiler.compile_(bytecode);
+        }
+        bytecode += (char) BACK;
     }
     return false;
 }

@@ -9,3 +9,6 @@ def pow(a) {
 }
 
 let a = pow(add(1, 2));
+let b = mul(2, 3);
+a += b;
+b *= a;

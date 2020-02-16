@@ -16,7 +16,7 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, BACK
+        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, BACK, RESIZE
     };
     class Compiler {
     public:
@@ -33,6 +33,8 @@ namespace Belish {
         AST ast;
         UL footerAdr;
         bool isRoot = false;
+        bool isCompilingFun = false;
+        string funName;
         map<string, UL> sym;
         map<string, string> macro;
         map<string, UL> functionAdrTab;

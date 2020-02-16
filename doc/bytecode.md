@@ -94,7 +94,6 @@ length: 4
 string: array
 bytecode: [0:]
 function: {
-    [string: Function name]
     [bytecode: body]
 }
 

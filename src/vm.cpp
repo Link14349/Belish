@@ -262,8 +262,15 @@ void Belish::BVM::run() {
                 auto stk_ = stk;
                 stk = new Stack;
                 frames.push_back(stk);
-                for (UL j = 1; j <= movCount; j++) stk->push(stk_->get(stk_->length() - j));
+                for (UL j = movCount; j; j--) stk->push(stk_->get(stk_->length() - j));
                 stk_->pop(movCount);
+                break;
+            }
+            case RESIZE: {
+                GETQBYTE
+                UL size(qbyte);
+                if (stk->length() >= size) stk->pop(stk->length() - size);
+                else for (UL j = 0; j < size - stk->length(); j++) stk->push(new Undefined);
                 break;
             }
             case CALL: {

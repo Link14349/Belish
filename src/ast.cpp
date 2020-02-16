@@ -737,6 +737,9 @@ void Belish::AST::parse() {
         case Lexer::BREAK_TOKEN:
             root = new node(Lexer::BREAK_TOKEN, "", lexer.line() + baseLine);
             break;
+        case Lexer::DEBUGGER_TOKEN:
+            root = new node(Lexer::DEBUGGER_TOKEN, "", lexer.line() + baseLine);
+            break;
         case Lexer::CONTINUE_TOKEN:
             root = new node(Lexer::CONTINUE_TOKEN, "", lexer.line() + baseLine);
             break;

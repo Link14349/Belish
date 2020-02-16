@@ -216,6 +216,8 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = UNDEFINED_TOKEN;
     } else if (t.s == "return") {
         t.t = RETURN_TOKEN;
+    } else if (t.s == "debugger") {
+        t.t = DEBUGGER_TOKEN;
     } else if (t.s == "in") {
         t.t = IN_TOKEN;
     } else if (t.s == "of") {

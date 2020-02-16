@@ -370,6 +370,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     return true;
                 }
             }
+            case Lexer::DEBUGGER_TOKEN:
+            {
+                bytecode += (char) DEB;
+            }
             case Lexer::CONTINUE_TOKEN:
             {
                 if (ctTab) {
@@ -561,14 +565,19 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
 //        compiler.sym = sym;
 //        compiler.stkOffset = stkOffset;
         compiler.ast.child = true;
+        compiler.isCompilingFun = true;
+        compiler.funName = ast.root->value();
         compiler.macro = macro;
         compiler.functionAdrTab = functionAdrTab;
         for (auto k = 0; k < ast.root->get(0)->length(); k++)
             compiler.sym[ast.root->get(0)->get(k)->value()] = compiler.stkOffset++;
+        bytecode += (char) RESIZE;
+        bytecode += transI32S_bin(ast.root->get(0)->length());// 参数多了就删，少了就补
         for (auto k = 1; k < ast.root->length(); k++) {
             compiler.ast.root = ast.root->get(k);
             compiler.compile_(bytecode);
         }
+        bytecode += (char) PUSH_UND;
         bytecode += (char) BACK;
     }
     return false;

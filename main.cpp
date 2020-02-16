@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     s = now;
     ULL length;
     auto buffer = readFileCPTR("test.belc", length);
-    Belish::decompile(buffer, length);
+//    Belish::decompile(buffer, length);
     Belish::BVM bvm(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;

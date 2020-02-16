@@ -16,6 +16,19 @@ bool Belish::Compiler::compile(string &bytecode) {
     UL footerAdr_ = bytecode.length();
     bytecode += "0000";// 占位
     isRoot = true;
+    // ===============
+    // 添加__exports__变量
+    sym["__exports__"] = stkOffset++;
+    bytecode += (char) PUSH_OBJ;
+    //设置其的属性
+    bytecode += (char) PUSH_STR;
+    bytecode += transI32S_bin(filename.length());
+    bytecode += filename;
+    bytecode += (char) PUSH_STR;
+    bytecode += transI32S_bin(8);
+    bytecode += "filename";
+    bytecode += (char) SET_ATTR;
+    // ===============
     auto state = compile_(bytecode);
     auto footerAdrS = transI32S_bin(footerAdr);
     bytecode[footerAdr_] = footerAdrS[0];

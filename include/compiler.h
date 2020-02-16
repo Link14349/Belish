@@ -36,7 +36,6 @@ namespace Belish {
         map<string, UL> sym;
         map<string, string> macro;
         map<string, UL> functionAdrTab;
-        vector<string> functionsBcs;
         std::list<string> newVars;
         bool independent = true;
     };

@@ -48,8 +48,9 @@ void Belish::decompile(char* bytecode, ULL len) {
             std::cout << "=====[END]=====" << std::endl;
             std::cout << "=====[FUNCTION DEFINITIONS]=====" << std::endl;
             i = indexEnd;
+            if (i >= len) break;
         }
-        if (i == functions[functionsOffset]) {
+        if (!functions.empty() && i == functions[functionsOffset]) {
             std::cout << "----[FUNCTION: #" << (functionsOffset++) << "]----" << std::endl;
         }
         printf("0x%08x\t", i);

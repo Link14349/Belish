@@ -34,6 +34,7 @@ namespace Belish {
         UL footerAdr;
         bool isRoot = false;
         bool pushedFun = false;
+        bool parentIsSet = false;
         UL pushedFunID;
         UL argCount = 0;
         string funName;

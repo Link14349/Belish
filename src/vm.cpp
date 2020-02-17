@@ -187,7 +187,9 @@ void Belish::BVM::run() {
             }
             case PUSH: {
                 GETQBYTE
-                stk->push(stk->get(qbyte)->copy());
+                auto val = stk->get(qbyte);
+                if (val->type() == OBJECT) stk->push(val);
+                else stk->push(val->copy());
                 break;
             }
             case POP: {
@@ -238,8 +240,29 @@ void Belish::BVM::run() {
             }
             case MOV: {
                 auto v = stk->get(stk->length() - 2);
-                if (stk->top()->type() == v->type()) v->set(stk->top());
-                else { std::cerr << "Wrong type to mov" << std::endl; return; }
+                auto t = stk->top();
+                if (stk->top()->type() == v->type()) v->set(t);
+                else {
+                    auto vLinked = v->linked;
+                    switch (v->type()) {
+                        case NUMBER: ((Number*)v)->~Number(); break;
+                        case STRING: ((String*)v)->~String(); break;
+                        case INT: ((Int*)v)->~Int(); break;
+                        case UNDEFINED: ((Undefined*)v)->~Undefined(); break;
+                        case OBJECT: ((Object*)v)->~Object(); break;
+                        case FUNCTION: ((Function*)v)->~Function(); break;
+                    }
+                    switch (stk->top()->type()) {
+                        case NUMBER: v = new (v)Number; break;
+                        case STRING: v = new (v)String; break;
+                        case INT: v = new (v)Int; break;
+                        case UNDEFINED: v = new (v)Undefined; break;
+                        case OBJECT: v = new (v)Object; break;
+                        case FUNCTION: v = new (v)Function; break;
+                    }
+                    v->linked = vLinked;
+                    v->set(t);
+                }
                 stk->pop(1);
                 break;
             }
@@ -248,11 +271,11 @@ void Belish::BVM::run() {
                 break;
             }
             case SET_ATTR: {
-                string attr_name(((String*)stk->top())->value());
+                string attr_name(((String*)stk->get(stk->length() - 2))->value());
                 auto obj_ = stk->get(stk->length() - 3);
                 if (obj_->type() != OBJECT) { std::cerr << "Wrong type to set attr" << std::endl; return; }
                 auto obj = (Object*)obj_;
-                obj->set(attr_name, stk->get(stk->length() - 2));
+                obj->set(attr_name, stk->top());
                 stk->pop(1);
                 stk->pop(1);
                 break;
@@ -264,7 +287,14 @@ void Belish::BVM::run() {
                 stk->pop(1);
                 stk->pop(1);
                 auto obj = (Object*)obj_;
-                stk->push(obj->get(attr_name));
+                auto attr = obj->get(attr_name);
+                if (attr) {
+                    stk->push(attr);
+                } else {
+                    attr = new Undefined;
+                    obj->set(attr_name, attr);
+                    stk->push(attr);
+                }
                 break;
             }
             case NEW_FRAME: {
@@ -322,5 +352,5 @@ void Belish::BVM::run() {
     }
     // 测试
     stk->dbg();
-    for (auto & frame : frames) delete frame;
+    delete stk;
 }

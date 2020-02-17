@@ -22,11 +22,11 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode += (char) PUSH_OBJ;
     //设置其的属性
     bytecode += (char) PUSH_STR;
-    bytecode += transI32S_bin(filename.length());
-    bytecode += filename;
-    bytecode += (char) PUSH_STR;
     bytecode += transI32S_bin(8);
     bytecode += "filename";
+    bytecode += (char) PUSH_STR;
+    bytecode += transI32S_bin(filename.length());
+    bytecode += filename;
     bytecode += (char) SET_ATTR;
     // ===============
     auto state = compile_(bytecode);
@@ -113,7 +113,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.compile_(bytecode);
                 compiler.ast.root = ast.root->get(1);
                 compiler.compile_(bytecode);
-                bytecode += (char) GET_ATTR;
+                if (!parentIsSet) bytecode += (char) GET_ATTR;
                 if (!inOPTOEXPR) {
                     bytecode += (char) SAV;
                     bytecode += (char) POP;
@@ -285,9 +285,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.ast.root = ast.root->get(i + 1);
-                    compiler.compile_(bytecode);
                     bytecode += (char) PUSH_STR;
                     bytecode += transI32S_bin(attr_name.length()) + attr_name;
+                    compiler.compile_(bytecode);
                     bytecode += (char) SET_ATTR;
                 }
                 if (independent) bytecode += (char) POP;
@@ -309,11 +309,14 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.compile_(bytecode);
-                for (auto i = attrs.begin(); i != attrs.end(); i++) {
+                bytecode += (char) PUSH_STR;
+                bytecode += transI32S_bin((*attrs.begin()).length()) + *attrs.begin();
+                for (auto i = ++attrs.begin(); i != attrs.end(); i++) {
+                    bytecode += (char) GET_ATTR;
                     bytecode += (char) PUSH_STR;
                     bytecode += transI32S_bin((*i).length()) + *i;
-                    bytecode += (char) GET_ATTR;
                 }
+                if (!parentIsSet) bytecode += (char) GET_ATTR;
                 if (!inOPTOEXPR) {
                     bytecode += (char) SAV;
                     bytecode += (char) POP;
@@ -399,6 +402,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::DEBUGGER_TOKEN:
             {
                 bytecode += (char) DEB;
+                break;
             }
             case Lexer::CONTINUE_TOKEN:
             {
@@ -482,10 +486,13 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     if (independent)
                         bytecode += (char)OPID::POP;
                     break;
+                } else if (ast.root->type() == Lexer::SET_TOKEN) {
+                    compiler.parentIsSet = true;
                 }
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
                 if (ast.root->length() == 2) {
+                    compiler.parentIsSet = false;
                     compiler.ast.root = ast.root->get(1);
                     if (compiler.compile_(bytecode)) return true;
                 }
@@ -565,7 +572,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         bytecode += (char)OPID::POW;
                         break;
                     case Lexer::SET_TOKEN:
-                        bytecode += (char)OPID::MOV;
+                        if (ast.root->get(0)->type() == Lexer::DOT_TOKEN || ast.root->get(0)->type() == Lexer::MIDDLE_BRACKETS_LEFT_TOKEN)
+                            bytecode += (char)OPID::SET_ATTR;
+                        else
+                            bytecode += (char)OPID::MOV;
                         break;
                     case Lexer::DADD_TOKEN:
                     case Lexer::DSUB_TOKEN:

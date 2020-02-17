@@ -10,7 +10,7 @@ using std::vector;
 
 namespace Belish {
     enum TYPE {
-        NUMBER, STRING, OBJECT, NULL_, UNDEFINED, FUNCTION, INT
+        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT
     };
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
@@ -245,7 +245,17 @@ namespace Belish {
         void land(Value* n) override { ; }
         void lor(Value* n) override { ; }
         void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
+        void set(Value* n) override {
+            auto obj = (Object*)n;
+            for (auto & i : prop) {
+                i.second->linked--;
+                if (i.second->linked == 0) delete i.second;
+            }
+            for (auto & i : obj->prop) {
+                i.second->linked++;
+                prop[i.first] = i.second;
+            }
+        }
         void shiftl(Value* n) override { ; }
         void shiftr(Value* n) override { ; }
         bool isTrue() override { return !prop.empty(); }
@@ -258,7 +268,7 @@ namespace Belish {
         }
         void set(const string& k, Value* val) {
             auto i = prop.find(k);
-            if (i != prop.end()) {
+            if (i != prop.end() && i->second) {
                 i->second->linked--;
                 if (i->second->linked == 0) delete i->second;
             }

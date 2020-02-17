@@ -1,9 +1,9 @@
-def add(a, b) {
-    return a + b;
+def distance(a, b) {
+    if (a > b) {
+        return a - b;
+    } else {
+        return b - a;
+    }
 }
-def y(fun, a, b) {
-    return fun(a, b);
-}
-
-let a = y(add, 1, 2), f = add;
-let b = f(2, 3);
+__exports__.distance = distance;
+__exports__.test = __exports__.distance(213, 122);

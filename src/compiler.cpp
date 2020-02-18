@@ -4,6 +4,7 @@
 #include "timestamp.h"
 #include <ctime>
 #include <list>
+#include "fio.h"
 #include <iostream>
 
 //UL astTime = 0;
@@ -398,6 +399,26 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     std::cerr << "BLE200: Unexpected break at <" << filename << ">:" << ast.line() << std::endl;
                     return true;
                 }
+            }
+            case Lexer::IMPORT_TOKEN:
+            {
+                string name(ast.root->get(0)->value());
+                string path(ast.root->value());
+                ULL length;
+                auto moduleBcChar = readFileCPTR(path + ".belc", length);
+                string moduleScript;
+                if (!moduleBcChar) {
+                    if (readFile(path + ".bel", moduleScript)) {
+                        std::cerr << "BLE300: IOError: Failed to open the module '" << path << "' <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    }
+                    Compiler compiler(path, moduleScript);
+                    string moduleBcString;
+                    compile(moduleBcString);
+                    writeFile(path + ".belc", moduleBcString);
+                    auto moduleFooterAdr = compiler.footerAdr;
+                }
+                break;
             }
             case Lexer::DEBUGGER_TOKEN:
             {

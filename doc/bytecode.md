@@ -39,7 +39,7 @@
 | 22 | jmp | jmp <unsigned int> | Jump to <unsigned int> |
 | 23 | sav | sav | Cache the value (copy) at the top of the stack into the register |
 | 24 | bac | bac | Fetches cached values from registers back to the stack |
-| 25 | set_attr | set_attr | Assign the second element in the stack to the attribute(the first element in the stack) of the third element in the stack |
+| 25 | set_attr | set_attr | Assign the first element in the stack to the attribute(the second element in the stack) of the third element in the stack |
 | 26 | get_attr | get_attr | Get the attribute(the first element in the stack) of the second element in the stack |
 | 27 | new_frame | new_frame <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame |
 | 28 | call | call <unsigned int> | Call function with index n |

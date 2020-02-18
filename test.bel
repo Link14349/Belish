@@ -1,9 +1,1 @@
-def distance(a, b) {
-    if (a > b) {
-        return a - b;
-    } else {
-        return b - a;
-    }
-}
-__exports__.distance = distance;
-__exports__.test = __exports__.distance(213, 122);
+import "testmodule"

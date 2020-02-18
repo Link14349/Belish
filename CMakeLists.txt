@@ -8,4 +8,4 @@ include_directories(
         include
 )
 
-add_executable(Belish main.cpp src/Belish.cpp include/Belish.h include/lex.h src/lex.cpp include/dylib.h src/dylib.cpp src/ast.cpp include/ast.h src/compiler.cpp include/compiler.h src/trans.cpp include/trans.h src/vm.cpp include/vm.h src/values.cpp include/values.h src/decompile.cpp include/decompile.h include/timestamp.h src/timestamp.cpp)
+add_executable(Belish main.cpp src/Belish.cpp include/Belish.h include/lex.h src/lex.cpp include/dylib.h src/dylib.cpp src/ast.cpp include/ast.h src/compiler.cpp include/compiler.h src/trans.cpp include/trans.h src/vm.cpp include/vm.h src/values.cpp include/values.h src/decompile.cpp include/decompile.h include/timestamp.h src/timestamp.cpp src/fio.cpp include/fio.h)

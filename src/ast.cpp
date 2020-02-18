@@ -36,6 +36,20 @@ void Belish::AST::parse() {
             root = new node(Lexer::ERROR_TOKEN, "BLE103: Unknown operator '" + token.s + "'", lexer.line() + baseLine);
             break;
         }
+        case Lexer::IMPORT_TOKEN:
+        {
+            GET;
+            token.s.erase(0, 1);
+            token.s.erase(token.s.length() - 1, 1);
+            escape(token.s);
+            root = new node(Lexer::IMPORT_TOKEN, token.s, lexer.line() + baseLine);
+            LL index = token.s.find_last_of('/');
+            if (index == std::string::npos) index = -1;
+            string name;
+            for (auto i = index + 1; i < token.s.length(); i++) name += token.s[i];
+            root->insert(Lexer::NO_STATUS, name, lexer.line() + baseLine);
+            break;
+        }
         case Lexer::LET_TOKEN:
         {
             root = new node(Lexer::LET_TOKEN, "", initialLine);

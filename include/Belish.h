@@ -6,6 +6,7 @@
 #include "trans.h"
 #include "ast.h"
 #include "vm.h"
+#include "fio.h"
 #include "values.h"
 #include "compiler.h"
 #include "decompile.h"

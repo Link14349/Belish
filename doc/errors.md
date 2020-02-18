@@ -8,6 +8,7 @@
 | BLE200 | Unexpected break | Delete it |
 | BLE201 | Unexpected continue | Delete it |
 | BLE202 | Unexpected condition | Check it |
+| BLE300 | IOError: Failed to open the module | Check the module path |
 
 ## BLE1
 _About expression/variable/function defining errors_

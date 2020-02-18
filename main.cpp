@@ -21,54 +21,25 @@ void operator delete(void* p) {
 }
 #endif
 
-char* readFileCPTR(const string& filename, ULL& length) {
-    std::ifstream t;
-    char* buffer;
-    t.open("test.belc");
-    t.seekg(0, std::ios::end);
-    length = t.tellg();
-    t.seekg(0, std::ios::beg);
-    buffer = new char[length];
-    t.read(buffer, length);
-    t.close();
-    return buffer;
-}
-void openFile(const string& filename, string& content) {
-    fstream file(filename, ios::in | ios::out);
-    if(!file)
-    {
-        std::cerr << "Failed.\n";
-        file.close();
-        exit(1);
-    }
-    std::stringstream buf;
-    buf << file.rdbuf();
-    content = buf.str();
-    file.close();
-}
-
 int main(int argc, char* argv[]) {
     auto s = getCurrentTime();
     ULL ct;
     string script;
-    openFile("test.bel", script);
-    Belish::Compiler compiler("test.bel", script);
-    std::ofstream fs;
-    fs.open("test.belc", std::ios::out);
+    Belish::readFile("test.bel", script);
+    Belish::Compiler compiler("test", script);
     string bc;
     auto state = compiler.compile(bc);
     if (state) {
         std::cerr << "[Stop compiling]\n";
         return 1;
     }
-    fs << bc;
-    fs.close();
+    Belish::writeFile("test.belc", bc);
     std::cout << "finish compiling" << std::endl;
     auto now = getCurrentTime();
     ct = now - s;
     s = now;
     ULL length;
-    auto buffer = readFileCPTR("test.belc", length);
+    auto buffer = Belish::readFileCPTR("test.belc", length);
 //    Belish::decompile(buffer, length);
     Belish::BVM bvm(buffer, length);
     bvm.run();

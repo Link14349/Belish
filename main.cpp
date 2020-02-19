@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Belish.h>
 #include <fstream>
+#include <cstdio>
 #include "timestamp.h"
 #include <sstream>
 using std::fstream;
@@ -22,6 +23,7 @@ void operator delete(void* p) {
 #endif
 
 int main(int argc, char* argv[]) {
+    remove("testmodule.belc");
     auto s = getCurrentTime();
     ULL ct;
     string script;
@@ -40,12 +42,14 @@ int main(int argc, char* argv[]) {
     s = now;
     ULL length;
     auto buffer = Belish::readFileCPTR("test.belc", length);
-//    Belish::decompile(buffer, length);
     Belish::BVM bvm(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;
     auto e = getCurrentTime();
     std::cout << "vm used " << (e - s) << "ms, compiler used " << ct << "ms" << std::endl;
     delete buffer;
+//    buffer = Belish::readFileCPTR("testmodule.belc", length);
+//    Belish::decompile(buffer, length);
+//    delete buffer;
     return 0;
 }

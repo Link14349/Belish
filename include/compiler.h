@@ -16,11 +16,11 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, BACK, RESIZE, CHANGE, PUSH_FUN, CALL_FUN
+        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP
     };
     class Compiler {
     public:
-        Compiler() : filename("untitled.bel") { }
+        Compiler() : filename("untitled") { }
         Compiler(const string& fn) : filename(fn) { }
         Compiler(const string& fn, const string& s) : script(s), ast(s), filename(fn) { }
         bool compile(string&);

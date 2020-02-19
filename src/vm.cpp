@@ -5,6 +5,7 @@
 #include "trans.h"
 #include "trans.cpp"
 #include "values.h"
+#include "fio.h"
 
 void Belish::BVM::run() {
     Byte byte;
@@ -12,7 +13,7 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
-    UL i = 0;
+    i = 0;
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
         std::cerr << "Wrong magic code" << std::endl;
@@ -24,7 +25,6 @@ void Belish::BVM::run() {
     i = footerAdr = qbyte;
     // 关于定义函数、类等的处理
     // 获取所有函数
-    vector<UL> functions;
     GETQBYTE
     UL functionLen(qbyte);
     functions.reserve(functionLen);
@@ -32,7 +32,7 @@ void Belish::BVM::run() {
         GETQBYTE
         functions.push_back(qbyte);
     }
-    auto stk = new Stack;
+    if (!stk) stk = new Stack;
     UL inFun = 0;
     vector<Stack*> frames;
     frames.reserve(16);
@@ -270,6 +270,22 @@ void Belish::BVM::run() {
                 stk->push(new Object);
                 break;
             }
+            case IMP: {
+                string path(((String*)stk->top())->value());
+                ULL length;
+                auto buffer = Belish::readFileCPTR(path + ".belc", length);
+                auto vm = new BVM(buffer, length);
+                vm->child = true;
+                vm->run();
+                auto __exports__ = (Object*)vm->stk->get(0);// 偏移值为0的即__exports__变量
+                for (auto iter = __exports__->begin(); iter.next(); ) {
+                    auto val = iter.value();
+                    if (val->type() == FUNCTION) ((Function*)val)->module = modules.size();
+                }
+                modules.push_back(vm);
+                stk->pop(1);
+                break;
+            }
             case SET_ATTR: {
                 string attr_name(((String*)stk->get(stk->length() - 2))->value());
                 auto obj_ = stk->get(stk->length() - 3);
@@ -324,7 +340,11 @@ void Belish::BVM::run() {
                 break;
             }
             case CALL_FUN: {
-                UL funIndex(((Function*)stk->top())->id());
+                auto fun = ((Function*)stk->top());
+                UL funIndex(fun->id());
+                if (fun->module) {// 不为0
+
+                }
                 if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value" << std::endl; return; }
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
@@ -332,7 +352,7 @@ void Belish::BVM::run() {
                 stk->pop(1);
                 break;
             }
-            case BACK: {
+            case RET: {
                 auto ret = stk->top();
                 ret->linked++;
                 delete stk;
@@ -352,5 +372,8 @@ void Belish::BVM::run() {
     }
     // 测试
     stk->dbg();
-    delete stk;
+    if (!child) {
+        delete stk;
+        stk = nullptr;
+    }
 }

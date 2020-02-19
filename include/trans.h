@@ -24,7 +24,14 @@ namespace Belish {
     inline string transI32S_bin(int32_t);// trans int32_t to string by binary
     inline void escape(string& str);// escape sequence
 
+#define GETBYTE_(bytecode) byte = bytecode[i++]
 #define GETBYTE byte = bytecode[i++]
+#define GETDBYTE_(bytecdoe) { \
+    GETBYTE_(bytecode); \
+    dbyte = 0; \
+    dbyte = dbyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    dbyte = dbyte << 8 | byte; }
 #define GETDBYTE { \
     GETBYTE; \
     dbyte = 0; \
@@ -40,6 +47,16 @@ namespace Belish {
     GETBYTE; \
     qbyte = qbyte << 8 | byte; \
     GETBYTE; \
+    qbyte = qbyte << 8 | byte; }
+#define GETQBYTE_(bytecdoe) { \
+    GETBYTE_(bytecode); \
+    qbyte = 0; \
+    qbyte = qbyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    qbyte = qbyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    qbyte = qbyte << 8 | byte; \
+    GETBYTE_(bytecode); \
     qbyte = qbyte << 8 | byte; }
 #define GETEBYTE { \
     ebyte = 0; \
@@ -58,6 +75,24 @@ namespace Belish {
     GETBYTE; \
     ebyte = ebyte << 8 | byte; \
     GETBYTE; \
+    ebyte = ebyte << 8 | byte; }
+#define GETEBYTE_(bytecdoe) { \
+    GETBYTE_(bytecode); \
+    ebyte = 0; \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
+    ebyte = ebyte << 8 | byte; \
+    GETBYTE_(bytecode); \
     ebyte = ebyte << 8 | byte; }
 }
 

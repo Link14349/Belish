@@ -78,7 +78,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += transI32S_bin(funStart);
                 } else {
                     compiler.compile_(bytecode);
-                    bytecode += (char) BACK;
+                    bytecode += (char) RET;
                 }
                 break;
             }
@@ -405,19 +405,19 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 string name(ast.root->get(0)->value());
                 string path(ast.root->value());
                 ULL length;
-                auto moduleBcChar = readFileCPTR(path + ".belc", length);
                 string moduleScript;
-                if (!moduleBcChar) {
-                    if (readFile(path + ".bel", moduleScript)) {
-                        std::cerr << "BLE300: IOError: Failed to open the module '" << path << "' <" << filename << ">:" << ast.line() << std::endl;
-                        return true;
-                    }
-                    Compiler compiler(path, moduleScript);
-                    string moduleBcString;
-                    compile(moduleBcString);
-                    writeFile(path + ".belc", moduleBcString);
-                    auto moduleFooterAdr = compiler.footerAdr;
+                if (readFile(path + ".bel", moduleScript)) {
+                    std::cerr << "BLE300: IOError: Failed to open the module '" << path << "' <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
                 }
+                Compiler compiler(name, moduleScript);
+                string moduleBcString;
+                compiler.compile(moduleBcString);
+                writeFile(path + ".belc", moduleBcString);
+                bytecode += (char) PUSH_STR;
+                bytecode += transI32S_bin(path.length());
+                bytecode += path;
+                bytecode += (char) IMP;
                 break;
             }
             case Lexer::DEBUGGER_TOKEN:
@@ -647,7 +647,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             compiler.compile_(bytecode);
         }
         bytecode += (char) PUSH_UND;
-        bytecode += (char) BACK;
+        bytecode += (char) RET;
     }
     return false;
 }

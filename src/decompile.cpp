@@ -87,7 +87,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(BAC) printf("\n"); break;
             CASE_OP(SET_ATTR) printf("\n"); break;
             CASE_OP(GET_ATTR) printf("\n"); break;
-            CASE_OP(BACK) printf("\n"); break;
+            CASE_OP(RET) printf("\n"); break;
             CASE_OP(CALL_FUN) printf("\n"); break;
             CASE_OP(PUSH_NUM) {
                 GETEBYTE

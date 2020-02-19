@@ -281,17 +281,36 @@ namespace Belish {
                 if (i.second->linked == 0) delete i.second;
             }
         }
+        class Iterator {
+        public:
+            Iterator(const Iterator& iterator) : binding(iterator.binding), iter(iterator.iter) { }
+            bool next() {
+                if (iter == binding->prop.end()) return false;
+                iter++;
+                return iter == binding->prop.end();
+            }
+            string key() { return iter->first; }
+            Value* value() { return iter->second; }
+        private:
+            explicit Iterator(Object* b) : binding(b), iter(b->prop.begin()) { }
+            explicit Iterator(Object* b, std::map<string, Value*>::iterator iter) : binding(b), iter(iter) { }
+            Object* binding;
+            std::map<string, Value*>::iterator iter;
+            friend class Object;
+        };
+        Iterator begin() { return Iterator(this); }
+        Iterator end() { return Iterator(this, prop.end()); }
     private:
         std::map<string, Value*> prop;
     };
     class Function : public Value {
     public:
-        Function(UL i = 0) : index(i) { linked = 0; }
+        Function(UL i = 0, UL m = 0) : index(i), module(m) { linked = 0; }// module默认为0, 0代表自己
         UL id() { return index; }
         TYPE type() { return FUNCTION; }
-        string toString() { return "<function #" + std::to_string(index) + ">"; }
-        string toStringHL() { return "\033[35m<function #" + std::to_string(index) + ">\033[0m"; }
-        Value* copy() override { return new Function(index); }
+        string toString() { return "<function #" + std::to_string(index + module) + ">"; }
+        string toStringHL() { return "\033[35m<function #" + std::to_string(index + module) + ">\033[0m"; }
+        Value* copy() override { return new Function(index, module); }
         void add(Value* n) override { ; }
         void sub(Value* n) override { ; }
         void mul(Value* n) override { ; }
@@ -315,7 +334,9 @@ namespace Belish {
         bool isTrue() override { return true; }
         bool isFalse() override { return false; }
     private:
-        uint32_t index;
+        UL index;
+        UL module;
+        friend class BVM;
     };
 
     class Stack {

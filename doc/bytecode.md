@@ -43,10 +43,11 @@
 | 26 | get_attr | get_attr | Get the attribute(the first element in the stack) of the second element in the stack |
 | 27 | new_frame | new_frame <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame |
 | 28 | call | call <unsigned int> | Call function with index n |
-| 29 | back | back | End function call |
+| 29 | ret | ret | Return |
 | 2a | change | change <unsigned int> | Move the stack top element to <unsigned int> |
 | 2b | push_fun | push_fun <unsigned int> | Stack the function with number <unsigned int> |
 | 2c | call_fun | call_fun | Call the function at the top of the stack |
+| 2d | imp | imp | Import the module(the path is saved at the top of the stack) |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
@@ -94,6 +95,7 @@ argv: [0:]
 array<size>: length + {[size]...} -> [length] [0:]
 address: 4
 length: 4
+index: 4
 string: array
 bytecode: [0:]
 function: {

@@ -32,7 +32,7 @@ bool Belish::readFile(const string& filename, string& content) {
 }
 bool Belish::writeFile(const string& filename, const string& content) {
     std::ofstream fs;
-    fs.open("test.belc", std::ios::out);
+    fs.open(filename, std::ios::out);
     if (!fs) return false;
     fs << content;
     fs.close();

@@ -33,19 +33,12 @@ void* Belish::Dylib::resolve(const string& sym) {
 #endif
 }
 void Belish::Dylib::close() {
-    // 不能即刻便销毁，不然其中的函数方法等也会被销毁，必须先存着所有句柄然后再程序结束后统一销毁
-    dyhandlePool.push_back(dyhandle);
-    status = false;
-}
-void Belish::Dylib::clear()  {
-    for (auto i = dyhandlePool.begin(); i != dyhandlePool.end(); i++) {
 #ifdef I_OS_WIN32
-        // windows
-                FreeLibrary(*i);
+    // windows
+    FreeLibrary(dyhandle);
 #else
-        // linux, mac, unix等
-        dlclose(*i);
+    // linux, mac, unix等
+    dlclose(dyhandle);
 #endif
-    }
-    dyhandlePool.clear();
+    status = false;
 }

@@ -285,7 +285,7 @@ namespace Belish {
         public:
             Iterator(const Iterator& iterator) : binding(iterator.binding), iter(iterator.iter) { }
             bool next() {
-                if (iter == binding->prop.end()) return false;
+                if (iter == binding->prop.end()) return true;
                 iter++;
                 return iter == binding->prop.end();
             }

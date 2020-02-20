@@ -399,12 +399,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     std::cerr << "BLE200: Unexpected break at <" << filename << ">:" << ast.line() << std::endl;
                     return true;
                 }
+                break;
             }
             case Lexer::IMPORT_TOKEN:
             {
                 string name(ast.root->get(0)->value());
                 string path(ast.root->value());
-                ULL length;
                 string moduleScript;
                 if (readFile(path + ".bel", moduleScript)) {
                     std::cerr << "BLE300: IOError: Failed to open the module '" << path << "' <" << filename << ">:" << ast.line() << std::endl;
@@ -418,6 +418,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode += transI32S_bin(path.length());
                 bytecode += path;
                 bytecode += (char) IMP;
+                sym[name] = stkOffset++;
                 break;
             }
             case Lexer::DEBUGGER_TOKEN:
@@ -435,6 +436,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     std::cerr << "BLE201: Unexpected continue at <" << filename << ">:" << ast.line() << std::endl;
                     return true;
                 }
+                break;
             }
             case Lexer::DO_TOKEN: {
                 Compiler scCompiler(filename);

@@ -1,1 +1,3 @@
-import "testmodule"
+import "../testmodule"
+
+let a = testmodule.distance(0, 1);

@@ -41,18 +41,6 @@ namespace Belish {
 #endif
         bool status;
         bool open();
-    private:
-        static
-        inline
-#ifdef I_OS_WIN32
-        // windows
-std::vector<HINSTANCE> dyhandlePool;
-#else
-// linux, mac, unix等
-        std::vector<void*> dyhandlePool;
-#endif
-    public:
-        static void clear();
     };
 }
 

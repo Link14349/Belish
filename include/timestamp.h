@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 #include <cstdlib>
+#include "trans.h"
 
 int64_t getCurrentTime();
 

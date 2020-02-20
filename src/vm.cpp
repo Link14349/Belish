@@ -13,6 +13,7 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
+    if (callMoudleMethod) goto CALL_MODULE_METHOED;
     i = 0;
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
@@ -26,18 +27,18 @@ void Belish::BVM::run() {
     // 关于定义函数、类等的处理
     // 获取所有函数
     GETQBYTE
-    UL functionLen(qbyte);
+    functionLen = qbyte;
     functions.reserve(functionLen);
     for (UL j = 0; j < functionLen; j++) {
         GETQBYTE
         functions.push_back(qbyte);
     }
-    if (!stk) stk = new Stack;
-    UL inFun = 0;
-    vector<Stack*> frames;
-    frames.reserve(16);
-    frames.push_back(stk);
+    if (!stk) {
+        stk = new Stack;
+        frames.push_back(stk);
+    }
     for (i = 18; i < footerAdr || inFun; ) {
+        CALL_MODULE_METHOED:
         GETBYTE;
         auto op = (OPID)byte;
 //        if (stk->length() < 2) {
@@ -277,13 +278,15 @@ void Belish::BVM::run() {
                 auto vm = new BVM(buffer, length);
                 vm->child = true;
                 vm->run();
+                modules.push_back(vm);
                 auto __exports__ = (Object*)vm->stk->get(0);// 偏移值为0的即__exports__变量
-                for (auto iter = __exports__->begin(); iter.next(); ) {
+                for (auto iter = __exports__->begin(); ; ) {
                     auto val = iter.value();
                     if (val->type() == FUNCTION) ((Function*)val)->module = modules.size();
+                    if (!iter.next()) break;
                 }
-                modules.push_back(vm);
                 stk->pop(1);
+                stk->push(__exports__);
                 break;
             }
             case SET_ATTR: {
@@ -343,7 +346,19 @@ void Belish::BVM::run() {
                 auto fun = ((Function*)stk->top());
                 UL funIndex(fun->id());
                 if (fun->module) {// 不为0
-
+                    auto vm = modules[fun->module - 1];
+                    if (funIndex >= vm->functions.size()) { std::cerr << "Exceeded expected function index value" << std::endl; return; }
+                    vm->i = vm->functions[funIndex];
+                    vm->stk->push(new Int(-1));
+                    vm->frames.push_back(stk);
+                    vm->stk = vm->frames[vm->frames.size() - 1];
+                    vm->inFun++;
+                    vm->callMoudleMethod = true;
+                    stk = frames[frames.size() - 2];
+                    frames.erase(frames.end() - 1);
+                    vm->run();
+                    stk->push(vm->stk->top());
+                    break;
                 }
                 if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value" << std::endl; return; }
                 frames[frames.size() - 2]->push(new Int(i));
@@ -363,6 +378,7 @@ void Belish::BVM::run() {
                 stk->pop(1);
                 stk->push(ret);
                 inFun--;
+                if (i == -1) return;
                 break;
             }
             case DEB:

@@ -8,7 +8,7 @@
 
 namespace Belish {
     char* readFileCPTR(const string&, ULL&);
-    bool readFile(const string&, string&);
+    bool readFile(const string&, string&);// true为打开失败, false为成功
     bool writeFile(const string&, const string&);
 }
 

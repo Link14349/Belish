@@ -406,9 +406,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 string name(ast.root->get(0)->value());
                 string path(ast.root->value());
                 string moduleScript;
-                if (readFile(path + ".bel", moduleScript)) {
-                    std::cerr << "BLE300: IOError: Failed to open the module '" << path << "' <" << filename << ">:" << ast.line() << std::endl;
-                    return true;
+                if (readFile(path + ".bel", moduleScript)) {// 说明是拓展包
+                    bytecode += (char) PUSH_STR;
+                    bytecode += transI32S_bin(path.length());
+                    bytecode += path;
+                    bytecode += (char) LOAD;
+                    sym[name] = stkOffset++;
                 }
                 Compiler compiler(name, moduleScript);
                 string moduleBcString;

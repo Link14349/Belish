@@ -11,7 +11,7 @@ using std::vector;
 
 namespace Belish {
     enum TYPE {
-        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT, NFUNCTION
+        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT, NFUNCTION, BOOLEAN
     };
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
@@ -159,6 +159,39 @@ namespace Belish {
         bool isFalse() override { return val.empty(); }
     private:
         string val;
+    };
+    class Boolean : public Value {
+    public:
+        Boolean(bool n = true) : val(n) { linked = 0; }
+        TYPE type() { return STRING; }
+        string toString() { return val ? "true" : "false"; }
+        string toStringHL() { return "\033[36m\"" + string(val ? "true" : "false") + "\"\033[0m"; }
+        bool& value() { return val; }
+        Value* copy() override { return new Boolean(val); }
+        void add(Value* n) override { ; }
+        void sub(Value* n) override { ; }
+        void mul(Value* n) override { ; }
+        void div(Value* n) override { ; }
+        void mod(Value* n) override { ; }
+        void eq(Value* n) override { ; }
+        void neq(Value* n) override { ; }
+        void leq(Value* n) override { ; }
+        void meq(Value* n) override { ; }
+        void less(Value* n) override { ; }
+        void more(Value* n) override { ; }
+        void mand(Value* n) override { ; }
+        void mor(Value* n) override { ; }
+        void mxor(Value* n) override { ; }
+        void land(Value* n) override { ; }
+        void lor(Value* n) override { ; }
+        void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
+        bool isTrue() override { return val; }
+        bool isFalse() override { return !val; }
+    private:
+        bool val;
     };
     class Undefined : public Value {
     public:
@@ -350,6 +383,7 @@ namespace Belish {
         string toStringHL() { return "\033[35m<NativeFunction>\033[0m"; }
         Value* copy() override { return new NFunction(fun); }
         Value* call(Stack* stack) { return fun(stack); }
+        bool good() { return fun; }
         void add(Value* n) override { ; }
         void sub(Value* n) override { ; }
         void mul(Value* n) override { ; }
@@ -374,6 +408,38 @@ namespace Belish {
         bool isFalse() override { return false; }
     private:
         _NFunction fun;
+    };
+    class NValue : public Value {// Native Value
+    public:
+        NValue(void* v = nullptr) : val(v) { linked = 0; }// module默认为0, 0代表自己
+        TYPE type() { return NFUNCTION; }
+        string toString() { return "<NativeValue>"; }
+        string toStringHL() { return "\033[35m<NativeValue>\033[0m"; }
+        Value* copy() override { return new NValue(val); }
+        void add(Value* n) override { ; }
+        void sub(Value* n) override { ; }
+        void mul(Value* n) override { ; }
+        void div(Value* n) override { ; }
+        void mod(Value* n) override { ; }
+        void eq(Value* n) override { ; }
+        void neq(Value* n) override { ; }
+        void leq(Value* n) override { ; }
+        void meq(Value* n) override { ; }
+        void less(Value* n) override { ; }
+        void more(Value* n) override { ; }
+        void mand(Value* n) override { ; }
+        void mor(Value* n) override { ; }
+        void mxor(Value* n) override { ; }
+        void land(Value* n) override { ; }
+        void lor(Value* n) override { ; }
+        void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
+        bool isTrue() override { return true; }
+        bool isFalse() override { return false; }
+    private:
+        void* val;
     };
 
     class Stack {

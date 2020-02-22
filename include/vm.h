@@ -13,13 +13,6 @@ namespace Belish {
         void run();
         ~BVM() {
             delete stk;
-            for (auto & module : modules) {
-                delete module->bytecode;
-                delete module;
-            }
-            for (auto & exlib : exlibs) {
-                delete exlib;
-            }
         }
     private:
         bool child = false;

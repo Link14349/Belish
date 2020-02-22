@@ -7,21 +7,6 @@
 using std::fstream;
 using std::ios;
 
-#define DEBUG 0
-
-#if DEBUG
-
-void* operator new(size_t s) {
-    auto p = malloc(s);
-    std::clog << "n" << p << std::endl;
-    return p;
-}
-void operator delete(void* p) {
-    std::clog << "d" << p << std::endl;
-    free(p);
-}
-#endif
-
 int main(int argc, char* argv[]) {
     remove("testmodule.belc");
     auto s = getCurrentTime();

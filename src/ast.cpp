@@ -428,6 +428,7 @@ void Belish::AST::parse() {
                     else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
                         bracketsCount--;
                         if (!bracketsCount) {
+                            if (arg.empty()) break;
                             AST argA(arg, baseLine + initialLine);
                             argA.parse();
                             AST_CHECK_PARSING_ERR(argA)
@@ -440,6 +441,9 @@ void Belish::AST::parse() {
                         AST argA(arg, baseLine + initialLine);
                         argA.parse();
                         AST_CHECK_PARSING_ERR(argA)
+                        if (argA.root->type() == Lexer::PROGRAM_END) {
+                            arg = "";
+                        }
                         root->insert(argA.root);
                         arg = "";
                     } else arg += token.s + " ";
@@ -765,6 +769,7 @@ void Belish::AST::parse() {
 
 inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
     switch (tk) {
+        case Lexer::DOT_TOKEN:
         case Lexer::BRACKETS_LEFT_TOKEN: return 14;
         case Lexer::DADD_TOKEN:
         case Lexer::DSUB_TOKEN:

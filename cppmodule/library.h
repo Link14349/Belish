@@ -3,6 +3,8 @@
 
 #include <Belish.h>
 
-Belish::Object* module();
+Belish::Value* print(Belish::Stack*);
+Belish::Value* println(Belish::Stack*);
+MODULE_SETUP_DEC;
 
 #endif //CPPMODULE_LIBRARY_H

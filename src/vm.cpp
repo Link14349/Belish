@@ -271,6 +271,19 @@ void Belish::BVM::run() {
                 stk->push(new Object);
                 break;
             }
+            case LOAD: {
+                string path(((String*)stk->top())->value());
+                auto exlib = new Dylib(path);
+                if (!exlib->load()) {
+                    std::cerr << "Failed to load" << std::endl;
+                    return;
+                }
+                auto moduleSetup = (ModuleSetup) exlib->resolve("moduleSetup");
+                stk->pop(1);
+                stk->push(moduleSetup());
+                exlibs.push_back(exlib);
+                break;
+            }
             case IMP: {
                 string path(((String*)stk->top())->value());
                 ULL length;
@@ -343,6 +356,15 @@ void Belish::BVM::run() {
                 break;
             }
             case CALL_FUN: {
+                if (stk->top()->type() == NFUNCTION) {
+                    auto nfun = ((NFunction*)stk->top());
+                    stk->pop(1);
+                    nfun->call(stk);
+                    delete stk;
+                    frames.erase(frames.end() - 1);
+                    stk = frames[frames.size() - 1];
+                    break;
+                }
                 auto fun = ((Function*)stk->top());
                 UL funIndex(fun->id());
                 if (fun->module) {// 不为0
@@ -387,7 +409,7 @@ void Belish::BVM::run() {
         }
     }
     // 测试
-    stk->dbg();
+//    stk->dbg();
     if (!child) {
         delete stk;
         stk = nullptr;

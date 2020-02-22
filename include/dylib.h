@@ -28,7 +28,7 @@ namespace Belish {
             return open();
         }
         void* resolve(const string&);
-        ~Dylib() { if (dyhandle) close(); }
+        ~Dylib() { if (status) close(); }
         bool load() { return status; }
     private:
         string name;

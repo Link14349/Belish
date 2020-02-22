@@ -3,6 +3,7 @@
 
 #include "trans.h"
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <cmath>
 #include <map>
@@ -10,7 +11,7 @@ using std::vector;
 
 namespace Belish {
     enum TYPE {
-        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT
+        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT, NFUNCTION
     };
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
@@ -339,6 +340,42 @@ namespace Belish {
         friend class BVM;
     };
 
+    class Stack;
+    typedef Value* (*_NFunction)(Stack*);
+    class NFunction : public Value {// Native Function
+    public:
+        NFunction(_NFunction nFunction = nullptr) : fun(nFunction) { linked = 0; }// module默认为0, 0代表自己
+        TYPE type() { return NFUNCTION; }
+        string toString() { return "<NativeFunction>"; }
+        string toStringHL() { return "\033[35m<NativeFunction>\033[0m"; }
+        Value* copy() override { return new NFunction(fun); }
+        Value* call(Stack* stack) { return fun(stack); }
+        void add(Value* n) override { ; }
+        void sub(Value* n) override { ; }
+        void mul(Value* n) override { ; }
+        void div(Value* n) override { ; }
+        void mod(Value* n) override { ; }
+        void eq(Value* n) override { ; }
+        void neq(Value* n) override { ; }
+        void leq(Value* n) override { ; }
+        void meq(Value* n) override { ; }
+        void less(Value* n) override { ; }
+        void more(Value* n) override { ; }
+        void mand(Value* n) override { ; }
+        void mor(Value* n) override { ; }
+        void mxor(Value* n) override { ; }
+        void land(Value* n) override { ; }
+        void lor(Value* n) override { ; }
+        void pow(Value* n) override { ; }
+        void set(Value* n) override { ; }
+        void shiftl(Value* n) override { ; }
+        void shiftr(Value* n) override { ; }
+        bool isTrue() override { return true; }
+        bool isFalse() override { return false; }
+    private:
+        _NFunction fun;
+    };
+
     class Stack {
     public:
         Stack() : len(0) { val.reserve(1024); }
@@ -368,6 +405,7 @@ namespace Belish {
     private:
         vector<Value*> val;
         UL len;
+        friend class NFunction;
     };
 }
 

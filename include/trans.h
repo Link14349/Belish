@@ -23,6 +23,12 @@ namespace Belish {
     inline string transI64S_bin(int64_t);// trans int64_t to string by binary
     inline string transI32S_bin(int32_t);// trans int32_t to string by binary
     inline void escape(string& str);// escape sequence
+#define MODULE_SETUP_DEC extern "C" Belish::Object* moduleSetup();
+#define MODULE_SETUP_DEF Belish::Object* moduleSetup()
+#define MODULE_SETUP_FINISH return exports;
+#define MODULE_SETUP_EXPORT(name, val) exports->set((name), (val));
+#define MODULE_SETUP_INIT(moduleName) auto exports = new Belish::Object; \
+    exports->set("libraryName", new Belish::String(#moduleName));
 
 #define GETBYTE_(bytecode) byte = bytecode[i++]
 #define GETBYTE byte = bytecode[i++]

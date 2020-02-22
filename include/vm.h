@@ -3,6 +3,7 @@
 
 #include <string>
 #include "values.h"
+#include "dylib.h"
 using std::string;
 
 namespace Belish {
@@ -11,9 +12,13 @@ namespace Belish {
         BVM(char* bc, ULL l) : bytecode(bc), len(l) { modules.reserve(16);frames.reserve(16); }
         void run();
         ~BVM() {
-            for (auto i = modules.begin(); i != modules.end(); i++) {
-                delete (*i)->stk;
-                delete (*i)->bytecode;
+            delete stk;
+            for (auto & module : modules) {
+                delete module->bytecode;
+                delete module;
+            }
+            for (auto & exlib : exlibs) {
+                delete exlib;
             }
         }
     private:
@@ -27,9 +32,11 @@ namespace Belish {
         ULL len;
         Stack* stk = nullptr;
         vector<BVM*> modules;
+        vector<Dylib*> exlibs;
         vector<Stack*> frames;
         vector<UL> functions;
     };
+    typedef Object* (*ModuleSetup)();
 }
 
 

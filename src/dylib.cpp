@@ -12,14 +12,9 @@ bool Belish::Dylib::open() {
     if (dyhandle) close();
 #ifdef I_OS_WIN32
     // windows
-    dyhandle = LoadLibrary((name + ".dll").c_str());
+    dyhandle = LoadLibrary((name).c_str());
 #else
-    // linux, mac, unix等
-#ifdef __MAC_10_0
-    dyhandle = dlopen((name + ".dylib").c_str(), RTLD_NOW);
-#else
-    dyhandle = dlopen((name + ".so").c_str(), RTLD_NOW);
-#endif
+    dyhandle = dlopen((name).c_str(), RTLD_NOW);
 #endif
     return (status = (bool)dyhandle);
 }

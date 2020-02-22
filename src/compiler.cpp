@@ -407,21 +407,23 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 string path(ast.root->value());
                 string moduleScript;
                 if (readFile(path + ".bel", moduleScript)) {// 说明是拓展包
+                    path += "/lib" + name + ".belib";
                     bytecode += (char) PUSH_STR;
                     bytecode += transI32S_bin(path.length());
                     bytecode += path;
                     bytecode += (char) LOAD;
                     sym[name] = stkOffset++;
+                } else {
+                    Compiler compiler(name, moduleScript);
+                    string moduleBcString;
+                    compiler.compile(moduleBcString);
+                    writeFile(path + ".belc", moduleBcString);
+                    bytecode += (char) PUSH_STR;
+                    bytecode += transI32S_bin(path.length());
+                    bytecode += path;
+                    bytecode += (char) IMP;
+                    sym[name] = stkOffset++;
                 }
-                Compiler compiler(name, moduleScript);
-                string moduleBcString;
-                compiler.compile(moduleBcString);
-                writeFile(path + ".belc", moduleBcString);
-                bytecode += (char) PUSH_STR;
-                bytecode += transI32S_bin(path.length());
-                bytecode += path;
-                bytecode += (char) IMP;
-                sym[name] = stkOffset++;
                 break;
             }
             case Lexer::DEBUGGER_TOKEN:

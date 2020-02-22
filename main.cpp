@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     auto s = getCurrentTime();
     ULL ct;
     string script;
-    Belish::readFile("../test.bel", script);
+    Belish::readFile("test.bel", script);
     Belish::Compiler compiler("test", script);
     string bc;
     auto state = compiler.compile(bc);
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     ULL length;
     auto buffer = Belish::readFileCPTR("test.belc", length);
     Belish::BVM bvm(buffer, length);
-    Belish::decompile(buffer, length);
+//    Belish::decompile(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;
     auto e = getCurrentTime();

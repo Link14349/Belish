@@ -5,3 +5,4 @@ if (1) {
     let a = 1;
     io.println(a);
 }
+io.println(a);

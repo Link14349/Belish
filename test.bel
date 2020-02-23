@@ -1,8 +1,3 @@
 import "io";
-let a = 0;
-io.println(a);
-if (1) {
-    let a = 1;
-    io.println(a);
-}
-io.println(a);
+
+io.println((1234 + 4321) * 10);

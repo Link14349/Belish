@@ -1,7 +1,6 @@
 #include <climits>
-#include <vector>
 #include <list>
-#include <regex>
+#include <cmath>
 #include "ast.h"
 #include "trans.h"
 #include "trans.cpp"
@@ -765,6 +764,7 @@ void Belish::AST::parse() {
             root = new node(Lexer::PROGRAM_END, "", lexer.line() + baseLine);
             break;
     }
+    if (!child) optimization();
 }
 
 inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
@@ -818,5 +818,47 @@ inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
             return 2;
 //        case Lexer::COMMA_TOKEN: return 1;
         default: return 15;
+    }
+}
+
+void Belish::AST::optimization() {
+    if (root) root->optimization();
+}
+
+void Belish::AST::node::optimization() {
+    /*
+     * 优化语法树构建的结构
+     * 比如将1+2的树形结构改为3
+     * */
+    for (UL i = 0; i < length(); i++) get(i)->optimization();
+    if (type() >= Lexer::MAND_TOKEN && type() <= Lexer::SRIGHT_TOKEN && type() != Lexer::LNOT_TOKEN && type() != Lexer::MNOT_TOKEN) {
+        auto left = get(0);
+        auto right = get(1);
+        auto opType = type();
+        if (left->type() == Lexer::NUMBER_TOKEN && right->type() == Lexer::NUMBER_TOKEN) {
+            type(Lexer::NUMBER_TOKEN);
+            double lv(std::stod(left->value()));
+            double rv(std::stod(right->value()));
+            double val;
+#define AST_NODE_OPT_EXPR_CASE(NAME, op) case Lexer::NAME##_TOKEN: val = lv op rv; break;
+#define AST_NODE_OPT_EXPR_CASE_PI(NAME, op) case Lexer::NAME##_TOKEN: val = ((LL)lv) op ((LL)rv); break;
+            switch (opType) {
+                AST_NODE_OPT_EXPR_CASE(LAND, &&)
+                AST_NODE_OPT_EXPR_CASE(LOR, ||)
+                AST_NODE_OPT_EXPR_CASE(ADD, +)
+                AST_NODE_OPT_EXPR_CASE(SUB, -)
+                AST_NODE_OPT_EXPR_CASE(MUL, *)
+                AST_NODE_OPT_EXPR_CASE(DIV, /)
+                AST_NODE_OPT_EXPR_CASE_PI(MOD, %)
+                AST_NODE_OPT_EXPR_CASE_PI(SLEFT, <<)
+                AST_NODE_OPT_EXPR_CASE_PI(SRIGHT, >>)
+                AST_NODE_OPT_EXPR_CASE_PI(MAND, &)
+                AST_NODE_OPT_EXPR_CASE_PI(MOR, |)
+                case Lexer::POWER_TOKEN:
+                    val = std::pow(lv, rv);
+                    break;
+            }
+            value(std::to_string(val));
+        }
     }
 }

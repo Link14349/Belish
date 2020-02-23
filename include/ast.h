@@ -20,6 +20,7 @@ namespace Belish {
             if (root) delete root;
             root = nullptr;
         }
+        void optimization();
         string value() { if (root) return root->value(); return ""; }
         ~AST();
     private:
@@ -52,6 +53,7 @@ namespace Belish {
             void insert(node* n) { children.push_back(n); }
             void insert(Lexer::TOKENS y, const string& v, UL l) { children.push_back(new node(y, v, l)); }
             void clear() { children.clear(); }
+            void optimization();
             ~node() {
                 LL sz = children.size();
                 if (sz <= 0) return;

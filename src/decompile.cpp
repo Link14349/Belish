@@ -119,6 +119,27 @@ void Belish::decompile(char* bytecode, ULL len) {
                 printf("%u\n", qbyte);
                 break;
             }
+            CASE_OP(REG_EQ) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_NEQ) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_LEQ) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_MEQ) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_MORE)
+            CASE_OP(REG_LESS)
+            {
+                DECOM_SWITCH_REG_COM_CASE:
+                GETBYTE;
+                printf("%%%02x, ", byte);
+                GETEBYTE
+                printf("%lf\n", transI64D_bin(ebyte));
+                break;
+            }
+            CASE_OP(MOV_REG) {
+                GETQBYTE
+                printf("0x%08x, ", qbyte);
+                GETBYTE;
+                printf("%%%02x\n", byte);
+                break;
+            }
             CASE_OP(PUSH_STR) {
                 GETQBYTE
                 UL strlen = qbyte;

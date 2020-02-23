@@ -58,6 +58,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
+                compiler.regCount = regCount;
+                compiler.regValue = regValue;
+                compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 if (ast.root->get(0)->type() == Lexer::BRACKETS_LEFT_TOKEN && funName == ast.root->get(0)->get(0)->value()) {
@@ -106,6 +109,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: {
                 Compiler compiler(filename);
                 compiler.sym = sym;
+                compiler.regCount = regCount;
+                compiler.regValue = regValue;
+                compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.independent = false;
@@ -127,6 +133,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.sym = sym;
                 scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
+                scCompiler.regCount = regCount;
+                scCompiler.regValue = regValue;
+                scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 std::list<UL> tags;
@@ -195,20 +204,34 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.sym = sym;
                 scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
+                scCompiler.regCount = regCount;
+                scCompiler.regValue = regValue;
+                scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.root = conAsts->get(0);
                 scCompiler.compile_(bytecode);
                 auto loopVars = scCompiler.newVars;
-                for (auto & loopVar : loopVars) sym.insert(std::pair<string, UL>(loopVar, stkOffset++));
+                for (auto & loopVar : loopVars) {
+                    sym.insert(std::pair<string, UL>(loopVar, stkOffset++));
+                    if (~regCount) {
+                        bytecode += (char) MOV_REG;
+                        bytecode += transI32S_bin(stkOffset - 1);
+                        bytecode += regCount;
+                        scCompiler.regVar[loopVar] = regVar[loopVar] = regCount--;
+                    }
+                }
+                scCompiler.regCount = regCount;
                 auto conAdrS = transI32S_bin(bytecode.length());
                 scCompiler.ast.root = conAsts->get(1);
                 scCompiler.independent = false;
+                scCompiler.compilingForLoopCon = true;
                 scCompiler.compile_(bytecode);
                 bytecode += (char) JF;
                 auto conFAdr = bytecode.length();
                 bytecode += "0000";// 占位
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
+                scCompiler.compilingForLoopCon = false;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
                     scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
@@ -261,6 +284,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         auto val = om->second;
                         Compiler compiler(filename, val);
                         compiler.sym = sym;
+                        compiler.regCount = regCount;
+                        compiler.regValue = regValue;
+                        compiler.regVar = regVar;
                         compiler.functionAdrTab = functionAdrTab;
                         compiler.macro = macro;
                         compiler.independent = false;
@@ -283,6 +309,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.ast.child = true;
                     compiler.independent = false;
                     compiler.sym = sym;
+                    compiler.regCount = regCount;
+                    compiler.regValue = regValue;
+                    compiler.regVar = regVar;
                     compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.ast.root = ast.root->get(i + 1);
@@ -307,6 +336,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.ast.child = true;
                 compiler.independent = false;
                 compiler.sym = sym;
+                compiler.regCount = regCount;
+                compiler.regValue = regValue;
+                compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.compile_(bytecode);
@@ -336,6 +368,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.independent = false;
                     compiler.ast.root = ast.root->get(i + 1)->get(0);
                     compiler.sym = sym;
+                    compiler.regCount = regCount;
+                    compiler.regValue = regValue;
+                    compiler.regVar = regVar;
                     compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.stkOffset = stkOffset;
@@ -353,6 +388,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
                 scCompiler.stkOffset = stkOffset;
+                scCompiler.regCount = regCount;
+                scCompiler.regValue = regValue;
+                scCompiler.regVar = regVar;
                 scCompiler.ast.child = true;
                 scCompiler.independent = false;
                 scCompiler.ast.root = ast.root->get(0);
@@ -448,6 +486,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.sym = sym;
                 scCompiler.functionAdrTab = functionAdrTab;
                 scCompiler.macro = macro;
+                scCompiler.regCount = regCount;
+                scCompiler.regValue = regValue;
+                scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 UL bodyAdr = bytecode.length();
@@ -483,6 +524,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
                 compiler.sym = sym;
+                compiler.regCount = regCount;
+                compiler.regValue = regValue;
+                compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.stkOffset = stkOffset;
@@ -516,6 +560,22 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     break;
                 } else if (ast.root->type() == Lexer::SET_TOKEN) {
                     compiler.parentIsSet = true;
+                }
+                if (compilingForLoopCon) {
+                    if (ast.root->length() > 1 && ast.root->type() > Lexer::COLON_TOKEN && ast.root->type() < Lexer::BRACKETS_LEFT_TOKEN && ast.root->get(0)->type() == Lexer::UNKNOWN_TOKEN && ast.root->get(1)->type() == Lexer::NUMBER_TOKEN && regVar.find(ast.root->get(0)->value()) != regVar.end()) {
+#define COM_EXPR_CFLC_CASE(NAME) case Lexer::NAME##_TOKEN: bytecode += (char) REG_##NAME; break;
+                        switch (ast.root->type()) {
+                            COM_EXPR_CFLC_CASE(MORE)
+                            COM_EXPR_CFLC_CASE(LESS)
+                            COM_EXPR_CFLC_CASE(EQ)
+                            COM_EXPR_CFLC_CASE(NEQ)
+                            COM_EXPR_CFLC_CASE(LEQ)
+                            COM_EXPR_CFLC_CASE(MEQ)
+                        }
+                        bytecode += regVar[ast.root->get(0)->value()];
+                        bytecode += transI64S_bin(transDI64_bin(transSD(ast.root->get(1)->value())));
+                        goto FINISH_A_COM;
+                    }
                 }
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
@@ -553,16 +613,16 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     case Lexer::MOD_TO_TOKEN:
                         bytecode += (char) OPID::MOD;
                         break;
-                    case Lexer::EQUAL_TOKEN:
+                    case Lexer::EQ_TOKEN:
                         bytecode += (char)OPID::EQ;
                         break;
-                    case Lexer::NOT_EQUAL_TOKEN:
+                    case Lexer::NEQ_TOKEN:
                         bytecode += (char)OPID::NEQ;
                         break;
-                    case Lexer::LEQUAL_TOKEN:
+                    case Lexer::LEQ_TOKEN:
                         bytecode += (char)OPID::LEQ;
                         break;
-                    case Lexer::MEQUAL_TOKEN:
+                    case Lexer::MEQ_TOKEN:
                         bytecode += (char)OPID::MEQ;
                         break;
                     case Lexer::LESS_TOKEN:
@@ -621,6 +681,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 break;
             }
         }
+        FINISH_A_COM:
         if (ast.child) break;
     }
     footerAdr = bytecode.length();
@@ -643,6 +704,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         compiler.argCount = ast.root->get(0)->length();
         compiler.funName = ast.root->value();
         compiler.macro = macro;
+        compiler.regCount = regCount;
+        compiler.regValue = regValue;
+        compiler.regVar = regVar;
         compiler.functionAdrTab = functionAdrTab;
         compiler.funStart = bytecode.length();
         for (auto k = 0; k < ast.root->get(0)->length(); k++)

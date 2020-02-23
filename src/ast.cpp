@@ -788,12 +788,12 @@ inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
         case Lexer::SRIGHT_TOKEN:
             return 10;
         case Lexer::MORE_TOKEN:
-        case Lexer::MEQUAL_TOKEN:
+        case Lexer::MEQ_TOKEN:
         case Lexer::LESS_TOKEN:
-        case Lexer::LEQUAL_TOKEN:
+        case Lexer::LEQ_TOKEN:
             return 9;
-        case Lexer::EQUAL_TOKEN:
-        case Lexer::NOT_EQUAL_TOKEN:
+        case Lexer::EQ_TOKEN:
+        case Lexer::NEQ_TOKEN:
             return 8;
         case Lexer::MAND_TOKEN: return 7;
         case Lexer::MXOR_TOKEN: return 6;

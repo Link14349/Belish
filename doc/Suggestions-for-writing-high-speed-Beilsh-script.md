@@ -1,0 +1,1 @@
+- For loop variable does not use the object attribute. Loop condition uses <, < =, > or > =. The left side of the loop condition is the variable name, and the right side uses the numeric expression

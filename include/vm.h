@@ -3,6 +3,7 @@
 
 #include <string>
 #include "values.h"
+#include "compiler.h"
 #include "dylib.h"
 using std::string;
 
@@ -24,6 +25,7 @@ namespace Belish {
         UL inFun = 0;
         ULL len;
         Stack* stk = nullptr;
+        Value* regs[REG_COUNT] = { nullptr };
         vector<BVM*> modules;
         vector<Dylib*> exlibs;
         vector<Stack*> frames;

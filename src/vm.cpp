@@ -13,7 +13,6 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
-    Value* reg[16] = { nullptr };
     if (callMoudleMethod) goto CALL_MODULE_METHOED;
     i = 0;
     GETQBYTE
@@ -403,6 +402,61 @@ void Belish::BVM::run() {
                 stk->push(ret);
                 inFun--;
                 if (i == -1) return;
+                break;
+            }
+            case REG_EQ:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() == transI64D_bin(ebyte)));
+                break;
+            }
+            case REG_NEQ:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() != transI64D_bin(ebyte)));
+                break;
+            }
+            case REG_MEQ:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() >= transI64D_bin(ebyte)));
+                break;
+            }
+            case REG_LEQ:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() <= transI64D_bin(ebyte)));
+                break;
+            }
+            case REG_MORE:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() > transI64D_bin(ebyte)));
+                break;
+            }
+            case REG_LESS:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                stk->push(new Boolean(((Number*)regs[reg])->value() < transI64D_bin(ebyte)));
+                break;
+            }
+            case MOV_REG:
+            {
+                GETQBYTE
+                GETBYTE;
+                regs[byte] = stk->get(qbyte);
                 break;
             }
             case DEB:

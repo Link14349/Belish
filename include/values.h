@@ -165,7 +165,7 @@ namespace Belish {
         Boolean(bool n = true) : val(n) { linked = 0; }
         TYPE type() { return STRING; }
         string toString() { return val ? "true" : "false"; }
-        string toStringHL() { return "\033[36m\"" + string(val ? "true" : "false") + "\"\033[0m"; }
+        string toStringHL() { return "\033[36m" + string(val ? "true" : "false") + "\033[0m"; }
         bool& value() { return val; }
         Value* copy() override { return new Boolean(val); }
         void add(Value* n) override { ; }

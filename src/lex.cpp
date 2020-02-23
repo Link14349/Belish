@@ -97,13 +97,13 @@ Belish::Lexer::Token Belish::Lexer::get() {
     } else if (t.s == ":") {
         t.t = COLON_TOKEN;
     } else if (t.s == "==") {
-        t.t = EQUAL_TOKEN;
+        t.t = EQ_TOKEN;
     } else if (t.s == "!=") {
-        t.t = NOT_EQUAL_TOKEN;
+        t.t = NEQ_TOKEN;
     } else if (t.s == "<=") {
-        t.t = LEQUAL_TOKEN;
+        t.t = LEQ_TOKEN;
     } else if (t.s == ">=") {
-        t.t = MEQUAL_TOKEN;
+        t.t = MEQ_TOKEN;
     } else if (t.s == "<") {
         t.t = LESS_TOKEN;
     } else if (t.s == ">") {

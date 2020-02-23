@@ -13,6 +13,7 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
+    Value* reg[16] = { nullptr };
     if (callMoudleMethod) goto CALL_MODULE_METHOED;
     i = 0;
     GETQBYTE

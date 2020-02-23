@@ -343,7 +343,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         return true;
                     }
                     newVars.push_back(ast.root->get(i)->value());
-                    sym.insert(std::pair<string, UL>(ast.root->get(i)->value(), stkOffset++));
+                    sym[ast.root->get(i)->value()] = stkOffset++;
                 }
                 break;
             }

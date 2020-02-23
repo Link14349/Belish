@@ -1,5 +1,7 @@
 import "io";
-
-for (let i = 0; i < 100; i++) {
-    io.println("Hello,", i);
+let a = 0;
+io.println(a);
+if (1) {
+    let a = 1;
+    io.println(a);
 }

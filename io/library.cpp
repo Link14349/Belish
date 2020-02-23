@@ -29,7 +29,7 @@ Belish::Value* write(Belish::Stack* argv) {
     if (argv->length() < 2) return new Belish::Boolean(false);
     string path = argv->get(0)->toString();
     string content = argv->get(1)->toString();
-    std::fstream fs(path, std::ios::trunc);
+    std::ofstream fs(path, std::ios::trunc | std::ios::out);
     if (!fs.good()) {
         std::cout << path << std::endl;
         fs.close();
@@ -43,7 +43,7 @@ Belish::Value* app(Belish::Stack* argv) {
     if (argv->length() < 2) return new Belish::Boolean(false);
     string path = argv->get(0)->toString();
     string content = argv->get(1)->toString();
-    std::fstream fs(path, std::ios::app);
+    std::ofstream fs(path, std::ios::app | std::ios::out);
     if (!fs.good()) {
         fs.close();
         return new Belish::Boolean(false);

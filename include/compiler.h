@@ -37,6 +37,7 @@ namespace Belish {
         bool isRoot = false;
         bool pushedFun = false;
         bool compilingForLoopCon = false;
+        bool compilingForLoopUpd = false;
         bool parentIsSet = false;
         UL pushedFunID;
         UL argCount = 0;

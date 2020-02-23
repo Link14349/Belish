@@ -239,6 +239,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
 //                bytecode += "\x06";
                 auto lastConAdrS = transI32S_bin(bytecode.length());
                 scCompiler.ast.root = conAsts->get(2);
+                scCompiler.compilingForLoopUpd = true;
                 scCompiler.compile_(bytecode);
                 bytecode += (char) JMP;
                 bytecode += conAdrS;
@@ -667,13 +668,20 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         break;
                     case Lexer::DADD_TOKEN:
                     case Lexer::DSUB_TOKEN:
-                        bytecode += (char)OPID::SAV;
-                        bytecode += (char)OPID::PUSH_NUM;
-                        bytecode += transI64S_bin(transDI64_bin(1));
-                        if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
-                        else bytecode += (char)OPID::SUB;
-                        bytecode += (char)OPID::POP;
-                        bytecode += (char)OPID::BAC;
+                        if (compilingForLoopUpd) {
+                            bytecode += (char)OPID::PUSH_NUM;
+                            bytecode += transI64S_bin(transDI64_bin(1));
+                            if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
+                            else bytecode += (char)OPID::SUB;
+                        } else {
+                            bytecode += (char)OPID::SAV;
+                            bytecode += (char)OPID::PUSH_NUM;
+                            bytecode += transI64S_bin(transDI64_bin(1));
+                            if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
+                            else bytecode += (char)OPID::SUB;
+                            bytecode += (char)OPID::POP;
+                            bytecode += (char)OPID::BAC;
+                        }
                         break;
                 }
                 if (independent)

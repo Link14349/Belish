@@ -577,6 +577,21 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         bytecode += transI64S_bin(transDI64_bin(transSD(ast.root->get(1)->value())));
                         goto FINISH_A_COM;
                     }
+                } else if (compilingForLoopUpd) {
+                    if ((ast.root->type() == Lexer::DADD_TOKEN || ast.root->type() == Lexer::DSUB_TOKEN) && !ast.root->get(0)->length() && regVar.find(ast.root->get(0)->value()) != regVar.end()) {
+                        if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char) REG_ADD;
+                        else bytecode += (char) REG_SUB;
+                        bytecode += regVar[ast.root->get(0)->value()];
+                        bytecode += transI64S_bin(transDI64_bin(1));
+                        goto FINISH_A_COM;
+                    }
+                    if ((ast.root->type() == Lexer::ADD_TO_TOKEN || ast.root->type() == Lexer::SUB_TO_TOKEN) && ast.root->length() == 2 && ast.root->get(0)->type() == Lexer::UNKNOWN_TOKEN && ast.root->get(1)->type() == Lexer::NUMBER_TOKEN && regVar.find(ast.root->get(0)->value()) != regVar.end()) {
+                        if (ast.root->type() == Lexer::ADD_TO_TOKEN) bytecode += (char) REG_ADD;
+                        else bytecode += (char) REG_SUB;
+                        bytecode += regVar[ast.root->get(0)->value()];
+                        bytecode += transI64S_bin(transDI64_bin(transSD(ast.root->get(1)->value())));
+                        goto FINISH_A_COM;
+                    }
                 }
                 if (compiler.compile_(bytecode, ast.root->type() > Lexer::SRIGHT_TOKEN && ast.root->type() < Lexer::IN_TOKEN))
                     return true;
@@ -668,20 +683,13 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         break;
                     case Lexer::DADD_TOKEN:
                     case Lexer::DSUB_TOKEN:
-                        if (compilingForLoopUpd) {
-                            bytecode += (char)OPID::PUSH_NUM;
-                            bytecode += transI64S_bin(transDI64_bin(1));
-                            if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
-                            else bytecode += (char)OPID::SUB;
-                        } else {
-                            bytecode += (char)OPID::SAV;
-                            bytecode += (char)OPID::PUSH_NUM;
-                            bytecode += transI64S_bin(transDI64_bin(1));
-                            if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
-                            else bytecode += (char)OPID::SUB;
-                            bytecode += (char)OPID::POP;
-                            bytecode += (char)OPID::BAC;
-                        }
+                        bytecode += (char)OPID::SAV;
+                        bytecode += (char)OPID::PUSH_NUM;
+                        bytecode += transI64S_bin(transDI64_bin(1));
+                        if (ast.root->type() == Lexer::DADD_TOKEN) bytecode += (char)OPID::ADD;
+                        else bytecode += (char)OPID::SUB;
+                        bytecode += (char)OPID::POP;
+                        bytecode += (char)OPID::BAC;
                         break;
                 }
                 if (independent)

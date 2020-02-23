@@ -48,6 +48,15 @@
 | 2b | push_fun | push_fun <unsigned int> | Stack the function with number <unsigned int> |
 | 2c | call_fun | call_fun | Call the function at the top of the stack |
 | 2d | imp | imp | Import the module(the path is saved at the top of the stack) |
+| 2e | load | load | Load the library(the path is saved at the top of the stack) |
+| 2f | reg_eq | reg_eq <byte>, <double> | Compare the value in the register with the second parameter |
+| 30 | reg_neq | reg_neq <byte>, <double> | Compare the value in the register with the second parameter |
+| 31 | reg_leq | reg_leq <byte>, <double> | Compare the value in the register with the second parameter |
+| 32 | reg_meq | reg_meq <byte>, <double> | Compare the value in the register with the second parameter |
+| 32 | reg_less | reg_less <byte>, <double> | Compare the value in the register with the second parameter |
+| 32 | reg_more | reg_more <byte>, <double> | Compare the value in the register with the second parameter |
+| 33 | reg_add | reg_add <byte>, <double> | Add the value in the register to the second parameter |
+| 34 | reg_sub | reg_sub <byte>, <double> | Sub the value in the register to the second parameter |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

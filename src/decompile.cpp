@@ -123,8 +123,10 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(REG_NEQ) goto DECOM_SWITCH_REG_COM_CASE;
             CASE_OP(REG_LEQ) goto DECOM_SWITCH_REG_COM_CASE;
             CASE_OP(REG_MEQ) goto DECOM_SWITCH_REG_COM_CASE;
-            CASE_OP(REG_MORE)
-            CASE_OP(REG_LESS)
+            CASE_OP(REG_MORE) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_LESS) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_ADD) goto DECOM_SWITCH_REG_COM_CASE;
+            CASE_OP(REG_SUB)
             {
                 DECOM_SWITCH_REG_COM_CASE:
                 GETBYTE;

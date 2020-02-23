@@ -18,7 +18,7 @@ namespace Belish {
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
         SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP, LOAD,
-        REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG
+        REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB
     };
     class Compiler {
     public:

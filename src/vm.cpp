@@ -452,6 +452,22 @@ void Belish::BVM::run() {
                 stk->push(new Boolean(((Number*)regs[reg])->value() < transI64D_bin(ebyte)));
                 break;
             }
+            case REG_ADD:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                ((Number*)regs[reg])->value() += transI64D_bin(ebyte);
+                break;
+            }
+            case REG_SUB:
+            {
+                GETBYTE;
+                auto reg = byte;
+                GETEBYTE
+                ((Number*)regs[reg])->value() -= transI64D_bin(ebyte);
+                break;
+            }
             case MOV_REG:
             {
                 GETQBYTE

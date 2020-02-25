@@ -520,6 +520,36 @@ void Belish::AST::parse() {
             lexer.line(lexerLine);
             break;
         }
+        case Lexer::LNOT_TOKEN:
+        {
+            auto sl = lexer.line();
+            root = new node(Lexer::LNOT_TOKEN, "", baseLine + lexer.line());
+            string v;
+            GET;
+            while (!(FINISH_GET)) {
+                v += token.s + " ";
+                GET;
+            }
+            AST parser(v, baseLine + sl);
+            parser.parse();
+            root->insert(parser.root);
+            break;
+        }
+        case Lexer::MNOT_TOKEN:
+        {
+            auto sl = lexer.line();
+            root = new node(Lexer::MNOT_TOKEN, "", baseLine + lexer.line());
+            string v;
+            GET;
+            while (!(FINISH_GET)) {
+                v += token.s + " ";
+                GET;
+            }
+            AST parser(v, baseLine + sl);
+            parser.parse();
+            root->insert(parser.root);
+            break;
+        }
         case Lexer::DADD_TOKEN:
             root = new node(Lexer::ADD_TO_TOKEN, "", baseLine + lexer.line());
         case Lexer::DSUB_TOKEN:
@@ -822,15 +852,36 @@ inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
 }
 
 void Belish::AST::optimization() {
-    if (root) root->optimization();
+    if (root) root->optimization(valueTracking);
 }
 
-void Belish::AST::node::optimization() {
+void Belish::AST::node::optimization(map<string, VariableValue*>* valueTracking) {
     /*
      * 优化语法树构建的结构
      * 比如将1+2的树形结构改为3
      * */
-    for (UL i = 0; i < length(); i++) get(i)->optimization();
+    UL i = 0;
+    if (type() == Lexer::UNKNOWN_TOKEN && valueTracking) {
+        auto vti = valueTracking->find(value());
+        if (vti != valueTracking->end()) {
+            switch (vti->second->type) {
+                case NUMBER_T:
+                    type(Lexer::NUMBER_TOKEN);
+                    break;
+                case STRING_T:
+                    type(Lexer::STRING_TOKEN);
+                    break;
+                default:
+                    goto AST_OPT_OPT;
+            }
+            value(vti->second->val);
+            i++;
+        }
+    }
+    AST_OPT_OPT:
+    for (; i < length(); i++) {
+        get(i)->optimization();
+    }
     if (type() >= Lexer::MAND_TOKEN && type() <= Lexer::SRIGHT_TOKEN && type() != Lexer::LNOT_TOKEN && type() != Lexer::MNOT_TOKEN) {
         auto left = get(0);
         auto right = get(1);

@@ -42,6 +42,8 @@ bool Belish::Compiler::compile(string &bytecode) {
 
 bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>* brTab, std::list<UL>* ctTab) {
 //    ULL st = 0, ed = 0;
+    if (!ast.child) valueTracking = new map<string, VariableValue*>;
+    ast.valueTracking = valueTracking;
     std::list<AST::node*> functionAsts;
     newVars.clear();
     while (true) {
@@ -62,6 +64,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.regValue = regValue;
                 compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
+                compiler.valueTracking = valueTracking;
                 compiler.macro = macro;
                 if (ast.root->get(0)->type() == Lexer::BRACKETS_LEFT_TOKEN && funName == ast.root->get(0)->get(0)->value()) {
                     if (ast.root->get(0)->length() - 1 < argCount) {
@@ -116,6 +119,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.macro = macro;
                 compiler.independent = false;
                 compiler.ast.child = true;
+                compiler.valueTracking = valueTracking;
                 compiler.ast.root = ast.root->get(0);
                 compiler.compile_(bytecode);
                 compiler.ast.root = ast.root->get(1);
@@ -136,6 +140,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.regCount = regCount;
                 scCompiler.regValue = regValue;
                 scCompiler.regVar = regVar;
+                scCompiler.valueTracking = valueTracking;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
                 std::list<UL> tags;
@@ -208,6 +213,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.regValue = regValue;
                 scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
+                scCompiler.valueTracking = valueTracking;
                 scCompiler.ast.root = conAsts->get(0);
                 scCompiler.compile_(bytecode);
                 auto loopVars = scCompiler.newVars;
@@ -267,6 +273,30 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 break;
             }
             case Lexer::UNKNOWN_TOKEN: {
+                if (independent) goto FINISH_A_COM;
+                if (ast.root->value() == "true") {
+                    bytecode += (char) PUSH_TRUE;
+                    goto FINISH_A_COM;
+                } else if (ast.root->value() == "false") {
+                    bytecode += (char) PUSH_FALSE;
+                    goto FINISH_A_COM;
+                }
+//                if (!leftValue) {
+//                    auto vti = valueTracking->find(ast.root->value());
+//                    if (vti != valueTracking->end()) {
+//                        switch (vti->second->type) {
+//                            case NUMBER_T:
+//                                bytecode += (char) PUSH_NUM;
+//                                bytecode += transI64S_bin(transDI64_bin(transSD(vti->second->val)));
+//                                goto FINISH_A_COM;
+//                            case STRING_T:
+//                                bytecode += (char) PUSH_STR;
+//                                bytecode += transI32S_bin(vti->second->val.length());
+//                                bytecode += vti->second->val;
+//                                goto FINISH_A_COM;
+//                        }
+//                    }
+//                }
                 bool isNotFun = true;
                 auto oi = sym.find(ast.root->value());
                 if (oi == sym.end()) {
@@ -290,6 +320,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         compiler.regVar = regVar;
                         compiler.functionAdrTab = functionAdrTab;
                         compiler.macro = macro;
+                        compiler.valueTracking = valueTracking;
                         compiler.independent = false;
                         compiler.compile_(bytecode);
                         break;
@@ -298,7 +329,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 auto offset = oi->second;
                 if (inOPTOEXPR) bytecode += (char)OPID::REFER + transI32S_bin(offset);
                 else if (isNotFun) bytecode += (char)OPID::PUSH + transI32S_bin(offset);
-                if (independent) bytecode += (char) POP;
                 break;
             }
             case Lexer::OBJECT_TOKEN:
@@ -313,6 +343,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.regCount = regCount;
                     compiler.regValue = regValue;
                     compiler.regVar = regVar;
+                    compiler.valueTracking = valueTracking;
                     compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.ast.root = ast.root->get(i + 1);
@@ -340,6 +371,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.regCount = regCount;
                 compiler.regValue = regValue;
                 compiler.regVar = regVar;
+                compiler.valueTracking = valueTracking;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
                 compiler.compile_(bytecode);
@@ -372,9 +404,21 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.regCount = regCount;
                     compiler.regValue = regValue;
                     compiler.regVar = regVar;
+                    compiler.valueTracking = valueTracking;
                     compiler.functionAdrTab = functionAdrTab;
                     compiler.macro = macro;
                     compiler.stkOffset = stkOffset;
+                    if (ast.root->get(i + 1)->type() != Lexer::PN_DREFER_TOKEN) {
+                        if (ast.root->get(i + 1)->get(0)->type() == Lexer::NUMBER_TOKEN) {
+                            (*valueTracking)[ast.root->get(i)->value()] = new VariableValue(NUMBER_T, ast.root->get(i + 1)->get(0)->value());
+                        } else if (ast.root->get(i + 1)->get(0)->type() == Lexer::UNKNOWN_TOKEN) {
+                            (*valueTracking)[ast.root->get(i)->value()] = new VariableValue( (*valueTracking)[ast.root->get(i + 1)->get(0)->value()]);
+                        } else (*valueTracking)[ast.root->get(i)->value()] = new VariableValue(UNKNOWN_T);
+                    } else {
+                        if (ast.root->get(i + 1)->get(0)->type() == Lexer::UNKNOWN_TOKEN) {
+                            (*valueTracking)[ast.root->get(i)->value()] = (*valueTracking)[ast.root->get(i + 1)->get(0)->value()];
+                        }
+                    }
                     if (compiler.compile_(bytecode, ast.root->get(i + 1)->type() == Lexer::PN_DREFER_TOKEN)) {
                         return true;
                     }
@@ -391,6 +435,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.regCount = regCount;
                 scCompiler.regValue = regValue;
+                scCompiler.valueTracking = valueTracking;
                 scCompiler.regVar = regVar;
                 scCompiler.ast.child = true;
                 scCompiler.independent = false;
@@ -489,6 +534,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.macro = macro;
                 scCompiler.regCount = regCount;
                 scCompiler.regValue = regValue;
+                scCompiler.valueTracking = valueTracking;
                 scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
@@ -527,6 +573,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.sym = sym;
                 compiler.regCount = regCount;
                 compiler.regValue = regValue;
+                compiler.valueTracking = valueTracking;
                 compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
@@ -560,6 +607,45 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         bytecode += (char)OPID::POP;
                     break;
                 } else if (ast.root->type() == Lexer::SET_TOKEN) {
+                    if (ast.root->get(0)->type() == Lexer::UNKNOWN_TOKEN) {
+                        auto iter = valueTracking->find(ast.root->get(0)->value());
+                        if (iter != valueTracking->end()) {
+                            switch (ast.root->get(1)->type()) {
+                                case Lexer::NUMBER_TOKEN:
+                                    iter->second->type = NUMBER_T;
+                                    break;
+                                case Lexer::STRING_TOKEN:
+                                    iter->second->type = STRING_T;
+                                    break;
+                            }
+                            iter->second->val = ast.root->get(1)->value();
+                        }
+                    }
+                    compiler.parentIsSet = true;
+                } else if (ast.root->type() == Lexer::ADD_TO_TOKEN) {
+                    if (ast.root->get(0)->type() == Lexer::UNKNOWN_TOKEN) {
+                        auto iter = valueTracking->find(ast.root->get(0)->value());
+                        if (iter != valueTracking->end()) {
+                            if (iter->second->type <= STRING_T) {
+                                switch (ast.root->get(1)->type()) {
+                                    case Lexer::NUMBER_TOKEN:
+                                        if (iter->second->type != NUMBER_T) {
+                                            std::cerr << "BLE105: Wrong type at <" << filename << ">:" << ast.line() << std::endl;
+                                            return true;
+                                        }
+                                        iter->second->val = std::to_string(transSD(iter->second->val) + transSD(ast.root->get(1)->value()));
+                                        break;
+                                    case Lexer::STRING_TOKEN:
+                                        if (iter->second->type != STRING_T) {
+                                            std::cerr << "BLE105: Wrong type at <" << filename << ">:" << ast.line() << std::endl;
+                                            return true;
+                                        }
+                                        iter->second->val +=ast.root->get(1)->value();
+                                        break;
+                                }
+                            }
+                        }
+                    }
                     compiler.parentIsSet = true;
                 }
                 if (compilingForLoopCon) {
@@ -736,5 +822,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         bytecode += (char) PUSH_UND;
         bytecode += (char) RET;
     }
+    delete valueTracking;
     return false;
 }

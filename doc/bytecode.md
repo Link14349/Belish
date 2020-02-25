@@ -57,6 +57,8 @@
 | 32 | reg_more | reg_more <byte>, <double> | Compare the value in the register with the second parameter |
 | 33 | reg_add | reg_add <byte>, <double> | Add the value in the register to the second parameter |
 | 34 | reg_sub | reg_sub <byte>, <double> | Sub the value in the register to the second parameter |
+| 35 | push_true | push_true | Push a value: true |
+| 36 | push_false | push_true | Push a value: false |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

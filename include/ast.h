@@ -3,10 +3,20 @@
 
 #include <string>
 #include "lex.h"
+#include "values.h"
 using std::string;
 using std::vector;
 
 namespace Belish {
+    TYPE_VAL_ENUM_DEF(VV_TYPE, _T, UNKNOWN)
+    struct VariableValue {
+        VariableValue(VV_TYPE t, const string& s) : type(t), val(s) {  }
+        VariableValue(const VariableValue& vv) : type(vv.type), val(vv.val) {  }
+        VariableValue(const VariableValue* const vv) : type(vv->type), val(vv->val) {  }
+        VariableValue(VV_TYPE t) : type(t) {  }
+        VV_TYPE type;
+        string val;
+    };
     class AST {
     public:
         AST() : root(nullptr), script(""), child(false), baseLine(0), lexer(script) { }
@@ -53,7 +63,7 @@ namespace Belish {
             void insert(node* n) { children.push_back(n); }
             void insert(Lexer::TOKENS y, const string& v, UL l) { children.push_back(new node(y, v, l)); }
             void clear() { children.clear(); }
-            void optimization();
+            void optimization(map<string, VariableValue*>* valueTracking = nullptr);
             ~node() {
                 LL sz = children.size();
                 if (sz <= 0) return;
@@ -72,6 +82,7 @@ namespace Belish {
         node* root;
         string script;
         Lexer lexer;
+        map<string, VariableValue*>* valueTracking = nullptr;
         static inline unsigned short priority(Lexer::TOKENS& tk);
     public:
         node* rValue() { return root; }

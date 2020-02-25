@@ -4,6 +4,7 @@
 #include <map>
 #include <list>
 #include "ast.h"
+#include "values.h"
 using std::map;
 
 #define MBDKV "\x01"
@@ -18,7 +19,7 @@ namespace Belish {
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
         SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP, LOAD,
-        REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB
+        REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB, PUSH_TRUE, PUSH_FALSE
     };
     class Compiler {
     public:
@@ -28,6 +29,7 @@ namespace Belish {
         bool compile(string&);
         bool compile_(string&, bool = false, std::list<UL>* = nullptr, std::list<UL>* = nullptr);
     private:
+
         UL stkOffset = 0;
         UL funOffset = 0;
         string filename;
@@ -39,12 +41,15 @@ namespace Belish {
         bool compilingForLoopCon = false;
         bool compilingForLoopUpd = false;
         bool parentIsSet = false;
+//        bool leftValue = false;
         UL pushedFunID;
         UL argCount = 0;
         string funName;
         UL funStart;
         char regCount = REG_COUNT - 1;
         map<string, char> regVar;
+        map<string, VariableValue*>* valueTracking;
+        map<string, string> links;
         map<string, char> regValue;
         map<string, UL> sym;
         map<string, string> macro;

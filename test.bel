@@ -1,1 +1,4 @@
-for (let i = 0; i < 10000000; i += 1) { }
+let a = 100, c -> a;
+a += 10;
+let b = a * 2;
+debugger;

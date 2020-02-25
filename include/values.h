@@ -10,9 +10,11 @@
 using std::vector;
 
 namespace Belish {
-    enum TYPE {
-        NUMBER, STRING, OBJECT, UNDEFINED, FUNCTION, INT, NFUNCTION, BOOLEAN
+#define TYPE_VAL_ENUM_DEF(TYPE, SUFFIX, ADDTION) \
+    enum TYPE { \
+        NUMBER##SUFFIX, STRING##SUFFIX, OBJECT##SUFFIX, UNDEFINED##SUFFIX, FUNCTION##SUFFIX, INT##SUFFIX, NFUNCTION##SUFFIX, BOOLEAN##SUFFIX, ADDTION##SUFFIX \
     };
+    TYPE_VAL_ENUM_DEF(TYPE, , )
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
     public:
@@ -20,28 +22,30 @@ namespace Belish {
         virtual Value* copy() = 0;
         virtual string toString() = 0;
         virtual string toStringHL() = 0;// 高亮、缩进显示
-        virtual void add(Value*) = 0;
-        virtual void sub(Value*) = 0;
-        virtual void mul(Value*) = 0;
-        virtual void div(Value*) = 0;
-        virtual void mod(Value*) = 0;
-        virtual void eq(Value*) = 0;
-        virtual void neq(Value*) = 0;
-        virtual void leq(Value*) = 0;
-        virtual void meq(Value*) = 0;
-        virtual void less(Value*) = 0;
-        virtual void more(Value*) = 0;
-        virtual void mand(Value*) = 0;
-        virtual void mor(Value*) = 0;
-        virtual void mxor(Value*) = 0;
-        virtual void land(Value*) = 0;
-        virtual void lor(Value*) = 0;
-        virtual void pow(Value*) = 0;
-        virtual void shiftl(Value*) = 0;
-        virtual void shiftr(Value*) = 0;
-        virtual bool isTrue() = 0;
-        virtual bool isFalse() = 0;
-        virtual void set(Value*) = 0;
+        virtual void add(Value*) { ; }
+        virtual void sub(Value*) { ; }
+        virtual void mul(Value*) { ; }
+        virtual void div(Value* ) { ; }
+        virtual void mod(Value* ) { ; }
+        virtual void eq(Value* ) { ; }
+        virtual void neq(Value* ) { ; }
+        virtual void leq(Value* ) { ; }
+        virtual void meq(Value* ) { ; }
+        virtual void less(Value* ) { ; }
+        virtual void more(Value* ) { ; }
+        virtual void mand(Value* ) { ; }
+        virtual void mor(Value* ) { ; }
+        virtual void mxor(Value* ) { ; }
+        virtual void land(Value* ) { ; }
+        virtual void lor(Value* ) { ; }
+        virtual void pow(Value* ) { ; }
+        virtual void shiftl(Value* ) { ; }
+        virtual void shiftr(Value* ) { ; }
+        virtual void lnot() { ; }
+        virtual void mnot() { ; }
+        virtual bool isTrue( ) { return true; }
+        virtual bool isFalse( ) { return false; }
+        virtual void set(Value* ) { ; }
         UL count() { return linked; }
     protected:
         friend class Stack;
@@ -107,8 +111,10 @@ namespace Belish {
         void lor(Value* n) override { val = val || ((Int*)n)->val; }
         void pow(Value* n) override { val = std::pow(val, ((Int*)n)->val); }
         void set(Value* n) override { val = ((Int*)n)->val; }
-        void shiftl(Value* n) override { val = (((ULL)val) << ((ULL)((Number*)n)->value())); }
-        void shiftr(Value* n) override { val = (((ULL)val) >> ((ULL)((Number*)n)->value())); }
+        void shiftl(Value* n) override { val = (val << (((Int*)n)->value())); }
+        void shiftr(Value* n) override { val = (val >> (((Int*)n)->value())); }
+        virtual void lnot() { val = !val; }
+        virtual void mnot() { val = ~val; }
         bool isTrue() override { return val != 0; }
         bool isFalse() override { return val == 0; }
         uint64_t& value() { return val; }
@@ -168,26 +174,16 @@ namespace Belish {
         string toStringHL() { return "\033[36m" + string(val ? "true" : "false") + "\033[0m"; }
         bool& value() { return val; }
         Value* copy() override { return new Boolean(val); }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
+        void eq(Value* n) override { val = val == ((Boolean*)n)->val; }
+        void neq(Value* n) override { val = val != ((Boolean*)n)->val; }
+        void mand(Value* n) override { val = val & ((Boolean*)n)->val; }
+        void mor(Value* n) override { val = val | ((Boolean*)n)->val; }
+        void mxor(Value* n) override { val = val ^ ((Boolean*)n)->val; }
+        void land(Value* n) override { val = val && ((Boolean*)n)->val; }
+        void lor(Value* n) override { val = val || ((Boolean*)n)->val; }
+        void set(Value* n) override { val = ((Boolean*)n)->val; }
+        virtual void lnot() { val = !val; }
+        virtual void mnot() { val = ~val; }
         bool isTrue() override { return val; }
         bool isFalse() override { return !val; }
     private:
@@ -200,26 +196,6 @@ namespace Belish {
         string toString() { return "undefined"; }
         string toStringHL() { return "\033[35mundefined\033[0m"; }
         Value* copy() override { return new Undefined; }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
         bool isTrue() override { return false; }
         bool isFalse() override { return true; }
     private:
@@ -262,23 +238,6 @@ namespace Belish {
             }
             return obj;
         }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
         void set(Value* n) override {
             auto obj = (Object*)n;
             for (auto & i : prop) {
@@ -290,8 +249,6 @@ namespace Belish {
                 prop[i.first] = i.second;
             }
         }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
         bool isTrue() override { return !prop.empty(); }
         bool isFalse() override { return prop.empty(); }
         Value* operator[](const string& k) {
@@ -345,26 +302,6 @@ namespace Belish {
         string toString() { return "<function #" + std::to_string(index + module) + ">"; }
         string toStringHL() { return "\033[35m<function #" + std::to_string(index + module) + ">\033[0m"; }
         Value* copy() override { return new Function(index, module); }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
         bool isTrue() override { return true; }
         bool isFalse() override { return false; }
     private:
@@ -384,26 +321,6 @@ namespace Belish {
         Value* copy() override { return new NFunction(fun); }
         Value* call(Stack* stack) { return fun(stack); }
         bool good() { return fun; }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
         bool isTrue() override { return true; }
         bool isFalse() override { return false; }
     private:
@@ -416,26 +333,6 @@ namespace Belish {
         string toString() { return "<NativeValue>"; }
         string toStringHL() { return "\033[35m<NativeValue>\033[0m"; }
         Value* copy() override { return new NValue(val); }
-        void add(Value* n) override { ; }
-        void sub(Value* n) override { ; }
-        void mul(Value* n) override { ; }
-        void div(Value* n) override { ; }
-        void mod(Value* n) override { ; }
-        void eq(Value* n) override { ; }
-        void neq(Value* n) override { ; }
-        void leq(Value* n) override { ; }
-        void meq(Value* n) override { ; }
-        void less(Value* n) override { ; }
-        void more(Value* n) override { ; }
-        void mand(Value* n) override { ; }
-        void mor(Value* n) override { ; }
-        void mxor(Value* n) override { ; }
-        void land(Value* n) override { ; }
-        void lor(Value* n) override { ; }
-        void pow(Value* n) override { ; }
-        void set(Value* n) override { ; }
-        void shiftl(Value* n) override { ; }
-        void shiftr(Value* n) override { ; }
         bool isTrue() override { return true; }
         bool isFalse() override { return false; }
     private:

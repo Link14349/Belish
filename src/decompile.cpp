@@ -91,6 +91,8 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(CALL_FUN) printf("\n"); break;
             CASE_OP(IMP) printf("\n"); break;
             CASE_OP(LOAD) printf("\n"); break;
+            CASE_OP(PUSH_TRUE) printf("\n"); break;
+            CASE_OP(PUSH_FALSE) printf("\n"); break;
             CASE_OP(PUSH_NUM) {
                 GETEBYTE
                 printf("%lf\n", transI64D_bin(ebyte));

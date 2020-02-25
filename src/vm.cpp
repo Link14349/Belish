@@ -239,6 +239,22 @@ void Belish::BVM::run() {
                 stk->push(cache);
                 break;
             }
+            case PUSH_TRUE: {
+                stk->push(new Boolean(true));
+                break;
+            }
+            case PUSH_FALSE: {
+                stk->push(new Boolean(false));
+                break;
+            }
+            case LNOT: {
+                stk->top()->lnot();
+                break;
+            }
+            case MNOT: {
+                stk->top()->mnot();
+                break;
+            }
             case MOV: {
                 auto v = stk->get(stk->length() - 2);
                 auto t = stk->top();

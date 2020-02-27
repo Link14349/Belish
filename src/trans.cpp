@@ -54,7 +54,7 @@ void Belish::escape(string& str) {
             if (sign) str.replace(i - 1, 2, "\\");
             sign = !sign;
         } else if (sign) {
-            char target = 0xff;
+            char target = 0x00;
             switch (str[i]) {
                 case 'a': target = '\a'; break;
                 case 'b': target = '\b'; break;

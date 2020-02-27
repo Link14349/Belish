@@ -780,7 +780,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         bytecode[footerAdrStoreAdr + 2] = footerAdrStr[2];
         bytecode[footerAdrStoreAdr + 3] = footerAdrStr[3];
         bytecode += transI32S_bin(compiler.outerUsingList.size());
-        for (std::__1::__list_iterator<unsigned int, void *>::value_type & iter : compiler.outerUsingList) {
+        for (auto & iter : compiler.outerUsingList) {
             bytecode += transI32S_bin(iter);
         }
     }

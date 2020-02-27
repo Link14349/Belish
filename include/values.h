@@ -18,6 +18,7 @@ namespace Belish {
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
     public:
+        virtual ~Value() {}
         virtual TYPE type() = 0;
         virtual Value* copy() = 0;
         virtual string toString() = 0;
@@ -56,6 +57,7 @@ namespace Belish {
     class Number : public Value {
     public:
         Number(double n = 0) : val(n) { linked = 0;  }
+        virtual ~Number() {}
         TYPE type() { return NUMBER; }
         string toString() { return std::to_string(val); }
         string toStringHL() { return "\033[33m" + std::to_string(val) + "\033[0m"; }
@@ -89,6 +91,7 @@ namespace Belish {
     class Int : public Value {
     public:
         Int(double n = 0) : val(n) { linked = 0;  }
+        virtual ~Int() {}
         TYPE type() { return INT; }
         string toString() { return std::to_string(val); }
         string toStringHL() { return "\033[33m" + std::to_string(val) + "\033[0m"; }
@@ -124,6 +127,7 @@ namespace Belish {
     class String : public Value {
     public:
         String(const string& n = "") : val(n) { linked = 0; }
+        virtual ~String() {}
         TYPE type() { return STRING; }
         string toString() { return val; }
         string toStringHL() { return "\033[36m\"" + val + "\"\033[0m"; }
@@ -169,6 +173,7 @@ namespace Belish {
     class Boolean : public Value {
     public:
         Boolean(bool n = true) : val(n) { linked = 0; }
+        virtual ~Boolean() {}
         TYPE type() { return STRING; }
         string toString() { return val ? "true" : "false"; }
         string toStringHL() { return "\033[36m" + string(val ? "true" : "false") + "\033[0m"; }
@@ -192,6 +197,7 @@ namespace Belish {
     class Undefined : public Value {
     public:
         Undefined() { linked = 0; }
+        virtual ~Undefined() {}
         TYPE type() { return UNDEFINED; }
         string toString() { return "undefined"; }
         string toStringHL() { return "\033[35mundefined\033[0m"; }
@@ -204,6 +210,12 @@ namespace Belish {
     class Object : public Value {
     public:
         Object() { linked = 0; }
+        virtual ~Object() {
+            for (auto& i : prop) {
+                i.second->linked--;
+                if (i.second->linked == 0) delete i.second;
+            }
+        }
         TYPE type() { return OBJECT; }
         string toString() {
             return "\n" + toString("");
@@ -266,12 +278,6 @@ namespace Belish {
             prop[k] = val;
             val->linked++;
         }
-        ~Object() {
-            for (auto & i : prop) {
-                i.second->linked--;
-                if (i.second->linked == 0) delete i.second;
-            }
-        }
         class Iterator {
         public:
             Iterator(const Iterator& iterator) : binding(iterator.binding), iter(iterator.iter) { }
@@ -297,6 +303,7 @@ namespace Belish {
     class Function : public Value {
     public:
         Function(UL i = 0, UL m = 0) : index(i), module(m) { linked = 0; }// module默认为0, 0代表自己
+        virtual ~Function() {}
         UL id() { return index; }
         TYPE type() { return FUNCTION; }
         string toString() { return "<function #" + std::to_string(index + module) + ">"; }
@@ -315,6 +322,7 @@ namespace Belish {
     class NFunction : public Value {// Native Function
     public:
         NFunction(_NFunction nFunction = nullptr) : fun(nFunction) { linked = 0; }// module默认为0, 0代表自己
+        virtual ~NFunction() {}
         TYPE type() { return NFUNCTION; }
         string toString() { return "<NativeFunction>"; }
         string toStringHL() { return "\033[35m<NativeFunction>\033[0m"; }
@@ -329,6 +337,7 @@ namespace Belish {
     class NValue : public Value {// Native Value
     public:
         NValue(void* v = nullptr) : val(v) { linked = 0; }// module默认为0, 0代表自己
+        virtual ~NValue() {}
         TYPE type() { return NFUNCTION; }
         string toString() { return "<NativeValue>"; }
         string toStringHL() { return "\033[35m<NativeValue>\033[0m"; }

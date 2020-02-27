@@ -162,7 +162,7 @@ void Belish::decompile(char* bytecode, ULL len) {
                 GETQBYTE
                 UL strlen = qbyte;
                 string str;
-                for (auto j = 0; j < strlen; j++, i++) {
+                for (UL j = 0; j < strlen; j++, i++) {
                     str += bytecode[i];
                 }
                 std::cout << "[" << strlen << "] \"" << str << "\"" << std::endl;

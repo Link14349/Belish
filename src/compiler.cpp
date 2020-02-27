@@ -755,7 +755,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         bytecode += (char) PUSH_UND;
         bytecode += (char) RET;
         bytecode += transI32S_bin(compiler.needOut.size());
-        for (std::__1::__list_iterator<unsigned int, void *>::value_type & iter : compiler.outerUsingList) {
+        for (auto & iter : compiler.outerUsingList) {
             bytecode += transI32S_bin(iter);
         }
     }

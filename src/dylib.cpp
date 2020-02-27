@@ -1,3 +1,4 @@
+#include "dylib.h"
 #ifdef I_OS_WIN32
 // windows
 #include<wtypes.h>
@@ -6,7 +7,6 @@
 // linux, mac, unix等
 #include <dlfcn.h>
 #endif
-#include "dylib.h"
 
 bool Belish::Dylib::open() {
     if (dyhandle) close();

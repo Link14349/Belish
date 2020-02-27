@@ -171,7 +171,7 @@ void Belish::BVM::run() {
                 GETQBYTE
                 UL strlen = qbyte;
                 string str;
-                for (auto j = 0; j < strlen; j++, i++) {
+                for (UL j = 0; j < strlen; j++, i++) {
                     str += bytecode[i];
                 }
                 stk->push(new String(str));

@@ -10,6 +10,9 @@
 | BLE201 | Unexpected continue | Delete it |
 | BLE202 | Unexpected condition | Check it |
 | BLE300 | IOError: Failed to open the module | Check the module path |
+| BLE400 | Unexpected global flag | Delete your global flag |
+| BLE401 | Unexpected global symbol | Checkout your symbol |
+| BLE402 | Reusable global name | Checkout your symbol |
 
 ## BLE1
 _About expression/variable/function defining errors_

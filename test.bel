@@ -1,4 +1,7 @@
-let a = 100, c -> a;
-a += 10;
-let b = a * 2;
-debugger;
+let a = 0;
+
+def test() {
+    global a;
+    return a;
+}
+let b = test();

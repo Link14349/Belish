@@ -59,6 +59,7 @@
 | 34 | reg_sub | reg_sub <byte>, <double> | Sub the value in the register to the second parameter |
 | 35 | push_true | push_true | Push a value: true |
 | 36 | push_false | push_true | Push a value: false |
+| 37 | push_outer | push_outer <offset> | Push outer value |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
@@ -107,10 +108,11 @@ array<size>: length + {[size]...} -> [length] [0:]
 address: 4
 length: 4
 index: 4
-string: array
+string: array<1>
 bytecode: [0:]
 function: {
     [bytecode: body]
+    [array<4>: outers]
 }
 
 ```

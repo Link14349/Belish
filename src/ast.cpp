@@ -787,6 +787,27 @@ void Belish::AST::parse() {
         case Lexer::DEBUGGER_TOKEN:
             root = new node(Lexer::DEBUGGER_TOKEN, "", lexer.line() + baseLine);
             break;
+        case Lexer::GLOBAL_TOKEN: {
+            root = new node(Lexer::GLOBAL_TOKEN, "", lexer.line() + baseLine);
+            while (true) {
+                auto preLine = lexer.line();
+                GET;
+                if (token.t != Lexer::UNKNOWN_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", preLine + baseLine);
+                    return;
+                }
+                root->insert(Lexer::UNKNOWN_TOKEN, token.s, preLine + baseLine);
+                GET;
+                if (token.t == Lexer::END_TOKEN) break;
+                if (token.t != Lexer::COMMA_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", preLine + baseLine);
+                    return;
+                }
+            }
+            break;
+        }
         case Lexer::CONTINUE_TOKEN:
             root = new node(Lexer::CONTINUE_TOKEN, "", lexer.line() + baseLine);
             break;
@@ -794,7 +815,6 @@ void Belish::AST::parse() {
             root = new node(Lexer::PROGRAM_END, "", lexer.line() + baseLine);
             break;
     }
-    if (!child) optimization();
 }
 
 inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
@@ -852,36 +872,15 @@ inline unsigned short Belish::AST::priority(Lexer::TOKENS& tk) {
 }
 
 void Belish::AST::optimization() {
-    if (root) root->optimization(valueTracking);
+    if (root) root->optimization();
 }
 
-void Belish::AST::node::optimization(map<string, VariableValue*>* valueTracking) {
+void Belish::AST::node::optimization() {
     /*
      * 优化语法树构建的结构
      * 比如将1+2的树形结构改为3
      * */
-    UL i = 0;
-    if (type() == Lexer::UNKNOWN_TOKEN && valueTracking) {
-        auto vti = valueTracking->find(value());
-        if (vti != valueTracking->end()) {
-            switch (vti->second->type) {
-                case NUMBER_T:
-                    type(Lexer::NUMBER_TOKEN);
-                    break;
-                case STRING_T:
-                    type(Lexer::STRING_TOKEN);
-                    break;
-                default:
-                    goto AST_OPT_OPT;
-            }
-            value(vti->second->val);
-            i++;
-        }
-    }
-    AST_OPT_OPT:
-    for (; i < length(); i++) {
-        get(i)->optimization();
-    }
+    for (UL i = 0; i < length(); i++) get(i)->optimization();
     if (type() >= Lexer::MAND_TOKEN && type() <= Lexer::SRIGHT_TOKEN && type() != Lexer::LNOT_TOKEN && type() != Lexer::MNOT_TOKEN) {
         auto left = get(0);
         auto right = get(1);

@@ -220,6 +220,8 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = DEBUGGER_TOKEN;
     } else if (t.s == "import") {
         t.t = IMPORT_TOKEN;
+    } else if (t.s == "global") {
+        t.t = GLOBAL_TOKEN;
     } else if (t.s == "in") {
         t.t = IN_TOKEN;
     } else if (t.s == "of") {

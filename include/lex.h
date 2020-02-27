@@ -22,7 +22,7 @@ namespace Belish {
             ELSE_TOKEN,
             WHILE_TOKEN, DO_TOKEN, FOR_TOKEN, BREAK_TOKEN, CONTINUE_TOKEN,
             IMPORT_TOKEN,
-            NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN, DEBUGGER_TOKEN,
+            NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN, DEBUGGER_TOKEN, GLOBAL_TOKEN,
             // 注释token
             NOTE_TOKEN,
             // 符号token

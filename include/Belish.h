@@ -10,6 +10,7 @@
 #include "values.h"
 #include "compiler.h"
 #include "decompile.h"
+#include "valueTracker.h"
 
 namespace Belish {
 }

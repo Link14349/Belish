@@ -91,6 +91,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::DEF_TOKEN:
             {
+                bytecode += (char) DEF_FUN;
+                bytecode += transI32S_bin(funOffset);
                 functionAdrTab[ast.root->value()] = funOffset++;
                 functionAsts.push_back(ast.root);
                 functionDefSym.push_back(sym);
@@ -273,7 +275,23 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::GLOBAL_TOKEN: {
                 if (!parent) {
-
+                    std::cerr << "BLE400: Unexpected global flag at <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
+                for (UL i = 0; i < ast.root->length(); i++) {
+                    if (!parent->has(ast.root->get(i)->value())) {
+                        std::cerr << "BLE401: Unexpected global symbol '" << ast.root->get(i)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    }
+                    if (needOut[ast.root->get(i)->value()]) {
+                        std::cerr << "BLE402: Reusable global name '" << ast.root->get(i)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
+                        return true;
+                    }
+                    sym[ast.root->get(i)->value()] = stkOffset++;
+                    bytecode += (char) PUSH_OUTER;
+                    bytecode += transI32S_bin(outerUsingList.size());
+                    needOut[ast.root->get(i)->value()] = true;
+                    outerUsingList.push_back(parent->get(ast.root->get(i)->value()));
                 }
                 break;
             }
@@ -746,6 +764,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         compiler.funStart = bytecode.length();
         for (auto k = 0; k < ast.root->get(0)->length(); k++)
             compiler.sym[ast.root->get(0)->get(k)->value()] = compiler.stkOffset++;
+        UL footerAdrStoreAdr = bytecode.length();
+        bytecode += "0000";
         bytecode += (char) RESIZE;
         bytecode += transI32S_bin(ast.root->get(0)->length());// 参数多了就删，少了就补
         for (auto k = 1; k < ast.root->length(); k++) {
@@ -754,7 +774,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         }
         bytecode += (char) PUSH_UND;
         bytecode += (char) RET;
-        bytecode += transI32S_bin(compiler.needOut.size());
+        string footerAdrStr(transI32S_bin(bytecode.length()));
+        bytecode[footerAdrStoreAdr] = footerAdrStr[0];
+        bytecode[footerAdrStoreAdr + 1] = footerAdrStr[1];
+        bytecode[footerAdrStoreAdr + 2] = footerAdrStr[2];
+        bytecode[footerAdrStoreAdr + 3] = footerAdrStr[3];
+        bytecode += transI32S_bin(compiler.outerUsingList.size());
         for (auto & iter : compiler.outerUsingList) {
             bytecode += transI32S_bin(iter);
         }

@@ -13,6 +13,9 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
+    vector<vector<UL> > outers;
+    vector<vector<Value*> > outersDefs;
+    vector<Value*>* closure = nullptr;
     if (callMoudleMethod) goto CALL_MODULE_METHOED;
     i = 0;
     GETQBYTE
@@ -29,9 +32,26 @@ void Belish::BVM::run() {
     GETQBYTE
     functionLen = qbyte;
     functions.reserve(functionLen);
+    outers.reserve(functionLen);
+    outersDefs.reserve(functionLen);
     for (UL j = 0; j < functionLen; j++) {
         GETQBYTE
-        functions.push_back(qbyte);
+        functions.push_back(qbyte + 4);
+        outers.emplace_back();
+        outersDefs.emplace_back();
+        UL tmpI = i;
+        i = qbyte;
+        GETQBYTE
+        i = qbyte;
+        GETQBYTE
+        UL outerLen = qbyte;
+        outers.reserve(outerLen);
+        outersDefs.reserve(outerLen);
+        for (UL k = 0; k < outerLen; k++) {
+            GETQBYTE
+            outers.back().push_back(qbyte);
+        }
+        i = tmpI;
     }
     if (!stk) {
         stk = new Stack;
@@ -48,6 +68,13 @@ void Belish::BVM::run() {
         auto a = stk->get(stk->length() - 2);
         auto b = stk->get(stk->length() - 1);
         switch (op) {
+            case PUSH_OUTER: {
+//                stk->dbg();
+                if (!closure) { std::cerr << "Isn't in a function calling -> " << ((void*)(i - 1)) << std::endl; return; }
+                GETQBYTE
+                stk->push((*closure)[qbyte]);
+                break;
+            }
             case ADD: {
 //                stk->dbg();
                 if (a->type() == b->type()) a->add(b);
@@ -226,6 +253,17 @@ void Belish::BVM::run() {
                 stk->pop(1);
                 break;
             }
+            case DEF_FUN: {
+                GETQBYTE
+                auto& funOuters = outers[qbyte];
+                auto& funOutersDef = outersDefs[qbyte];
+                for (unsigned int & funOuter : funOuters) {
+                    auto v = stk->get(funOuter);
+                    funOutersDef.push_back(v);
+                    v->linked++;
+                }
+                break;
+            }
             case PUSH_FUN: {
                 GETQBYTE
                 stk->push(new Function(qbyte));
@@ -368,6 +406,7 @@ void Belish::BVM::run() {
                 if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value -> " << ((void*)(i - 5)) << std::endl; return; }
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
+                closure = &outersDefs[funIndex];
                 inFun++;
                 break;
             }
@@ -402,6 +441,7 @@ void Belish::BVM::run() {
                 if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value -> " << ((void*)(i - 1)) << std::endl; return; }
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
+                closure = &outersDefs[funIndex];
                 inFun++;
                 stk->pop(1);
                 break;

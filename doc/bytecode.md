@@ -111,6 +111,7 @@ index: 4
 string: array<1>
 bytecode: [0:]
 function: {
+    [address: footer address]
     [bytecode: body]
     [array<4>: outers]
 }

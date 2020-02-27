@@ -21,7 +21,7 @@ namespace Belish {
         MOV, POP, POPC, JT, JF, JMP,
         SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP, LOAD,
         REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB, PUSH_TRUE, PUSH_FALSE,
-        PUSH_OUTER
+        PUSH_OUTER, DEF_FUN
     };
     class Compiler {
     public:

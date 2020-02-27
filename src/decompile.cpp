@@ -36,7 +36,7 @@ void Belish::decompile(char* bytecode, ULL len) {
     std::cout << "Function count: " << functionLen << std::endl;
     for (UL j = 0; j < functionLen; j++) {
         GETQBYTE
-        printf("#%d 0x%08x\n", j, qbyte);
+        printf("#%d 0x%08x\n", j, qbyte + 4);
         functions.push_back(qbyte);
     }
     auto indexEnd = i;
@@ -52,6 +52,19 @@ void Belish::decompile(char* bytecode, ULL len) {
         }
         if (!functions.empty() && i == functions[functionsOffset]) {
             std::cout << "----[FUNCTION: #" << (functionsOffset++) << "]----" << std::endl;
+            GETQBYTE
+            UL tmpI = i;
+            i = qbyte;
+            GETQBYTE
+            std::cout << "Outer Values' Count: " << qbyte << std::endl;
+            UL ovc = qbyte;
+            std::cout << "Outer Values: " << (ovc ? "" : "[NONE]");
+            for (UL j = 0; j < ovc; j++) {
+                GETQBYTE
+                printf("0x%08x ", qbyte);
+            }
+            std::cout << std::endl;
+            i = tmpI;
         }
         printf("0x%08x\t", i);
         GETBYTE;

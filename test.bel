@@ -1,1 +1,2 @@
-import "testmodule"
+import "io";
+io.write("a.txt", "123");

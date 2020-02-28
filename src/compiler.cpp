@@ -49,8 +49,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
     if (!tracker) tracker = new ValueTracker;
     UL nowLine = 1;
     newVars.clear();
-    if ((*compiled)[filename]) return false;
-    (*compiled)[filename] = true;
+    if (isRoot) {
+        if ((*compiled)[filename]) return false;
+        (*compiled)[filename] = true;
+    }
     while (true) {
 //        st = getCurrentTime();
         if (!ast.child) ast.parse();
@@ -495,6 +497,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += transI32S_bin(path.length());
                     bytecode += path;
                     bytecode += (char) LOAD;
+                    librarys.push_back(stkOffset);
                     sym[name] = stkOffset++;
                 } else {
                     Compiler compiler(name, moduleScript);
@@ -754,6 +757,14 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         FINISH_A_COM:
         if (ast.child) break;
     }
+    for (auto iter = librarys.begin(); iter != librarys.end(); iter++) {
+        bytecode += (char) REFER;
+        bytecode += transI32S_bin(*iter);
+        bytecode += (char) PUSH_UND;
+        bytecode += (char) MOV;
+    }
+    bytecode += (char) POPC;
+    bytecode += transI32S_bin(librarys.size());
     footerAdr = bytecode.length();
     if (!isRoot) return false;
     bytecode += transI32S_bin(functionAsts.size());

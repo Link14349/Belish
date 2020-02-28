@@ -349,7 +349,7 @@ void Belish::BVM::run() {
             }
             case IMP: {
                 string path(((String*)stk->top())->value());
-                if ((*importedTab)[filename]) break;// 已经导入过模块就不再导入了
+                if ((*importedTab)[path]) break;// 已经导入过模块就不再导入了
                 ULL length;
                 auto buffer = Belish::readFileCPTR(path + ".belc", length);
                 auto vm = new BVM(path, buffer, length);

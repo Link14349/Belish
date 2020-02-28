@@ -18,7 +18,8 @@ namespace Belish {
     // ***该类的引用计数只有Stack类有权操作它***
     class Value {
     public:
-        virtual ~Value() {}
+        Value() { /*std::clog << "n" << this << "\n";*/ }
+        virtual ~Value() { /*std::clog << "d" << this << "\n";*/ }
         virtual TYPE type() = 0;
         virtual Value* copy() = 0;
         virtual string toString() = 0;

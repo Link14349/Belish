@@ -1,2 +1,3 @@
 import "io";
-io.write("a.txt", "123");
+
+io.println(io.readFile("test.bel"));

@@ -25,13 +25,12 @@ Belish::Value* input(Belish::Stack* argv) {
     std::cin >> str;
     return new Belish::String(str);
 }
-Belish::Value* write(Belish::Stack* argv) {
+Belish::Value* writeFile(Belish::Stack* argv) {
     if (argv->length() < 2) return new Belish::Boolean(false);
     string path = argv->get(0)->toString();
     string content = argv->get(1)->toString();
     std::ofstream fs(path, std::ios::trunc | std::ios::out);
     if (!fs.good()) {
-        std::cout << path << std::endl;
         fs.close();
         return new Belish::Boolean(false);
     }
@@ -39,7 +38,7 @@ Belish::Value* write(Belish::Stack* argv) {
     fs.close();
     return new Belish::Boolean(true);
 }
-Belish::Value* app(Belish::Stack* argv) {
+Belish::Value* appFile(Belish::Stack* argv) {
     if (argv->length() < 2) return new Belish::Boolean(false);
     string path = argv->get(0)->toString();
     string content = argv->get(1)->toString();
@@ -52,13 +51,30 @@ Belish::Value* app(Belish::Stack* argv) {
     fs.close();
     return new Belish::Boolean(true);
 }
+Belish::Value* readFile(Belish::Stack* argv) {
+    if (argv->length() < 1) return new Belish::Boolean(false);
+    string path = argv->get(0)->toString();
+    string content;
+    std::fstream file(path, std::ios::in | std::ios::out);
+    if(!file)
+    {
+        file.close();
+        return new Belish::Boolean(false);
+    }
+    std::stringstream buf;
+    buf << file.rdbuf();
+    content = buf.str();
+    file.close();
+    return new Belish::String(content);
+}
 
 MODULE_SETUP_DEF {
     MODULE_SETUP_INIT(io)
     MODULE_SETUP_EXPORT("print", new Belish::NFunction(print))
     MODULE_SETUP_EXPORT("println", new Belish::NFunction(println))
     MODULE_SETUP_EXPORT("input", new Belish::NFunction(input))
-    MODULE_SETUP_EXPORT("write", new Belish::NFunction(write))
-    MODULE_SETUP_EXPORT("app", new Belish::NFunction(app))
+    MODULE_SETUP_EXPORT("writeFile", new Belish::NFunction(writeFile))
+    MODULE_SETUP_EXPORT("appFile", new Belish::NFunction(appFile))
+    MODULE_SETUP_EXPORT("readFile", new Belish::NFunction(readFile))
     MODULE_SETUP_FINISH
 }

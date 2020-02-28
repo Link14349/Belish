@@ -16,9 +16,12 @@ void Belish::BVM::run() {
     vector<vector<UL> > outers;
     vector<vector<Value*> > outersDefs;
     vector<Value*>* closure = nullptr;
+    if (importedTab) (*importedTab)[filename] = true;
+    else importedTab = new map<string, bool>;
     if (callMoudleMethod) goto CALL_MODULE_METHOED;
     callingLineStk.push_back(1);
     i = 0;
+    (*importedTab)[filename] = true;
     // get magic code
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
@@ -346,9 +349,11 @@ void Belish::BVM::run() {
             }
             case IMP: {
                 string path(((String*)stk->top())->value());
+                if ((*importedTab)[filename]) break;// 已经导入过模块就不再导入了
                 ULL length;
                 auto buffer = Belish::readFileCPTR(path + ".belc", length);
                 auto vm = new BVM(path, buffer, length);
+                vm->importedTab = importedTab;
                 vm->child = true;
                 vm->run();
                 if (vm->error) {

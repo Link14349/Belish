@@ -1,6 +1,1 @@
-let a = 1;
-def test() {
-    global a;
-    return a + "123";
-}
-let b = test();
+import "testmodule"

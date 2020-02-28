@@ -39,6 +39,7 @@ namespace Belish {
         vector<Stack*> frames;
         vector<UL> functions;
         std::list<UL> callingLineStk;
+        map<string, bool>* importedTab = nullptr;
         string filename;
     };
     typedef Object* (*ModuleSetup)();

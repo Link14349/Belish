@@ -41,6 +41,7 @@ namespace Belish {
         string script;
         AST ast;
         UL footerAdr;
+        bool isEntry = true;
         bool isRoot = false;
         bool pushedFun = false;
         bool compilingForLoopCon = false;
@@ -53,6 +54,7 @@ namespace Belish {
         char regCount = REG_COUNT - 1;
         map<string, char> regVar;
         map<string, char> regValue;
+        map<string, bool>* compiled;
         map<string, UL> sym;
         map<string, string> macro;
         map<string, UL> functionAdrTab;

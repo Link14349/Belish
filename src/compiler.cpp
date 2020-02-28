@@ -10,6 +10,7 @@
 //UL astTime = 0;
 
 bool Belish::Compiler::compile(string &bytecode) {
+    if (isEntry) compiled = new map<string, bool>;
     bytecode = "\x9a\xd0\x75\x5c";// 魔数
     bytecode += MBDKV;
     bytecode += SBDKV;
@@ -37,6 +38,7 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode[footerAdr_ + 2] = footerAdrS[2];
     bytecode[footerAdr_ + 3] = footerAdrS[3];
 //    std::cout << "ast time: " << astTime << "ms" << std::endl;
+    if (isEntry) delete compiled;
     return state;
 }
 
@@ -47,6 +49,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
     if (!tracker) tracker = new ValueTracker;
     UL nowLine = 1;
     newVars.clear();
+    if ((*compiled)[filename]) return false;
+    (*compiled)[filename] = true;
     while (true) {
 //        st = getCurrentTime();
         if (!ast.child) ast.parse();
@@ -494,7 +498,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     sym[name] = stkOffset++;
                 } else {
                     Compiler compiler(name, moduleScript);
+                    compiler.isEntry = false;
                     string moduleBcString;
+                    if ((*compiled)[name]) goto FINISH_A_COM;
+                    compiler.compiled = compiled;
                     compiler.compile(moduleBcString);
                     writeFile(path + ".belc", moduleBcString);
                     bytecode += (char) PUSH_STR;

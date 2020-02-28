@@ -59,7 +59,6 @@ namespace Belish {
             script = s;
             i = 0;
             l = 0;
-            updateLine = false;
         }
         Token get();
         Token token() { return t; }
@@ -68,7 +67,6 @@ namespace Belish {
         void line(UL n) { l = n; }
         void index(UL n) { i = n; }
     private:
-        bool updateLine = false;
         UL i;
         UL l;
         Token t;

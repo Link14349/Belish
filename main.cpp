@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     s = now;
     ULL length;
     auto buffer = Belish::readFileCPTR("test.belc", length);
-    Belish::BVM bvm(buffer, length);
+    Belish::BVM bvm("test", buffer, length);
     Belish::decompile(buffer, length);
     bvm.run();
     std::cout << "finish running" << std::endl;

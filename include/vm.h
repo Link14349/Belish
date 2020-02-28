@@ -10,12 +10,20 @@ using std::string;
 namespace Belish {
     class BVM {
     public:
-        BVM(char* bc, ULL l) : bytecode(bc), len(l) { modules.reserve(16);frames.reserve(16); }
+        BVM(const string& fn, char* bc, ULL l) : filename(fn), bytecode(bc), len(l) { modules.reserve(16);frames.reserve(16); }
         void run();
+        void Throw(UL errID, const string& message) {
+            std::cerr << "BLE" << errID << ": " << message;
+            auto iter = --callingLineStk.cend();
+            std::cerr << " at <" << filename << ">:" << *(iter--) << "\n";
+            while (iter != callingLineStk.cend()) std::cerr << " at <" << filename << ">:" << *(iter--) << "\n";
+            error = true;
+        }
         ~BVM() {
             delete stk;
         }
     private:
+        bool error = false;
         bool child = false;
         bool callMoudleMethod = false;
         char* bytecode;
@@ -30,6 +38,8 @@ namespace Belish {
         vector<Dylib*> exlibs;
         vector<Stack*> frames;
         vector<UL> functions;
+        std::list<UL> callingLineStk;
+        string filename;
     };
     typedef Object* (*ModuleSetup)();
 }

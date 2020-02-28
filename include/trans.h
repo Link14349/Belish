@@ -100,6 +100,13 @@ namespace Belish {
     ebyte = ebyte << 8 | byte; \
     GETBYTE_(bytecode); \
     ebyte = ebyte << 8 | byte; }
+#define GETSTRING(str) { \
+    GETQBYTE \
+        for (UL idx = 0; idx < qbyte; idx++) { \
+        GETBYTE; \
+        filename += byte; \
+    } \
+}
 }
 
 #endif //BELISH_TRANS_H

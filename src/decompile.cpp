@@ -21,6 +21,9 @@ void Belish::decompile(char* bytecode, ULL len) {
     }
     GETDBYTE
     printf("Version: 0x%04x\n", dbyte);
+//    string filename;
+//    GETSTRING(filename)
+//    std::cout << "Source name: " << filename << std::endl;
     GETEBYTE
     auto timer = gmtime(reinterpret_cast<const time_t *>(&ebyte));
     printf("Built time: %lld(timestamp), %d/%02d/%02d %02d:%02d:%02d\n", ebyte, timer->tm_year + 1900, timer->tm_mon + 1, timer->tm_mday, timer->tm_hour + 8, timer->tm_min, timer->tm_sec);
@@ -30,6 +33,7 @@ void Belish::decompile(char* bytecode, ULL len) {
     // 关于定义函数、类等的处理
     // 获取所有函数
     vector<UL> functions;
+    vector<UL> functionFooters;
     GETQBYTE
     UL functionLen(qbyte);
     std::cout << "=====[FUNCTIONS INDEX]=====" << std::endl;
@@ -38,6 +42,9 @@ void Belish::decompile(char* bytecode, ULL len) {
         GETQBYTE
         printf("#%d 0x%08x\n", j, qbyte + 4);
         functions.push_back(qbyte);
+        GETQBYTE
+        functionFooters.push_back(qbyte);
+        i -= 4;
     }
     auto indexEnd = i;
     UL functionsOffset = 0;
@@ -127,7 +134,9 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(POPC) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(PUSH_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
+            CASE_OP(DEF_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
+            CASE_OP(LINE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(NEW_FRAME)
             {
                 DECOM_SWITCH_POPC_NEW_FRAME_CASE:

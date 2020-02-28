@@ -2,10 +2,6 @@
 
 Belish::Lexer::Token Belish::Lexer::get() {
     auto preIndex = i;
-    if (updateLine) {
-        l++;
-        updateLine = false;
-    }
     if (i >= script.length()) {
         t.s = "";
         t.t = PROGRAM_END;
@@ -18,12 +14,10 @@ Belish::Lexer::Token Belish::Lexer::get() {
         if (IS_SPACE(script[i])) {
             if (t.t) {// 已经有分割出来的token, 遇到空符就意味着语句的结束
                 i++;
-                if (script[i - 1] == '\n'/* && lastI < (i - 1)*/)
-                    updateLine = true;
+                if (script[i - 1] == '\n'/* && lastI < (i - 1)*/) l++;
                 break;
             }
-            if (i > 0 && script[i - 1] == '\n'/* && lastI < (i - 1)*/)
-                l++;
+            if (i > 0 && script[i - 1] == '\n'/* && lastI < (i - 1)*/) l++;
             // 尚未有分割出来的token, 所以不做处理
             continue;
         } else if (IS_OP(script[i])) {
@@ -91,7 +85,7 @@ Belish::Lexer::Token Belish::Lexer::get() {
     if (t.s == ";") {
         t.t = END_TOKEN;
         i++;
-        if (script[i] == '\n') updateLine = true;
+        if (script[i] == '\n') l++;
     } else if (t.s == "=") {
         t.t = SET_TOKEN;
     } else if (t.s == ":") {

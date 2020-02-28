@@ -87,6 +87,7 @@ MAIN:
 header {
     [version: Main BDK]
     [version: SUB BDK]
+    [string: source name]
     [timestamp: Last edit time]
     [address: Footer address]
 }

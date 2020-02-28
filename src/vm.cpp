@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstring>
+#include <list>
 #include "compiler.h"
 #include "vm.h"
 #include "trans.h"
@@ -17,14 +17,19 @@ void Belish::BVM::run() {
     vector<vector<Value*> > outersDefs;
     vector<Value*>* closure = nullptr;
     if (callMoudleMethod) goto CALL_MODULE_METHOED;
+    callingLineStk.push_back(1);
     i = 0;
+    // get magic code
     GETQBYTE
     if (qbyte != 0x9ad0755c) {
-        std::cerr << "Wrong magic code -> " << ((void*)(i - 4)) << std::endl;
+        Throw(500, "Wrong magic code");
         return;
     }
+    // get main version&sub version
     GETDBYTE
+    // get compiling timestamp
     GETEBYTE
+    // get footer adress
     GETQBYTE
     i = footerAdr = qbyte;
     // 关于定义函数、类等的处理
@@ -61,16 +66,17 @@ void Belish::BVM::run() {
         CALL_MODULE_METHOED:
         GETBYTE;
         auto op = (OPID)byte;
-//        if (stk->length() < 2) {
-//            std::cerr << "Cannot perform binocular operation" << std::endl;
-//            return;
-//        }
         auto a = stk->get(stk->length() - 2);
         auto b = stk->get(stk->length() - 1);
         switch (op) {
+            case LINE: {
+                GETQBYTE
+                callingLineStk.back() = qbyte;
+                break;
+            }
             case PUSH_OUTER: {
 //                stk->dbg();
-                if (!closure) { std::cerr << "Isn't in a function calling -> " << ((void*)(i - 1)) << std::endl; return; }
+                if (!closure) { Throw(600, "Isn't in a function calling"); return; }
                 GETQBYTE
                 stk->push((*closure)[qbyte]);
                 break;
@@ -78,115 +84,115 @@ void Belish::BVM::run() {
             case ADD: {
 //                stk->dbg();
                 if (a->type() == b->type()) a->add(b);
-                else { std::cerr << "Wrong type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to add"); return; }
                 stk->pop(1);
                 break;
             }
             case SL: {
                 if (b->type() == NUMBER) a->shiftl(b);
-                else { std::cerr << "Wrong type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to shift left"); return; }
                 stk->pop(1);
                 break;
             }
             case SR: {
                 if (b->type() == NUMBER) a->shiftr(b);
-                else { std::cerr << "Wrong type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to shift right"); return; }
                 stk->pop(1);
                 break;
             }
             case SUB: {
                 if (a->type() == b->type()) a->sub(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to sub"); return; }
                 stk->pop(1);
                 break;
             }
             case MUL: {
                 if (a->type() == b->type() || (b->type() == NUMBER && a->type() == STRING)) a->mul(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to mul"); return; }
                 stk->pop(1);
                 break;
             }
             case DIV: {
                 if (a->type() == b->type()) a->div(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to div"); return; }
                 stk->pop(1);
                 break;
             }
             case MOD: {
                 if (a->type() == b->type()) a->mod(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to mod"); return; }
                 stk->pop(1);
                 break;
             }
             case EQ: {
                 if (a->type() == b->type()) a->eq(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare equal"); return; }
                 stk->pop(1);
                 break;
             }
             case NEQ: {
                 if (a->type() == b->type()) a->neq(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare not equal"); return; }
                 stk->pop(1);
                 break;
             }
             case LEQ: {
                 if (a->type() == b->type()) a->leq(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare less or equal"); return; }
                 stk->pop(1);
                 break;
             }
             case MEQ: {
                 if (a->type() == b->type()) a->meq(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare more or equal"); return; }
                 stk->pop(1);
                 break;
             }
             case LESS: {
                 if (a->type() == b->type()) a->less(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare less"); return; }
                 stk->pop(1);
                 break;
             }
             case MORE: {
                 if (a->type() == b->type()) a->more(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to compare more"); return; }
                 stk->pop(1);
                 break;
             }
             case MAND: {
                 if (a->type() == b->type()) a->mand(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to &"); return; }
                 stk->pop(1);
                 break;
             }
             case MOR: {
                 if (a->type() == b->type()) a->mor(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to |"); return; }
                 stk->pop(1);
                 break;
             }
             case MXOR: {
                 if (a->type() == b->type()) a->mxor(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to ^"); return; }
                 stk->pop(1);
                 break;
             }
             case LAND: {
                 if (a->type() == b->type()) a->land(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to &&"); return; }
                 stk->pop(1);
                 break;
             }
             case LOR: {
                 if (a->type() == b->type()) a->lor(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to ||"); return; }
                 stk->pop(1);
                 break;
             }
             case POW: {
                 if (a->type() == b->type()) a->pow(b);
-                else { std::cerr << "Wrong  type -> " << ((void*)(i - 1)) << std::endl; return; }
+                else { Throw(501, "Wrong type to **"); return; }
                 stk->pop(1);
                 break;
             }
@@ -329,7 +335,7 @@ void Belish::BVM::run() {
                 string path(((String*)stk->top())->value());
                 auto exlib = new Dylib(path);
                 if (!exlib->load()) {
-                    std::cerr << "Failed to load -> " << ((void*)(i - 1)) << std::endl;
+                    Throw(301, "Failed to load the library '" + path + "'");
                     return;
                 }
                 auto moduleSetup = (ModuleSetup) exlib->resolve("moduleSetup");
@@ -342,9 +348,13 @@ void Belish::BVM::run() {
                 string path(((String*)stk->top())->value());
                 ULL length;
                 auto buffer = Belish::readFileCPTR(path + ".belc", length);
-                auto vm = new BVM(buffer, length);
+                auto vm = new BVM(path, buffer, length);
                 vm->child = true;
                 vm->run();
+                if (vm->error) {
+                    Throw(700, "The module that you are importing had some errors");
+                    return;
+                }
                 modules.push_back(vm);
                 auto __exports__ = (Object*)vm->stk->get(0);// 偏移值为0的即__exports__变量
                 for (auto iter = __exports__->begin(); ; ) {
@@ -359,7 +369,7 @@ void Belish::BVM::run() {
             case SET_ATTR: {
                 string attr_name(((String*)stk->get(stk->length() - 2))->value());
                 auto obj_ = stk->get(stk->length() - 3);
-                if (obj_->type() != OBJECT) { std::cerr << "Wrong type to set attr -> " << ((void*)(i - 1)) << std::endl; return; }
+                if (obj_->type() != OBJECT) { Throw(800, "Wrong type to set attr"); return; }
                 auto obj = (Object*)obj_;
                 obj->set(attr_name, stk->top());
                 stk->pop(1);
@@ -369,7 +379,7 @@ void Belish::BVM::run() {
             case GET_ATTR: {
                 string attr_name(((String*)stk->top())->value());
                 auto obj_ = stk->get(stk->length() - 2);
-                if (obj_->type() != OBJECT) { std::cerr << "Wrong type to get attr -> " << ((void*)(i - 1)) << std::endl; return; }
+                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
                 stk->pop(1);
                 stk->pop(1);
                 auto obj = (Object*)obj_;
@@ -403,11 +413,12 @@ void Belish::BVM::run() {
             case CALL: {
                 GETQBYTE
                 UL funIndex(qbyte);
-                if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value -> " << ((void*)(i - 5)) << std::endl; return; }
+                if (funIndex >= functions.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ")"); return; }
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
                 closure = &outersDefs[funIndex];
                 inFun++;
+                callingLineStk.push_back(0);
                 break;
             }
             case CALL_FUN: {
@@ -425,7 +436,7 @@ void Belish::BVM::run() {
                 UL funIndex(fun->id());
                 if (fun->module) {// 不为0
                     auto vm = modules[fun->module - 1];
-                    if (funIndex >= vm->functions.size()) { std::cerr << "Exceeded expected function index value -> " << ((void*)(i - 1)) << std::endl; return; }
+                    if (funIndex >= vm->functions.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ")"); return; }
                     vm->i = vm->functions[funIndex];
                     vm->stk->push(new Int(-1));
                     vm->frames.push_back(stk);
@@ -434,16 +445,22 @@ void Belish::BVM::run() {
                     vm->callMoudleMethod = true;
                     stk = frames[frames.size() - 2];
                     frames.erase(frames.end() - 1);
+                    vm->callingLineStk.push_back(0);
                     vm->run();
+                    if (vm->error) {
+                        Throw(701, "The module method that you are calling had some errors");
+                        return;
+                    }
                     stk->push(vm->stk->top());
                     break;
                 }
-                if (funIndex >= functions.size()) { std::cerr << "Exceeded expected function index value -> " << ((void*)(i - 1)) << std::endl; return; }
+                if (funIndex >= functions.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ")"); return; }
                 frames[frames.size() - 2]->push(new Int(i));
                 i = functions[funIndex];
                 closure = &outersDefs[funIndex];
                 inFun++;
                 stk->pop(1);
+                callingLineStk.push_back(0);
                 break;
             }
             case RET: {
@@ -458,6 +475,7 @@ void Belish::BVM::run() {
                 stk->push(ret);
                 inFun--;
                 if (i == -1) return;
+                callingLineStk.erase(--callingLineStk.end());
                 break;
             }
             case REG_EQ:

@@ -43,6 +43,7 @@ namespace Belish {
         UL footerAdr;
         bool isEntry = true;
         bool isRoot = false;
+        bool isBlock = false;
         bool pushedFun = false;
         bool compilingForLoopCon = false;
         bool compilingForLoopUpd = false;

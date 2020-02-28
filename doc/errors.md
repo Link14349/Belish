@@ -11,6 +11,7 @@
 | BLE202 | Unexpected condition | Check it |
 | BLE300 | IOError: Failed to open the module | Check the module path |
 | BLE301 | IOError: Failed to load the library | Check the library path |
+| BLE302 | You cannot import modules or libraries in a sub block | Delete it |
 | BLE400 | Unexpected global flag | Delete your global flag |
 | BLE401 | Unexpected global symbol | Checkout your symbol |
 | BLE402 | Reusable global name | Checkout your symbol |

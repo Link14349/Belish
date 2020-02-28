@@ -15,7 +15,6 @@ namespace Belish {
         NUMBER##BAC, STRING##BAC, OBJECT##BAC, UNDEFINED##BAC, FUNCTION##BAC, INT##BAC, NFUNCTION##BAC, BOOLEAN##BAC, ADDTION##BAC \
     };
     TYPE_VAL_ENUM_DEF(TYPE, , )
-    // ***该类的引用计数只有Stack类有权操作它***
     class Value {
     public:
         Value() { /*std::clog << "n" << this << "\n";*/ }

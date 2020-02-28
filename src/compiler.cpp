@@ -18,6 +18,7 @@ bool Belish::Compiler::compile(string &bytecode) {
     UL footerAdr_ = bytecode.length();
     bytecode += "0000";// 占位
     isRoot = true;
+    isBlock = true;
     // ===============
     // 添加__exports__变量
     sym["__exports__"] = stkOffset++;
@@ -61,12 +62,16 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
         ast.optimization();
         tracker->track(ast.root);
-        if (ast.root->line() > nowLine) {
-            nowLine = ast.root->line();
+        if (ast.line() > nowLine) {
+            nowLine = ast.line();
             bytecode += (char) LINE;
             bytecode += transI32S_bin(nowLine);
         }
         switch (ast.root->type()) {
+            case Lexer::CLASS_TOKEN:
+            {
+                break;
+            }
             case Lexer::RETURN_TOKEN:
             {
                 Compiler compiler(filename);
@@ -82,12 +87,12 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 if (ast.root->get(0)->type() == Lexer::BRACKETS_LEFT_TOKEN && funName == ast.root->get(0)->get(0)->value()) {
                     if (ast.root->get(0)->length() - 1 < argCount) {
                         for (UL i = 0; i < argCount - ast.root->get(0)->length() + 1; i++) {
-                            ast.root->get(0)->insert(Lexer::UNDEFINED_TOKEN, "", ast.root->line());
+                            ast.root->get(0)->insert(Lexer::UNDEFINED_TOKEN, "", ast.line());
                         }
                     }
                     for (UL i = 1; i < ast.root->get(0)->length() && i <= argCount; i++) {
                         compiler.ast.root = ast.root->get(0)->get(i);
-                        compiler.compile_(bytecode, true);
+                        if (compiler.compile_(bytecode, true)) return true;
                     }
                     for (UL i = 1; i < ast.root->get(0)->length() && i <= argCount; i++) {
                         bytecode += (char) CHANGE;
@@ -96,7 +101,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += (char) JMP;
                     bytecode += transI32S_bin(funStart);
                 } else {
-                    compiler.compile_(bytecode);
+                    if (compiler.compile_(bytecode)) return true;
                     bytecode += (char) RET;
                 }
                 break;
@@ -136,9 +141,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.independent = false;
                 compiler.ast.child = true;
                 compiler.ast.root = ast.root->get(0);
-                compiler.compile_(bytecode);
+                if (compiler.compile_(bytecode)) return true;
                 compiler.ast.root = ast.root->get(1);
-                compiler.compile_(bytecode);
+                if (compiler.compile_(bytecode)) return true;
                 if (!parentIsSet) bytecode += (char) GET_ATTR;
                 if (!inOPTOEXPR) {
                     bytecode += (char) SAV;
@@ -172,17 +177,20 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     }
                     UL adr;
                     if (!isLast) {
+                        scCompiler.isBlock = false;
                         scCompiler.independent = false;
                         scCompiler.ast.root = ast.root->get(i);
-                        scCompiler.compile_(bytecode);
+                        if (scCompiler.compile_(bytecode)) return true;
                         bytecode += (char) OPID::JF;
                         adr = bytecode.length();
                         bytecode += "0000";// 先占位
                     }
                     scCompiler.independent = true;
+                    scCompiler.isBlock = true;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
                         scCompiler.compile_(bytecode, false, brTab, ctTab);
+                        if (scCompiler.compile_(bytecode)) return true;
                     }
                     if (isLast) break;
                     // 跳到最后
@@ -228,7 +236,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.root = conAsts->get(0);
-                scCompiler.compile_(bytecode);
+                if (scCompiler.compile_(bytecode)) return true;
                 auto loopVars = scCompiler.newVars;
                 for (auto & loopVar : loopVars) {
                     sym.insert(std::pair<string, UL>(loopVar, stkOffset++));
@@ -244,22 +252,24 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.ast.root = conAsts->get(1);
                 scCompiler.independent = false;
                 scCompiler.compilingForLoopCon = true;
-                scCompiler.compile_(bytecode);
+                if (scCompiler.compile_(bytecode)) return true;
                 bytecode += (char) JF;
                 auto conFAdr = bytecode.length();
                 bytecode += "0000";// 占位
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
+                scCompiler.isBlock = true;
                 scCompiler.compilingForLoopCon = false;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
-                    scCompiler.compile_(bytecode, false, &breakTab, &continueTab);
+                    if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
                 }
+                scCompiler.isBlock = false;
 //                bytecode += "\x06";
                 auto lastConAdrS = transI32S_bin(bytecode.length());
                 scCompiler.ast.root = conAsts->get(2);
                 scCompiler.compilingForLoopUpd = true;
-                scCompiler.compile_(bytecode);
+                if (scCompiler.compile_(bytecode)) return true;
                 bytecode += (char) JMP;
                 bytecode += conAdrS;
                 auto lastAdrS = transI32S_bin(bytecode.length());
@@ -340,7 +350,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         compiler.functionAdrTab = functionAdrTab;
                         compiler.macro = macro;
                         compiler.independent = false;
-                        compiler.compile_(bytecode);
+                        if (compiler.compile_(bytecode)) return true;
                         break;
                     }
                 }
@@ -366,7 +376,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     compiler.ast.root = ast.root->get(i + 1);
                     bytecode += (char) PUSH_STR;
                     bytecode += transI32S_bin(attr_name.length()) + attr_name;
-                    compiler.compile_(bytecode);
+                    if (compiler.compile_(bytecode)) return true;
                     bytecode += (char) SET_ATTR;
                 }
                 if (independent) bytecode += (char) POP;
@@ -390,7 +400,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 compiler.regVar = regVar;
                 compiler.functionAdrTab = functionAdrTab;
                 compiler.macro = macro;
-                compiler.compile_(bytecode);
+                if (compiler.compile_(bytecode)) return true;
                 bytecode += (char) PUSH_STR;
                 bytecode += transI32S_bin((*attrs.begin()).length()) + *attrs.begin();
                 for (auto i = ++attrs.begin(); i != attrs.end(); i++) {
@@ -448,6 +458,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode += "0000";// 先占位
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
+                scCompiler.isBlock = true;
                 for (UL i = 1; i < ast.root->length(); i++) {
                     scCompiler.ast.root = ast.root->get(i);
                     if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
@@ -488,6 +499,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::IMPORT_TOKEN:
             {
+                if (!isRoot) {
+                    std::cerr << "BLE302: You cannot import modules or libraries in a sub block at <" << filename << ">:" << ast.line() << std::endl;
+                    return true;
+                }
                 string name(ast.root->get(0)->value());
                 string path(ast.root->value());
                 string moduleScript;
@@ -498,6 +513,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += path;
                     bytecode += (char) LOAD;
                     sym[name] = stkOffset++;
+                    newVars.push_back(name);
                 } else {
                     Compiler compiler(name, moduleScript);
                     compiler.isEntry = false;
@@ -511,6 +527,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += path;
                     bytecode += (char) IMP;
                     sym[name] = stkOffset++;
+                    newVars.push_back(name);
                 }
                 break;
             }
@@ -541,6 +558,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
+                scCompiler.isBlock = true;
                 UL bodyAdr = bytecode.length();
                 std::list<UL> breakTab, continueTab;
                 for (UL i = 1; i < ast.root->length(); i++) {
@@ -548,6 +566,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
                 }
                 scCompiler.independent = false;
+                scCompiler.isBlock = false;
                 scCompiler.ast.root = ast.root->get(0);
                 auto conAdrS = transI32S_bin(bytecode.length());
                 if (scCompiler.compile_(bytecode)) return true;
@@ -756,9 +775,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         FINISH_A_COM:
         if (ast.child) break;
     }
-    if (isRoot) {
+    if (isBlock || isRoot) {
         bytecode += (char) POPC;
-        bytecode += transI32S_bin(sym.size());
+        bytecode += transI32S_bin(newVars.size());
     }
     footerAdr = bytecode.length();
     if (!isRoot) return false;

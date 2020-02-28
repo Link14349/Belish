@@ -30,6 +30,83 @@ void Belish::AST::parse() {
     auto initialIndex = lexer.index();
     auto GET;
     switch (token.t) {
+        case Lexer::CLASS_TOKEN:
+        {
+            auto defLine = lexer.line();
+            GET;
+            if (token.t != Lexer::UNKNOWN_TOKEN) {
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", defLine + baseLine);
+                return;
+            }
+            root = new node(Lexer::CLASS_TOKEN, token.s, defLine + baseLine);
+            root->insert(Lexer::NO_STATUS, "", defLine + baseLine);
+            GET;
+            if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) goto AST_PARSE_CLASS_METHODS_DEF;
+            if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
+                delete root;
+                root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", defLine + baseLine);
+                return;
+            }
+            {
+                UL bc = 1;
+                string className;
+                while (true) {
+                    GET;
+                    if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bc++;
+                    else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
+                        bc--;
+                        if (!bc) goto AST_PARSE_PARSE_EX_CLASS_REF;
+                    } else if (token.t == Lexer::COMMA_TOKEN && bc == 1) {
+                        AST_PARSE_PARSE_EX_CLASS_REF:
+                        if (className.empty()) break;
+                        AST ast(className, lexer.line() + baseLine);
+                        ast.parse();
+                        root->get(0)->insert(ast.root);
+                        if (bc) continue;
+                        break;
+                    } else className += token.s + " ";
+                }
+                GET;
+                if (token.t != Lexer::BIG_BRACKETS_LEFT_TOKEN) {
+                    delete root;
+                    root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", defLine + baseLine);
+                    return;
+                }
+            }
+            AST_PARSE_CLASS_METHODS_DEF:
+            UL funDefLine = lexer.line();
+            UL sbc = 0;
+            UL bbc = 0;
+            string funScript = "def ";
+            while (true) {
+                GET;
+                funScript += token.s + " ";
+                switch (token.t) {
+                    case Lexer::BRACKETS_LEFT_TOKEN:
+                        sbc++;
+                        break;
+                    case Lexer::BRACKETS_RIGHT_TOKEN:
+                        sbc--;
+                        break;
+                    case Lexer::BIG_BRACKETS_LEFT_TOKEN:
+                        bbc++;
+                        break;
+                    case Lexer::BIG_BRACKETS_RIGHT_TOKEN:
+                        if (!bbc) goto AST_PARSE_FINISH_CLASS_PARSE;
+                        bbc--;
+                        if (!bbc) {
+                            AST ast(funScript, funDefLine + baseLine);
+                            ast.parse();
+                            root->insert(ast.root);
+                            funScript = "def ";
+                            sbc = bbc = 0;
+                        }
+                        break;
+                }
+            }
+            AST_PARSE_FINISH_CLASS_PARSE:
+            break;
+        }
         case Lexer::UNKNOWN_OP_TOKEN:
         {
             root = new node(Lexer::ERROR_TOKEN, "BLE103: Unknown operator '" + token.s + "'", lexer.line() + baseLine);

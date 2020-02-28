@@ -1,0 +1,20 @@
+import "io";
+/*
+class Hello() {
+    ctor(name) {
+        this.name = name;
+        io.println("Create", name);
+    }
+    say(msg) {
+        io.println(name);
+    }
+}
+let hello = new Hello();
+hello.say("haha");
+*/
+if (1) {
+    let a = 0;
+    let b = 100;
+    import "testmodule";
+}
+debugger;

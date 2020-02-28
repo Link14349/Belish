@@ -1,3 +1,0 @@
-import "io";
-
-io.println(io.readFile("test.bel"));

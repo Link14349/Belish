@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 #include <Belish.h>
 
 Belish::Value* print(Belish::Stack* argv) {
@@ -67,6 +68,12 @@ Belish::Value* readFile(Belish::Stack* argv) {
     file.close();
     return new Belish::String(content);
 }
+Belish::Value* mkdir(Belish::Stack* argv) {
+    if (argv->length() < 1) return new Belish::Boolean(false);
+    string path = argv->get(0)->toString();
+    mkdir(path.c_str(), 0755);
+    return new Belish::Boolean(true);
+}
 
 MODULE_SETUP_DEF {
     MODULE_SETUP_INIT(io)
@@ -76,5 +83,6 @@ MODULE_SETUP_DEF {
     MODULE_SETUP_EXPORT("writeFile", new Belish::NFunction(writeFile))
     MODULE_SETUP_EXPORT("appFile", new Belish::NFunction(appFile))
     MODULE_SETUP_EXPORT("readFile", new Belish::NFunction(readFile))
+    MODULE_SETUP_EXPORT("mkdir", new Belish::NFunction(mkdir))
     MODULE_SETUP_FINISH
 }

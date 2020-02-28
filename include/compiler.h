@@ -60,7 +60,6 @@ namespace Belish {
         map<string, UL> functionAdrTab;
         map<string, bool> needOut;// 所需要的函数定义处的值
         std::list<string> newVars;
-        std::list<UL> librarys;
         std::list<UL> outerUsingList;
         ValueTracker* tracker;
         Compiler* parent = nullptr;

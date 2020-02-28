@@ -497,7 +497,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     bytecode += transI32S_bin(path.length());
                     bytecode += path;
                     bytecode += (char) LOAD;
-                    librarys.push_back(stkOffset);
                     sym[name] = stkOffset++;
                 } else {
                     Compiler compiler(name, moduleScript);
@@ -757,14 +756,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
         FINISH_A_COM:
         if (ast.child) break;
     }
-    for (auto iter = librarys.begin(); iter != librarys.end(); iter++) {
-        bytecode += (char) REFER;
-        bytecode += transI32S_bin(*iter);
-        bytecode += (char) PUSH_UND;
-        bytecode += (char) MOV;
+    if (isRoot) {
+        bytecode += (char) POPC;
+        bytecode += transI32S_bin(sym.size());
     }
-    bytecode += (char) POPC;
-    bytecode += transI32S_bin(librarys.size());
     footerAdr = bytecode.length();
     if (!isRoot) return false;
     bytecode += transI32S_bin(functionAsts.size());

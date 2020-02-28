@@ -35,3 +35,25 @@
     + [ ] 数值追踪
     + [ ] 独立非操作性表达式的自动忽略
     + [x] a++, a--的优化
+- [ ] 基础库
+    + [ ] io
+        + [x] print, println函数
+        + [x] input函数
+        + [x] readFile, writeFile, appFile函数
+        + [x] mkdir函数
+        + [ ] has函数
+        + [ ] remove函数
+        + [ ] type函数
+        + [ ] open函数
+    + [ ] http
+    + [ ] https
+    + [ ] math
+    + [ ] set
+    + [ ] map
+    + [ ] sys
+- [ ] 类型转换
+    + [ ] 隐式类型转换
+    + [ ] 显式类型转换
+- [ ] 运行时信息
+    + [ ] argv
+    + [ ] vm

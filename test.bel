@@ -1,20 +1,15 @@
 import "io";
-/*
-class Hello() {
+class Hello {
     ctor(name) {
+        global io;
         this.name = name;
         io.println("Create", name);
     }
     say(msg) {
-        io.println(name);
+        global io;
+        io.println(msg);
     }
 }
-let hello = new Hello();
-hello.say("haha");
-*/
-if (1) {
-    let a = 0;
-    let b = 100;
-    import "testmodule";
-}
+let hello = new Hello("haha");
+// hello.say("haha");
 debugger;

@@ -273,6 +273,18 @@ void Belish::BVM::run() {
                 }
                 break;
             }
+            case DEF_FUN_AND_PUSH: {
+                GETQBYTE
+                auto& funOuters = outers[qbyte];
+                auto& funOutersDef = outersDefs[qbyte];
+                for (unsigned int & funOuter : funOuters) {
+                    auto v = stk->get(funOuter);
+                    funOutersDef.push_back(v);
+                    v->linked++;
+                }
+                stk->push(new Function(qbyte));
+                break;
+            }
             case PUSH_FUN: {
                 GETQBYTE
                 stk->push(new Function(qbyte));

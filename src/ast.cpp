@@ -7,6 +7,7 @@
 
 #define FINISH_PRO token.t == Lexer::PROGRAM_END
 #define FINISH_GET token.t == Lexer::PROGRAM_END || token.t == Lexer::END_TOKEN || token.t == Lexer::NO_STATUS
+#define FINISH_CASE case Lexer::PROGRAM_END: case Lexer::END_TOKEN: case Lexer::NO_STATUS:
 #define FINISH_GET_ERROR { delete root; \
 root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token PROGRAM_END"); \
 return; }
@@ -30,6 +31,36 @@ void Belish::AST::parse() {
     auto initialIndex = lexer.index();
     auto GET;
     switch (token.t) {
+        case Lexer::NEW_TOKEN:
+        {
+            string exp;
+#define AST_PARSE_GET_EXPR_PARSE_BC case Lexer::BRACKETS_LEFT_TOKEN: sbc++; break; \
+            case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; break; \
+            case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; break; \
+            case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; break; \
+            case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; break; \
+            case Lexer::BIG_BRACKETS_RIGHT_TOKEN: bbc--; break;
+            UL sbc = 0, mbc = 0, bbc = 0;
+            string expr;
+            auto defLine = lexer.line();
+            while (true) {
+                GET;
+                switch (token.t) {
+                    AST_PARSE_GET_EXPR_PARSE_BC
+                    FINISH_CASE
+                        if (!(sbc || mbc || bbc)) goto AST_PARSE_NEW_FINISH_GET;
+                        break;
+                }
+                expr += token.s;
+            }
+            AST_PARSE_NEW_FINISH_GET:
+            AST ast(expr, defLine + baseLine);
+            ast.isParsingClassCtorNew = true;
+            ast.parse();
+            root = ast.root;
+            root->type(Lexer::NEW_TOKEN);
+            break;
+        }
         case Lexer::CLASS_TOKEN:
         {
             auto defLine = lexer.line();
@@ -61,6 +92,7 @@ void Belish::AST::parse() {
                         if (className.empty()) break;
                         AST ast(className, lexer.line() + baseLine);
                         ast.parse();
+                        AST_CHECK_PARSING_ERR(ast)
                         root->get(0)->insert(ast.root);
                         if (bc) continue;
                         break;
@@ -96,6 +128,7 @@ void Belish::AST::parse() {
                         bbc--;
                         if (!bbc) {
                             AST ast(funScript, funDefLine + baseLine);
+                            ast.isParsingClassMethod = true;
                             ast.parse();
                             root->insert(ast.root);
                             funScript = "def ";
@@ -144,7 +177,7 @@ void Belish::AST::parse() {
                 }
                 auto op = token;
                 string value;
-                ULL sbc = 0, mbc = 0, bbc = 0;
+                UL sbc = 0, mbc = 0, bbc = 0;
                 auto defLine = lexer.line();
                 while (true) {
                     GET;
@@ -325,6 +358,9 @@ void Belish::AST::parse() {
             UL bc(1);
             UL argLine = lexer.line();
             string arg;
+            if (isParsingClassMethod) {
+                root->get(0)->insert(Lexer::UNKNOWN_TOKEN, "this", lexer.line() + baseLine);
+            }
             while (true) {
                 GET;
                 if (FINISH_GET) FINISH_GET_ERROR
@@ -493,6 +529,9 @@ void Belish::AST::parse() {
                 lexer.index(op.index);
                 lexer.line(op.line);
                 string arg;
+                if (isParsingClassCtorNew) {
+                    root->insert(Lexer::OBJECT_TOKEN, "", baseLine + initialLine);
+                }
                 bracketsCount = 1;
                 while (true) {
                     GET;

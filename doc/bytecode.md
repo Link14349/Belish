@@ -60,6 +60,8 @@
 | 35 | push_true | push_true | Push a value: true |
 | 36 | push_false | push_true | Push a value: false |
 | 37 | push_outer | push_outer <offset> | Push outer value |
+| 38 | def_fun | def_fun <offset> | Define function |
+| 39 | def_fun_and_push | def_fun_and_push <offset> | Define function and push it in |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

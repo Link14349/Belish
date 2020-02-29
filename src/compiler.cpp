@@ -67,9 +67,52 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             bytecode += (char) LINE;
             bytecode += transI32S_bin(nowLine);
         }
+        COM_A_COM_ORG:
         switch (ast.root->type()) {
+            case Lexer::NEW_TOKEN:
+            {
+                auto ctorNodeDot = new AST::node(Lexer::DOT_TOKEN, "", ast.root->line());
+                ctorNodeDot->insert(ast.root->get(0));
+                ctorNodeDot->insert(Lexer::UNKNOWN_TOKEN, "ctor", ast.root->line());
+                ast.root->noDelSet(0, ctorNodeDot);
+                ast.root->type(Lexer::BRACKETS_LEFT_TOKEN);
+                goto COM_A_COM_ORG;
+            }
             case Lexer::CLASS_TOKEN:
             {
+                string className(ast.root->value());
+                bytecode += (char) PUSH_OBJ;
+                bytecode += (char) PUSH_STR;
+                bytecode += transI32S_bin(5);
+                bytecode += ".name";
+                bytecode += (char) PUSH_STR;
+                bytecode += transI32S_bin(className.length());
+                bytecode += className;
+                bytecode += (char) SET_ATTR;
+                for (UL i = 1; i < ast.root->length(); i++) {
+                    bytecode += (char) PUSH_STR;
+                    bytecode += transI32S_bin(ast.root->get(i)->value().length());
+                    bytecode += ast.root->get(i)->value();
+                    bytecode += (char) DEF_FUN_AND_PUSH;
+                    bytecode += transI32S_bin(funOffset);
+                    if (ast.root->get(i)->value() == "ctor") {
+                        ast.root->get(i)->insert(Lexer::GLOBAL_TOKEN, "", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, className, ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->insert(Lexer::SET_TOKEN, "", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->insert(Lexer::DOT_TOKEN, "", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, "this", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, ".class_link", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, className, ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->insert(Lexer::RETURN_TOKEN, "", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, "this", ast.root->get(i)->get(-1)->line());
+                    }
+                    functionAdrTab["." + className + "." + ast.root->get(i)->value()] = funOffset++;
+                    functionAsts.push_back(ast.root->get(i));
+                    functionDefSym.push_back(sym);
+                    bytecode += (char) SET_ATTR;
+                    ast.root->noDelSet(i, nullptr);
+                }
+                sym[className] = stkOffset++;
                 break;
             }
             case Lexer::RETURN_TOKEN:

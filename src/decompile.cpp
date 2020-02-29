@@ -135,6 +135,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(PUSH_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(DEF_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
+            CASE_OP(DEF_FUN_AND_PUSH) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(LINE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
             CASE_OP(NEW_FRAME)

@@ -49,6 +49,11 @@ namespace Belish {
                 delete children[index % children.size()];
                 children[index % children.size()] = n;
             }
+            inline void noDelSet(long index, node* n) {
+                if (children.empty()) return;
+                while (index < 0) index += children.size();
+                children[index % children.size()] = n;
+            }
             inline UL length() const { return children.size(); }
             node& operator[](long index) { return *get(index); }
             void insert(node* n) { children.push_back(n); }
@@ -73,6 +78,8 @@ namespace Belish {
         node* root;
         string script;
         Lexer lexer;
+        bool isParsingClassMethod = false;
+        bool isParsingClassCtorNew = false;
         ValueTracker* tracker;
         friend class Compiler;
         static inline unsigned short priority(Lexer::TOKENS& tk);

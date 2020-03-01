@@ -101,7 +101,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         ast.root->get(i)->insert(Lexer::SET_TOKEN, "", ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->insert(Lexer::DOT_TOKEN, "", ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, "this", ast.root->get(i)->get(-1)->line());
-                        ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, ".class_link", ast.root->get(i)->get(-1)->line());
+                        ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, CLASS_LINK, ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, className, ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->insert(Lexer::RETURN_TOKEN, "", ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, "this", ast.root->get(i)->get(-1)->line());

@@ -47,6 +47,7 @@ void Belish::decompile(char* bytecode, ULL len) {
         i -= 4;
     }
     auto indexEnd = i;
+    UL funFooter = -1;
     UL functionsOffset = 0;
     std::cout << "=====[END]=====" << std::endl;
     std::cout << "=====[MAIN]=====" << std::endl;
@@ -57,11 +58,19 @@ void Belish::decompile(char* bytecode, ULL len) {
             i = indexEnd;
             if (i >= len) break;
         }
+        if (i == funFooter) {
+            if (functionsOffset < functions.size()) {
+                i = functions[functionsOffset];
+                goto DEC_DECFUN;
+            }
+            else break;
+        }
         if (!functions.empty() && i == functions[functionsOffset]) {
+            DEC_DECFUN:
             std::cout << "----[FUNCTION: #" << (functionsOffset++) << "]----" << std::endl;
             GETQBYTE
             UL tmpI = i;
-            i = qbyte;
+            funFooter = i = qbyte;
             GETQBYTE
             std::cout << "Outer Values' Count: " << qbyte << std::endl;
             UL ovc = qbyte;

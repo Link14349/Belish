@@ -302,18 +302,19 @@ namespace Belish {
     };
     class Function : public Value {
     public:
-        Function(UL i = 0, UL m = 0) : index(i), module(m) { linked = 0; }// module默认为0, 0代表自己
+        Function(UL i = 0, UL m = 0, bool ism = false) : index(i), module(m), isMethod(ism) { linked = 0; }// module默认为0, 0代表自己
         virtual ~Function() {}
         UL id() { return index; }
         TYPE type() { return FUNCTION; }
         string toString() { return "<function #" + std::to_string(index + module) + ">"; }
         string toStringHL() { return "\033[35m<function #" + std::to_string(index + module) + ">\033[0m"; }
-        Value* copy() override { return new Function(index, module); }
+        Value* copy() override { return new Function(index, module, isMethod); }
         bool isTrue() override { return true; }
         bool isFalse() override { return false; }
     private:
         UL index;
         UL module;
+        bool isMethod;
         friend class BVM;
     };
 

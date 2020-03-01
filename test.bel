@@ -10,6 +10,5 @@ class Hello {
         io.println(msg);
     }
 }
-let hello = new Hello("haha");
-// hello.say("haha");
-debugger;
+let haha = new Hello("haha");
+haha.say("Hello");

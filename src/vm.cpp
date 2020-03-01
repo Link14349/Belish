@@ -13,6 +13,7 @@ void Belish::BVM::run() {
     Qbyte qbyte;
     Ebyte ebyte;
     Value* cache = nullptr;
+    Value* preValue = nullptr;// 存储取属性运算符.(也可以是[])左边的值
     vector<vector<UL> > outers;
     vector<vector<Value*> > outersDefs;
     vector<Value*>* closure = nullptr;
@@ -296,6 +297,7 @@ void Belish::BVM::run() {
             }
             case BAC: {
                 stk->push(cache);
+                cache = nullptr;
                 break;
             }
             case PUSH_TRUE: {
@@ -404,10 +406,21 @@ void Belish::BVM::run() {
                 if (attr) {
                     stk->push(attr);
                 } else {
+                    if (obj->get(CLASS_LINK)) {
+                        attr = ((Object*)obj->get(CLASS_LINK))->get(attr_name);
+                        if (attr) {
+                            obj->set(attr_name, attr);
+                            if (attr->type() == FUNCTION) ((Function*)attr)->isMethod = true;
+                            stk->push(attr);
+                            goto VM_GET_ATTR_LAST;
+                        }
+                    }
                     attr = new Undefined;
                     obj->set(attr_name, attr);
                     stk->push(attr);
                 }
+                VM_GET_ATTR_LAST:
+                preValue = obj;
                 break;
             }
             case NEW_FRAME: {
@@ -415,6 +428,9 @@ void Belish::BVM::run() {
                 UL movCount(qbyte);
                 auto stk_ = stk;
                 stk = new Stack;
+                if (cache && cache->type() == FUNCTION && ((Function*)cache)->isMethod) {
+                    stk->push(preValue);
+                }
                 frames.push_back(stk);
                 for (UL j = movCount; j; j--) stk->push(stk_->get(stk_->length() - j));
                 stk_->pop(movCount);

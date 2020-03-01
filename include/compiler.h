@@ -25,6 +25,7 @@ namespace Belish {
 
         LINE = 0xff
     };
+#define CLASS_LINK ".class_link"
     class Compiler {
     public:
         Compiler() : filename("untitled") { }

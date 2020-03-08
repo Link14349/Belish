@@ -212,7 +212,7 @@ namespace Belish {
     class Object : public Value {
     private:
         void del(std::set<void*>& objSet) {
-            std::clog << "d" << this << "\n";
+            /*std::clog << "d" << this << "\n";*/
             for (auto& i : prop) {
                 i.second->linked--;
                 if (i.second->linked == 0) {
@@ -229,9 +229,9 @@ namespace Belish {
         }
         friend class GC;
     public:
-        Object() { linked = 0; std::clog << "n" << this << "\n"; }
+        Object() { linked = 0; /*std::clog << "n" << this << "\n";*/ }
         ~Object() override {// 只有普通的没有循环引用的Object才会直接调析构函数
-            std::clog << "d" << this << "\n";
+            /*std::clog << "d" << this << "\n";*/
             for (auto& i : prop) {
                 i.second->linked--;
                 if (i.second->linked == 0) delete i.second;

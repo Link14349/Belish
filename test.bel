@@ -1,14 +1,4 @@
 import "io";
-class Hello {
-    ctor(name) {
-        global io;
-        this.name = name;
-        io.println("Create", name);
-    }
-    say(msg) {
-        global io;
-        io.println(msg);
-    }
-}
-let haha = new Hello("haha");
-haha.say("Hello");
+
+let 😂 = "😂";
+io.println(😂);

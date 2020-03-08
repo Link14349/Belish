@@ -75,7 +75,7 @@ namespace Belish {
         friend class AST;
 #define IS_SPACE(c) (c == '\t' || c == ' ' || c == '\n')
 #define IS_OP(c) \
-    (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && c != '_' && c != '$')
+    (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && c != '_' && c != '$') && (c > 0)
     };
 
 #define IS_NUM(c) (c >= '0' && c <= '9')

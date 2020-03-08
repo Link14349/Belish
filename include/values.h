@@ -254,11 +254,13 @@ namespace Belish {
             res += "\n" + tab + "}";
             return res;
         }
-        string toStringHL(const string& tab) {
+        string toStringHL(const string& tab, int Threshold = 5) {
             string res(tab + "{");
             for (auto i = prop.begin(); i != prop.end(); i++) {
                 res += "\n" + tab + "\t\033[35m'" + i->first + "'\033[0m: ";
-                if (i->second->type() == OBJECT) res += ((Object*)i->second)->toStringHL(tab + "\t");
+                if (i->second->type() == OBJECT) {
+                    res += --Threshold == 0 ? "an object(stop recursive display)" : ((Object*)i->second)->toStringHL(tab + "\t", Threshold);
+                }
                 else res += i->second->toStringHL();
             }
             res += "\n" + tab + "}";
@@ -376,7 +378,7 @@ namespace Belish {
 
     class Stack {
     public:
-        Stack(std::map<void*, UL>& objs, std::list<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.reserve(1024); }
+        Stack(std::map<void*, UL>& objs, std::list<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
         void set(UL offset, Value* v) {
             auto& value = val[offset];
@@ -396,8 +398,8 @@ namespace Belish {
             for (UL i = 0; i < offset; i++) {
                 auto& value = val[len + i];
                 if (!(--value->linked)) {
-                    delete value;
                     if (value->type() == OBJECT) objects.erase(value);
+                    delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {
                     deathObjects.push_back((Object*)value);
                     objects.erase(value);

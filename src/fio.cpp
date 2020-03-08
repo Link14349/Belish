@@ -3,8 +3,8 @@
 char* Belish::readFileCPTR(const string& filename, ULL& length) {
     std::ifstream t;
     char* buffer;
-    t.open(filename);
-    if (!t) {
+    t.open(filename, std::ios::in | std::ios::binary);
+    if (!t.is_open() || !t) {
         t.close();
         length = 0;
         return nullptr;
@@ -18,9 +18,8 @@ char* Belish::readFileCPTR(const string& filename, ULL& length) {
     return buffer;
 }
 bool Belish::readFile(const string& filename, string& content) {
-    std::fstream file(filename, std::ios::in | std::ios::out);
-    if(!file)
-    {
+    std::ifstream file(filename, std::ios::in);
+    if (!file.is_open() || !file) {
         file.close();
         return true;
     }
@@ -32,8 +31,8 @@ bool Belish::readFile(const string& filename, string& content) {
 }
 bool Belish::writeFile(const string& filename, const string& content) {
     std::ofstream fs;
-    fs.open(filename, std::ios::out);
-    if (!fs) return false;
+    fs.open(filename, std::ios::out | std::ios::binary);
+    if (!fs.is_open() || !fs) return false;
     fs << content;
     fs.close();
     return true;

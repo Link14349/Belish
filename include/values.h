@@ -408,8 +408,16 @@ namespace Belish {
         }
         UL length() { return len; }
         ~Stack() {
-            for (UL i = 0; i < len; i++)
-                if (!(--val[i]->linked)) delete val[i];
+            for (UL i = 0; i < len; i++) {
+                auto value = val[i];
+                if (!(--value->linked)) {
+                    if (value->type() == OBJECT) objects.erase(value);
+                    delete value;
+                } else if (value->type() == OBJECT && !(--objects[value])) {
+                    deathObjects.push_back((Object*)value);
+                    objects.erase(value);
+                }
+            }
         }
     private:
         UL len;

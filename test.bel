@@ -1,6 +1,7 @@
-for (let i = 0; i < 10; i++) {
+def test() {
     let a = { };
     let b = { a: a };
     let c = { b: b };
     a.c = c;
 }
+test();

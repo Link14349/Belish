@@ -18,8 +18,13 @@ void Belish::GC::gc() {
                 while (!stk.empty() && stk.top().end()) stk.pop();
                 if (stk.empty()) break;
                 stk.top().next();
+                continue;
             }
             if (stk.top().value()->type() == OBJECT) {
+                if (objectSet.find(stk.top().value()) != objectSet.end()) {
+                    stk.top().next();
+                    continue;
+                }
                 objectSet.insert(stk.top().value());
                 stk.push(((Object*)stk.top().value())->begin());
             } else stk.top().next();

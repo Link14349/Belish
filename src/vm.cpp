@@ -382,10 +382,9 @@ void Belish::BVM::run() {
                 }
                 modules.push_back(vm);
                 auto __exports__ = (Object*)vm->stk->get(0);// 偏移值为0的即__exports__变量
-                for (auto iter = __exports__->begin(); ; ) {
+                for (auto iter = __exports__->begin(); !iter.end(); iter.next()) {
                     auto val = iter.value();
                     if (val->type() == FUNCTION) ((Function*)val)->module = modules.size();
-                    if (!iter.next()) break;
                 }
                 stk->pop(1);
                 stk->push(__exports__);

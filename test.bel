@@ -1,7 +1,1 @@
-def test() {
-    let a = { };
-    let b = { a: a };
-    let c = { b: b };
-    a.c = c;
-}
-test();
+import "testmodule";

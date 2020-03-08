@@ -596,6 +596,17 @@ void Belish::BVM::run() {
     // 测试
 //    stk->dbg();
     if (!child) {
+        for (auto& def : outersDefs) {
+            for (auto& value : def) {
+                if (!(--value->linked)) {
+                    delete value;
+                    if (value->type() == OBJECT) objects.erase(value);
+                } else if (value->type() == OBJECT && (!(--objects[value]) || ~objects[value])) {
+                    deathObjects.push_back((Object*)value);
+                    objects.erase(value);
+                }
+            }
+        }
         if (!deathObjects.empty()) gc.gc();
         for (auto & module : modules) {
             delete module->bytecode;
@@ -604,11 +615,6 @@ void Belish::BVM::run() {
         }
         for (auto & exlib : exlibs) {
             delete exlib;
-        }
-        for (auto& def : outersDefs) {
-            for (auto& val : def) {
-                if (!(--val->linked)) delete val;
-            }
         }
         delete stk;
         stk = nullptr;

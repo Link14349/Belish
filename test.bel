@@ -3,4 +3,6 @@ class Hello {
         this.name = name;
     }
 }
+Hello.a = Hello;
 let a = new Hello("123");
+

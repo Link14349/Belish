@@ -303,6 +303,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
                 scCompiler.compilingForLoopCon = false;
+                scCompiler.newVars.clear();
                 for (UL i = 1; i < ast.root->length(); i++) {
                     if (i == ast.root->length() - 1) scCompiler.isBlock = true;
                     scCompiler.ast.root = ast.root->get(i);

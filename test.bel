@@ -1,4 +1,6 @@
-let a = { };
-let b = { a: a };
-let c = { b: b };
-a.c = c;
+for (let i = 0; i < 10; i++) {
+    let a = { };
+    let b = { a: a };
+    let c = { b: b };
+    a.c = c;
+}

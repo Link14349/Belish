@@ -113,6 +113,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     ast.root->noDelSet(i, nullptr);
                 }
                 sym[className] = stkOffset++;
+                newVars.push_back(className);
                 break;
             }
             case Lexer::RETURN_TOKEN:

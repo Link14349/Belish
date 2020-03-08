@@ -1,1 +1,6 @@
-import "testmodule";
+class Hello {
+    ctor(name) {
+        this.name = name;
+    }
+}
+let a = new Hello("123");

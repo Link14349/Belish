@@ -596,7 +596,7 @@ void Belish::BVM::run() {
     // 测试
 //    stk->dbg();
     if (!child) {
-        gc.gc();
+        if (!deathObjects.empty()) gc.gc();
         for (auto & module : modules) {
             delete module->bytecode;
             module->gc.gc();
@@ -604,6 +604,11 @@ void Belish::BVM::run() {
         }
         for (auto & exlib : exlibs) {
             delete exlib;
+        }
+        for (auto& def : outersDefs) {
+            for (auto& val : def) {
+                if (!(--val->linked)) delete val;
+            }
         }
         delete stk;
         stk = nullptr;

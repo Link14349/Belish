@@ -36,12 +36,6 @@ namespace Belish {
         bool has(const string& name) { return sym.find(name) != sym.end(); }
         UL get(const string& name) { return sym[name]; }
     private:
-        UL stkOffset = 0;
-        UL funOffset = 0;
-        string filename;
-        string script;
-        AST ast;
-        UL footerAdr;
         bool isEntry = true;
         bool isRoot = false;
         bool isBlock = false;
@@ -49,11 +43,20 @@ namespace Belish {
         bool compilingForLoopCon = false;
         bool compilingForLoopUpd = false;
         bool parentIsSet = false;
+        bool independent = true;
+        char regCount = REG_COUNT - 1;
+        UL stkOffset = 0;
+        UL funOffset = 0;
+        UL footerAdr;
         UL pushedFunID;
         UL argCount = 0;
-        string funName;
+        UL nowLine = 0;
         UL funStart;
-        char regCount = REG_COUNT - 1;
+        ValueTracker* tracker;
+        Compiler* parent = nullptr;
+        string funName;
+        string filename;
+        string script;
         map<string, char> regVar;
         map<string, char> regValue;
         map<string, bool>* compiled;
@@ -63,9 +66,7 @@ namespace Belish {
         map<string, bool> needOut;// 所需要的函数定义处的值
         std::list<string> newVars;
         std::list<UL> outerUsingList;
-        ValueTracker* tracker;
-        Compiler* parent = nullptr;
-        bool independent = true;
+        AST ast;
     };
 }
 

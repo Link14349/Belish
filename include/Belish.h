@@ -11,6 +11,7 @@
 #include "compiler.h"
 #include "decompile.h"
 #include "valueTracker.h"
+#include "GC.h"
 
 namespace Belish {
 }

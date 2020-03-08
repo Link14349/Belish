@@ -7,6 +7,9 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <list>
+#include <set>
+
 using std::vector;
 
 namespace Belish {
@@ -206,11 +209,29 @@ namespace Belish {
         bool isFalse() override { return true; }
     private:
     };
-#define CLASS_TYPE_PROP_NAME "__type__"
     class Object : public Value {
+    private:
+        void del(std::set<void*>& objSet) {
+            std::clog << "d" << this << "\n";
+            for (auto& i : prop) {
+                i.second->linked--;
+                if (i.second->linked == 0) {
+                    if (i.second->type() == OBJECT) {
+                        if (objSet.find(i.second) != objSet.end()) continue;
+                        objSet.insert(i.second);
+                        ((Object*)i.second)->del(objSet);
+                        free(i.second);
+                        continue;
+                    }
+                    delete i.second;
+                }
+            }
+        }
+        friend class GC;
     public:
-        Object() { linked = 0; }
-        virtual ~Object() {
+        Object() { linked = 0; std::clog << "n" << this << "\n"; }
+        ~Object() override {// 只有普通的没有循环引用的Object才会直接调析构函数
+            std::clog << "d" << this << "\n";
             for (auto& i : prop) {
                 i.second->linked--;
                 if (i.second->linked == 0) delete i.second;
@@ -286,6 +307,7 @@ namespace Belish {
                 iter++;
                 return iter == binding->prop.end();
             }
+            bool end() { return iter == binding->prop.end(); }
             string key() { return iter->first; }
             Value* value() { return iter->second; }
         private:
@@ -351,19 +373,33 @@ namespace Belish {
 
     class Stack {
     public:
-        Stack() : len(0) { val.reserve(1024); }
+        Stack(std::map<void*, UL>& objs, std::list<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.reserve(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
         void set(UL offset, Value* v) {
-            if (!(--val[offset]->linked)) delete val[offset];
-            val[offset] = v;
+            auto& value = val[offset];
+            if (!(--val[offset]->linked)) {
+                delete value;
+                if (value->type() == OBJECT) objects.erase(value);
+            } else if (value->type() == OBJECT && !(--objects[value])) {
+                deathObjects.push_back((Object*)value);
+                objects.erase(value);
+            }
+            value = v;
             v->linked++;
         }
         void push(Value* v);
         void pop(UL offset) {
             len -= offset;
             for (UL i = 0; i < offset; i++) {
-                if (!(--val[len + i]->linked)) delete val[len + i];
-                val[len + i] = nullptr;
+                auto& value = val[len + i];
+                if (!(--value->linked)) {
+                    delete value;
+                    if (value->type() == OBJECT) objects.erase(value);
+                } else if (value->type() == OBJECT && !(--objects[value])) {
+                    deathObjects.push_back((Object*)value);
+                    objects.erase(value);
+                }
+                value = nullptr;
             }
         }
         void dbg();
@@ -376,8 +412,10 @@ namespace Belish {
                 if (!(--val[i]->linked)) delete val[i];
         }
     private:
-        vector<Value*> val;
         UL len;
+        std::map<void*, UL>& objects;
+        std::list<Object*>& deathObjects;
+        vector<Value*> val;
         friend class NFunction;
     };
 }

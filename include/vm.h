@@ -2,15 +2,17 @@
 #define BELISH_VM_H
 
 #include <string>
+#include <map>
 #include "values.h"
 #include "compiler.h"
 #include "dylib.h"
+#include "GC.h"
 using std::string;
 
 namespace Belish {
     class BVM {
     public:
-        BVM(const string& fn, char* bc, ULL l) : filename(fn), bytecode(bc), len(l) { modules.reserve(16);frames.reserve(16); }
+        BVM(const string& fn, char* bc, ULL l) : filename(fn), bytecode(bc), len(l), gc(this) { modules.reserve(16);frames.reserve(16); }
         void run();
         void Throw(UL errID, const string& message) {
             std::cerr << "BLE" << errID << ": " << message;
@@ -25,22 +27,26 @@ namespace Belish {
     private:
         bool error = false;
         bool child = false;
-        bool callMoudleMethod = false;
-        char* bytecode;
+        bool callModuleMethod = false;
         UL functionLen;
         UL footerAdr;
         UL i;
         UL inFun = 0;
         ULL len;
+        char* bytecode;
+        GC gc;
+        map<string, bool>* importedTab = nullptr;
         Stack* stk = nullptr;
         Value* regs[REG_COUNT] = { nullptr };
+        std::map<void*, UL> objects;
+        std::list<Object*> deathObjects;
         vector<BVM*> modules;
         vector<Dylib*> exlibs;
         vector<Stack*> frames;
         vector<UL> functions;
         std::list<UL> callingLineStk;
-        map<string, bool>* importedTab = nullptr;
         string filename;
+        friend class GC;
     };
     typedef Object* (*ModuleSetup)();
 }

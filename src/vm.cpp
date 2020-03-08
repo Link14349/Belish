@@ -19,7 +19,7 @@ void Belish::BVM::run() {
     vector<Value*>* closure = nullptr;
     if (importedTab) (*importedTab)[filename] = true;
     else importedTab = new map<string, bool>;
-    if (callMoudleMethod) goto CALL_MODULE_METHOED;
+    if (callModuleMethod) goto CALL_MODULE_METHOED;
     callingLineStk.push_back(1);
     i = 0;
     (*importedTab)[filename] = true;
@@ -63,7 +63,7 @@ void Belish::BVM::run() {
         i = tmpI;
     }
     if (!stk) {
-        stk = new Stack;
+        stk = new Stack(objects, deathObjects);
         frames.push_back(stk);
     }
     for (i = 18; i < footerAdr || inFun; ) {
@@ -226,7 +226,10 @@ void Belish::BVM::run() {
             case PUSH: {
                 GETQBYTE
                 auto val = stk->get(qbyte);
-                if (val->type() == OBJECT) stk->push(val);
+                if (val->type() == OBJECT) {
+                    stk->push(val);
+                    objects[val]++;
+                }
                 else stk->push(val->copy());
                 break;
             }
@@ -235,9 +238,10 @@ void Belish::BVM::run() {
 //                stk->dbg();
                 break;
             }
-            case POPC: {
+            case POPC: {// popc指令只会在一个块结束之际出现，所以在popc之后往往会产生一些垃圾
                 GETQBYTE
                 stk->pop(qbyte);
+                if (deathObjects.size() > 4) gc.gc();
                 break;
             }
             case JT: {
@@ -345,7 +349,9 @@ void Belish::BVM::run() {
                 break;
             }
             case PUSH_OBJ: {
-                stk->push(new Object);
+                auto obj = new Object;
+                stk->push(obj);
+                objects[obj]++;
                 break;
             }
             case LOAD: {
@@ -427,7 +433,7 @@ void Belish::BVM::run() {
                 GETQBYTE
                 UL movCount(qbyte);
                 auto stk_ = stk;
-                stk = new Stack;
+                stk = new Stack(objects, deathObjects);
                 if (cache && cache->type() == FUNCTION && ((Function*)cache)->isMethod) {
                     stk->push(preValue);
                 }
@@ -475,7 +481,7 @@ void Belish::BVM::run() {
                     vm->frames.push_back(stk);
                     vm->stk = vm->frames[vm->frames.size() - 1];
                     vm->inFun++;
-                    vm->callMoudleMethod = true;
+                    vm->callModuleMethod = true;
                     stk = frames[frames.size() - 2];
                     frames.erase(frames.end() - 1);
                     vm->callingLineStk.push_back(0);
@@ -509,6 +515,7 @@ void Belish::BVM::run() {
                 inFun--;
                 if (i == -1) return;
                 callingLineStk.erase(--callingLineStk.end());
+                if (deathObjects.size() > 4) gc.gc();// 函数调用完成后往往会产生一些垃圾
                 break;
             }
             case REG_EQ:
@@ -590,8 +597,10 @@ void Belish::BVM::run() {
     // 测试
 //    stk->dbg();
     if (!child) {
+        gc.gc();
         for (auto & module : modules) {
             delete module->bytecode;
+            module->gc.gc();
             delete module;
         }
         for (auto & exlib : exlibs) {

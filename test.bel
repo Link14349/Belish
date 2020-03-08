@@ -1,4 +1,4 @@
-import "io";
-
-let 😂 = "😂";
-io.println(😂);
+let a = { };
+let b = { a: a };
+let c = { b: b };
+a.c = c;

@@ -32,6 +32,7 @@ bool Belish::Compiler::compile(string &bytecode) {
     bytecode += filename;
     bytecode += (char) SET_ATTR;
     // ===============
+    newVars.clear();
     auto state = compile_(bytecode);
     auto footerAdrS = transI32S_bin(footerAdr);
     bytecode[footerAdr_] = footerAdrS[0];
@@ -45,11 +46,10 @@ bool Belish::Compiler::compile(string &bytecode) {
 
 bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>* brTab, std::list<UL>* ctTab) {
 //    ULL st = 0, ed = 0;
+#define COM_COM_SET_NOW_LINE(compiler) compiler.nowLine = nowLine;
     std::list<AST::node*> functionAsts;
     std::list<map<string, UL> > functionDefSym;
     if (!tracker) tracker = new ValueTracker;
-    UL nowLine = 1;
-    newVars.clear();
     if (isRoot) {
         if ((*compiled)[filename]) return false;
         (*compiled)[filename] = true;
@@ -118,6 +118,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             case Lexer::RETURN_TOKEN:
             {
                 Compiler compiler(filename);
+                COM_COM_SET_NOW_LINE(compiler);
                 compiler.ast.child = true;
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);
@@ -175,6 +176,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: {
                 Compiler compiler(filename);
+                COM_COM_SET_NOW_LINE(compiler);
                 compiler.sym = sym;
                 compiler.regCount = regCount;
                 compiler.regValue = regValue;
@@ -229,11 +231,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         bytecode += "0000";// 先占位
                     }
                     scCompiler.independent = true;
-                    scCompiler.isBlock = true;
                     for (UL j = 0; j < ast.root->get(i + 1)->length(); j++) {
+                        if (j == ast.root->get(i + 1)->length() - 1) scCompiler.isBlock = true;
                         scCompiler.ast.root = ast.root->get(i + 1)->get(j);
-                        scCompiler.compile_(bytecode, false, brTab, ctTab);
-                        if (scCompiler.compile_(bytecode)) return true;
+                        if (scCompiler.compile_(bytecode, false, brTab, ctTab)) return true;
                     }
                     if (isLast) break;
                     // 跳到最后
@@ -301,9 +302,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode += "0000";// 占位
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
-                scCompiler.isBlock = true;
                 scCompiler.compilingForLoopCon = false;
                 for (UL i = 1; i < ast.root->length(); i++) {
+                    if (i == ast.root->length() - 1) scCompiler.isBlock = true;
                     scCompiler.ast.root = ast.root->get(i);
                     if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
                 }
@@ -386,6 +387,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     } else {
                         auto val = om->second;
                         Compiler compiler(filename, val);
+                        COM_COM_SET_NOW_LINE(compiler);
                         compiler.sym = sym;
                         compiler.regCount = regCount;
                         compiler.regValue = regValue;
@@ -408,6 +410,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 for (UL i = 0; i < ast.root->length(); i += 2) {
                     string attr_name(ast.root->get(i)->value());
                     Compiler compiler(filename);
+                    COM_COM_SET_NOW_LINE(compiler);
                     compiler.ast.child = true;
                     compiler.independent = false;
                     compiler.sym = sym;
@@ -434,6 +437,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     dotNode = dotNode->get(0);
                 }
                 Compiler compiler(filename);
+                COM_COM_SET_NOW_LINE(compiler);
                 compiler.ast.root = dotNode;
                 compiler.ast.child = true;
                 compiler.independent = false;
@@ -466,6 +470,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                         continue;
                     }
                     Compiler compiler(filename);
+                    COM_COM_SET_NOW_LINE(compiler);
                     compiler.ast.child = true;
                     compiler.independent = false;
                     compiler.ast.root = ast.root->get(i + 1)->get(0);
@@ -501,8 +506,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 bytecode += "0000";// 先占位
                 scCompiler.independent = true;
                 std::list<UL> breakTab, continueTab;
-                scCompiler.isBlock = true;
                 for (UL i = 1; i < ast.root->length(); i++) {
+                    if (i == ast.root->length() - 1) scCompiler.isBlock = true;
                     scCompiler.ast.root = ast.root->get(i);
                     if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
                 }
@@ -559,6 +564,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                     newVars.push_back(name);
                 } else {
                     Compiler compiler(name, moduleScript);
+                    COM_COM_SET_NOW_LINE(compiler);
                     compiler.isEntry = false;
                     string moduleBcString;
                     if ((*compiled)[name]) goto FINISH_A_COM;
@@ -601,10 +607,10 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
                 scCompiler.regVar = regVar;
                 scCompiler.stkOffset = stkOffset;
                 scCompiler.ast.child = true;
-                scCompiler.isBlock = true;
                 UL bodyAdr = bytecode.length();
                 std::list<UL> breakTab, continueTab;
                 for (UL i = 1; i < ast.root->length(); i++) {
+                    if (i == ast.root->length() - 1) scCompiler.isBlock = true;
                     scCompiler.ast.root = ast.root->get(i);
                     if (scCompiler.compile_(bytecode, false, &breakTab, &continueTab)) return true;
                 }
@@ -632,6 +638,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool inOPTOEXPR, std::list<UL>
             }
             default: {// 表达式
                 Compiler compiler(filename);
+                COM_COM_SET_NOW_LINE(compiler);
                 compiler.ast.child = true;
                 compiler.independent = false;
                 compiler.ast.root = ast.root->get(0);

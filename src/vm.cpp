@@ -599,10 +599,13 @@ void Belish::BVM::run() {
         for (auto& def : outersDefs) {
             for (auto& value : def) {
                 if (!(--value->linked)) {
+                    if (value->type() == OBJECT) {
+                        objects.erase(value);
+                        deathObjects.erase((Object*)value);
+                    }
                     delete value;
-                    if (value->type() == OBJECT) objects.erase(value);
                 } else if (value->type() == OBJECT && (!(--objects[value]) || ~objects[value])) {
-                    deathObjects.push_back((Object*)value);
+                    deathObjects.insert((Object*)value);
                     objects.erase(value);
                 }
             }

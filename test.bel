@@ -1,8 +1,13 @@
+import "io";
 class Hello {
     ctor(name) {
         this.name = name;
     }
+    say(msg) {
+        global io;
+        io.println(this.name + ": " + msg);
+    }
 }
-Hello.a = Hello;
-let a = new Hello("123");
 
+let a = new Hello("123");
+a.say("haha");

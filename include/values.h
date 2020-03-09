@@ -255,7 +255,7 @@ namespace Belish {
             return res;
         }
         string toStringHL(const string& tab, int Threshold = 5) {
-            string res(tab + "{");
+            string res("{");
             for (auto i = prop.begin(); i != prop.end(); i++) {
                 res += "\n" + tab + "\t\033[35m'" + i->first + "'\033[0m: ";
                 if (i->second->type() == OBJECT) {
@@ -378,15 +378,18 @@ namespace Belish {
 
     class Stack {
     public:
-        Stack(std::map<void*, UL>& objs, std::list<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
+        Stack(std::map<void*, UL>& objs, std::set<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
         void set(UL offset, Value* v) {
             auto& value = val[offset];
             if (!(--val[offset]->linked)) {
+                if (value->type() == OBJECT) {
+                    objects.erase(value);
+                    deathObjects.erase((Object*)value);
+                }
                 delete value;
-                if (value->type() == OBJECT) objects.erase(value);
             } else if (value->type() == OBJECT && !(--objects[value])) {
-                deathObjects.push_back((Object*)value);
+                deathObjects.insert((Object*)value);
                 objects.erase(value);
             }
             value = v;
@@ -398,10 +401,13 @@ namespace Belish {
             for (UL i = 0; i < offset; i++) {
                 auto& value = val[len + i];
                 if (!(--value->linked)) {
-                    if (value->type() == OBJECT) objects.erase(value);
+                    if (value->type() == OBJECT) {
+                        objects.erase(value);
+                        deathObjects.erase((Object*)value);
+                    }
                     delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {
-                    deathObjects.push_back((Object*)value);
+                    deathObjects.insert((Object*)value);
                     objects.erase(value);
                 }
                 value = nullptr;
@@ -416,10 +422,13 @@ namespace Belish {
             for (UL i = 0; i < len; i++) {
                 auto value = val[i];
                 if (!(--value->linked)) {
-                    if (value->type() == OBJECT) objects.erase(value);
+                    if (value->type() == OBJECT) {
+                        objects.erase(value);
+                        deathObjects.erase((Object*)value);
+                    }
                     delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {
-                    deathObjects.push_back((Object*)value);
+                    deathObjects.insert((Object*)value);
                     objects.erase(value);
                 }
             }
@@ -427,7 +436,7 @@ namespace Belish {
     private:
         UL len;
         std::map<void*, UL>& objects;
-        std::list<Object*>& deathObjects;
+        std::set<Object*>& deathObjects;
         vector<Value*> val;
         friend class NFunction;
     };

@@ -39,7 +39,7 @@ namespace Belish {
         Stack* stk = nullptr;
         Value* regs[REG_COUNT] = { nullptr };
         std::map<void*, UL> objects;
-        std::list<Object*> deathObjects;
+        std::set<Object*> deathObjects;
         vector<BVM*> modules;
         vector<Dylib*> exlibs;
         vector<Stack*> frames;

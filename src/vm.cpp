@@ -590,6 +590,7 @@ void Belish::BVM::run() {
             }
             case DEB:
                 stk->dbg();
+                getchar();
                 break;
         }
     }

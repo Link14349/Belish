@@ -1,13 +1,61 @@
 import "io";
-class Hello {
-    ctor(name) {
-        this.name = name;
-    }
-    say(msg) {
-        global io;
-        io.println(this.name + ": " + msg);
-    }
-}
 
-let a = new Hello("123");
-a.say("haha");
+class BinTreeNode {
+    ctor(key, val) {
+        this.key = key;
+        this.val = val;
+        this.left = undefined;
+        this.right = undefined;
+    }
+    insert(key, val) {
+        global BinTreeNode;
+        if (key > this.key) {
+            if (this.right) {
+                this.right.insert(key, val);
+            } else {
+                this.right = new BinTreeNode(key, val);
+            }
+        } else {
+            if (this.left) {
+                this.left.insert(key, val);
+            } else {
+                this.left = new BinTreeNode(key, val);
+            }
+        }
+    }
+    lRr() {
+        global io;
+        if (this.left) {
+            this.left.lRr();
+        }
+        io.println(this.key, ",", this.val);
+        if (this.right) {
+            this.right.lRr();
+        }
+    }
+};
+class BinTree {
+    ctor() {
+        this.root = undefined;
+    }
+    insert(key, val) {
+        global BinTreeNode;
+        if (this.root) {
+            this.root.insert(key, val);
+        } else {
+            this.root = new BinTreeNode(key, val);
+        }
+    }
+    lRr() {
+        this.root.lRr();
+    }
+};
+
+let tree = new BinTree();
+let C = 20;
+tree.insert(C / 2);
+for (let i = C - 2; i > 0; i--) {
+    tree.insert(C / 2 - i, i ** 2);
+    tree.insert(C / 2 + i, i ** 2);
+}
+tree.lRr();

@@ -209,7 +209,9 @@ namespace Belish {
         bool isFalse() override { return true; }
     private:
     };
+    class Stack;
     class Object : public Value {
+        friend class Stack;
     private:
         void del(std::set<void*>& objSet) {
 //            std::clog << "d" << this << "\n";
@@ -233,13 +235,7 @@ namespace Belish {
             linked = 0;
 //            std::clog << "n" << this << "\n";
         }
-        ~Object() override {// 只有普通的没有循环引用的Object才会直接调析构函数
-//            std::clog << "d" << this << "\n";
-            for (auto& i : prop) {
-                i.second->linked--;
-                if (i.second->linked == 0) delete i.second;
-            }
-        }
+        inline ~Object() override;
         TYPE type() { return OBJECT; }
         string toString() {
             return "\n" + toString("");
@@ -276,17 +272,7 @@ namespace Belish {
             }
             return obj;
         }
-        void set(Value* n) override {
-            auto obj = (Object*)n;
-            for (auto & i : prop) {
-                i.second->linked--;
-                if (i.second->linked == 0) delete i.second;
-            }
-            for (auto & i : obj->prop) {
-                i.second->linked++;
-                prop[i.first] = i.second;
-            }
-        }
+        void set(Value* n) override;
         bool isTrue() override { return !prop.empty(); }
         bool isFalse() override { return prop.empty(); }
         Value* operator[](const string& k) {
@@ -295,15 +281,7 @@ namespace Belish {
         Value* get(const string& k) {
             return prop[k];
         }
-        void set(const string& k, Value* val) {
-            auto i = prop.find(k);
-            if (i != prop.end() && i->second) {
-                i->second->linked--;
-                if (i->second->linked == 0) delete i->second;
-            }
-            prop[k] = val;
-            val->linked++;
-        }
+        inline void set(const string& k, Value* val);
         class Iterator {
         public:
             Iterator(const Iterator& iterator) : binding(iterator.binding), iter(iterator.iter) { }
@@ -326,6 +304,7 @@ namespace Belish {
         Iterator end() { return Iterator(this, prop.end()); }
     private:
         std::map<string, Value*> prop;
+        Stack* stk = nullptr;
     };
     class Function : public Value {
     public:
@@ -377,6 +356,7 @@ namespace Belish {
     };
 
     class Stack {
+        friend class Object;
     public:
         Stack(std::map<void*, UL>& objs, std::set<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
@@ -386,6 +366,7 @@ namespace Belish {
                 if (value->type() == OBJECT) {
                     objects.erase(value);
                     deathObjects.erase((Object*)value);
+                    ((Object*)value)->stk = this;
                 }
                 delete value;
             } else if (value->type() == OBJECT && !(--objects[value])) {
@@ -394,6 +375,7 @@ namespace Belish {
             }
             value = v;
             v->linked++;
+            if (v->type() == OBJECT) ((Object*)v)->stk = this;
         }
         void push(Value* v);
         void pop(UL offset) {
@@ -404,6 +386,7 @@ namespace Belish {
                     if (value->type() == OBJECT) {
                         objects.erase(value);
                         deathObjects.erase((Object*)value);
+                        ((Object*)value)->stk = this;
                     }
                     delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {
@@ -425,6 +408,7 @@ namespace Belish {
                     if (value->type() == OBJECT) {
                         objects.erase(value);
                         deathObjects.erase((Object*)value);
+                        ((Object*)value)->stk = this;
                     }
                     delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {

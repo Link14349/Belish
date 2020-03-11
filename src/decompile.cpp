@@ -116,6 +116,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(BAC) printf("\n"); break;
             CASE_OP(SET_ATTR) printf("\n"); break;
             CASE_OP(GET_ATTR) printf("\n"); break;
+            CASE_OP(GET_CP_ATTR) printf("\n"); break;
             CASE_OP(RET) printf("\n"); break;
             CASE_OP(CALL_FUN) printf("\n"); break;
             CASE_OP(IMP) printf("\n"); break;
@@ -140,18 +141,26 @@ void Belish::decompile(char* bytecode, ULL len) {
                 printf("0x%08x\n", qbyte);
                 break;
             }
-            CASE_OP(POPC) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(PUSH_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(DEF_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(DEF_FUN_AND_PUSH) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(LINE) goto DECOM_SWITCH_POPC_NEW_FRAME_CASE;
-            CASE_OP(NEW_FRAME)
+            CASE_OP(POPC) goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(PUSH_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(CALL) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(DEF_FUN) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(DEF_FUN_AND_PUSH) printf("#"); goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(RESIZE) goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(LINE) goto DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE;
+            CASE_OP(NEW_FRAME_AND_CALL_AND_CALL_FUN)
             {
-                DECOM_SWITCH_POPC_NEW_FRAME_CASE:
+                DECOM_SWITCH_POPC_NEW_FRAME_AND_CALL_CASE:
                 GETQBYTE
                 printf("%u\n", qbyte);
+                break;
+            }
+            CASE_OP(NEW_FRAME_AND_CALL)
+            {
+                GETQBYTE
+                printf("%u, ", qbyte);
+                GETQBYTE
+                printf("#%u\n", qbyte);
                 break;
             }
             CASE_OP(REG_EQ) goto DECOM_SWITCH_REG_COM_CASE;
@@ -177,7 +186,11 @@ void Belish::decompile(char* bytecode, ULL len) {
                 printf("%%%02x\n", byte);
                 break;
             }
-            CASE_OP(PUSH_STR) {
+            CASE_OP(GET_ATTR_STR) goto DECOM_PUSH_STR_MAIN;
+            CASE_OP(GET_CP_ATTR_STR) goto DECOM_PUSH_STR_MAIN;
+            CASE_OP(PUSH_STR)
+            {
+                DECOM_PUSH_STR_MAIN:
                 GETQBYTE
                 UL strlen = qbyte;
                 string str;

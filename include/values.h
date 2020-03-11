@@ -93,7 +93,7 @@ namespace Belish {
     };
     class Int : public Value {
     public:
-        Int(double n = 0) : val(n) { linked = 0;  }
+        Int(UL n = 0) : val(n) { linked = 0;  }
         virtual ~Int() {}
         TYPE type() { return INT; }
         string toString() { return std::to_string(val); }
@@ -121,11 +121,11 @@ namespace Belish {
         void shiftr(Value* n) override { val = (val >> (((Int*)n)->value())); }
         virtual void lnot() { val = !val; }
         virtual void mnot() { val = ~val; }
-        bool isTrue() override { return val != 0; }
-        bool isFalse() override { return val == 0; }
-        uint64_t& value() { return val; }
+        bool isTrue() override { return val; }
+        bool isFalse() override { return !val; }
+        UL& value() { return val; }
     private:
-        uint64_t val;
+        UL val;
     };
     class String : public Value {
     public:

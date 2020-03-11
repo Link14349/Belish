@@ -52,10 +52,10 @@ class BinTree {
 };
 
 let tree = new BinTree();
-let C = 20;
+let C = 100;
 tree.insert(C / 2);
 for (let i = C - 2; i > 0; i--) {
     tree.insert(C / 2 - i, i ** 2);
     tree.insert(C / 2 + i, i ** 2);
 }
-tree.lRr();
+// tree.lRr();

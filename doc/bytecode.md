@@ -62,6 +62,10 @@
 | 37 | push_outer | push_outer <offset> | Push outer value |
 | 38 | def_fun | def_fun <offset> | Define function |
 | 39 | def_fun_and_push | def_fun_and_push <offset> | Define function and push it in |
+| 3a | get_cp_attr | get_cp_attr | Copy the attribute(the first element in the stack) of the second element in the stack |
+| 3b | new_frame_and_move_fun | new_frame_and_move_fun <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame and push the function into the new frame |
+| 3c | get_attr_str | get_attr_str <string> | Get the attribute of the first element in the stack |
+| 3d | get_cp_attr_str | get_cp_attr_str <string> | Copy the attribute of the first element in the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

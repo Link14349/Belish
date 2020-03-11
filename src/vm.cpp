@@ -8,6 +8,7 @@
 #include "fio.h"
 
 void Belish::BVM::run() {
+    auto undef = new Undefined;
     Byte byte;
     Dbyte dbyte;
     Qbyte qbyte;
@@ -215,7 +216,7 @@ void Belish::BVM::run() {
                 break;
             }
             case PUSH_UND: {
-                stk->push(new Undefined);
+                stk->push(undef);
                 break;
             }
             case REFER: {
@@ -428,7 +429,103 @@ void Belish::BVM::run() {
                 preValue = obj;
                 break;
             }
-            case NEW_FRAME: {
+            case GET_CP_ATTR: {
+                string attr_name(((String*)stk->top())->value());
+                auto obj_ = stk->get(stk->length() - 2);
+                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
+                stk->pop(1);
+                stk->pop(1);
+                auto obj = (Object*)obj_;
+                auto attr = obj->get(attr_name);
+                if (attr) {
+                    if (attr->type() == OBJECT) stk->push(attr);
+                    else stk->push(attr->copy());
+                } else {
+                    if (obj->get(CLASS_LINK)) {
+                        attr = ((Object*)obj->get(CLASS_LINK))->get(attr_name);
+                        if (attr) {
+                            obj->set(attr_name, attr);
+                            if (attr->type() == FUNCTION) ((Function*)attr)->isMethod = true;
+                            stk->push(attr);
+                            goto VM_GET_CP_ATTR_LAST;
+                        }
+                    }
+                    attr = new Undefined;
+                    obj->set(attr_name, attr);
+                    if (attr->type() == OBJECT) stk->push(attr);
+                    else stk->push(attr->copy());
+                }
+                VM_GET_CP_ATTR_LAST:
+                preValue = obj;
+                break;
+            }
+            case GET_ATTR_STR: {
+                string attr_name;
+                GETQBYTE
+                UL strlen = qbyte;
+                for (UL j = 0; j < strlen; j++, i++) {
+                    attr_name += bytecode[i];
+                }
+                auto obj_ = stk->top();
+                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
+                stk->pop(1);
+                auto obj = (Object*)obj_;
+                auto attr = obj->get(attr_name);
+                if (attr) {
+                    stk->push(attr);
+                } else {
+                    if (obj->get(CLASS_LINK)) {
+                        attr = ((Object*)obj->get(CLASS_LINK))->get(attr_name);
+                        if (attr) {
+                            obj->set(attr_name, attr);
+                            if (attr->type() == FUNCTION) ((Function*)attr)->isMethod = true;
+                            stk->push(attr);
+                            goto VM_GET_ATTR_STR_LAST;
+                        }
+                    }
+                    attr = new Undefined;
+                    obj->set(attr_name, attr);
+                    stk->push(attr);
+                }
+                VM_GET_ATTR_STR_LAST:
+                preValue = obj;
+                break;
+            }
+            case GET_CP_ATTR_STR: {
+                string attr_name;
+                GETQBYTE
+                UL strlen = qbyte;
+                for (UL j = 0; j < strlen; j++, i++) {
+                    attr_name += bytecode[i];
+                }
+                auto obj_ = stk->top();
+                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
+                stk->pop(1);
+                auto obj = (Object*)obj_;
+                auto attr = obj->get(attr_name);
+                if (attr) {
+                    if (attr->type() == OBJECT) stk->push(attr);
+                    else stk->push(attr->copy());
+                } else {
+                    if (obj->get(CLASS_LINK)) {
+                        attr = ((Object*)obj->get(CLASS_LINK))->get(attr_name);
+                        if (attr) {
+                            obj->set(attr_name, attr);
+                            if (attr->type() == FUNCTION) ((Function*)attr)->isMethod = true;
+                            stk->push(attr);
+                            goto VM_GET_CP_ATTR_STR_LAST;
+                        }
+                    }
+                    attr = new Undefined;
+                    obj->set(attr_name, attr);
+                    if (attr->type() == OBJECT) stk->push(attr);
+                    else stk->push(attr->copy());
+                }
+                VM_GET_CP_ATTR_STR_LAST:
+                preValue = obj;
+                break;
+            }
+            case NEW_FRAME_AND_CALL: {
                 GETQBYTE
                 UL movCount(qbyte);
                 auto stk_ = stk;
@@ -439,16 +536,6 @@ void Belish::BVM::run() {
                 frames.push_back(stk);
                 for (UL j = movCount; j; j--) stk->push(stk_->get(stk_->length() - j));
                 stk_->pop(movCount);
-                break;
-            }
-            case RESIZE: {
-                GETQBYTE
-                UL size(qbyte);
-                if (stk->length() >= size) stk->pop(stk->length() - size);
-                else for (UL j = 0; j < size - stk->length(); j++) stk->push(new Undefined);
-                break;
-            }
-            case CALL: {
                 GETQBYTE
                 UL funIndex(qbyte);
                 if (funIndex >= functions.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ")"); return; }
@@ -459,7 +546,33 @@ void Belish::BVM::run() {
                 callingLineStk.push_back(0);
                 break;
             }
+            case NEW_FRAME_AND_CALL_AND_CALL_FUN: {
+                auto fun = cache = stk->top();
+                fun->linked++;
+                stk->pop(1);
+                fun->linked--;
+                GETQBYTE
+                UL movCount(qbyte);
+                auto stk_ = stk;
+                stk = new Stack(objects, deathObjects);
+                if (cache && cache->type() == FUNCTION && ((Function*)cache)->isMethod) {
+                    stk->push(preValue);
+                }
+                frames.push_back(stk);
+                for (UL j = movCount; j; j--) stk->push(stk_->get(stk_->length() - j));
+                stk_->pop(movCount);
+                stk->push(fun);
+                goto VM_CALL_FUN;
+            }
+            case RESIZE: {
+                GETQBYTE
+                UL size(qbyte);
+                if (stk->length() >= size) stk->pop(stk->length() - size);
+                else for (UL j = 0; j < size - stk->length(); j++) stk->push(new Undefined);
+                break;
+            }
             case CALL_FUN: {
+                VM_CALL_FUN:
                 if (stk->top()->type() == NFUNCTION) {
                     auto nfun = ((NFunction*)stk->top());
                     stk->pop(1);

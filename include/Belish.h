@@ -12,6 +12,7 @@
 #include "decompile.h"
 #include "valueTracker.h"
 #include "GC.h"
+#include "timestamp.h"
 
 namespace Belish {
 }

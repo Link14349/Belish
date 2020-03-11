@@ -19,9 +19,10 @@ namespace Belish {
         MAND, MOR, MXOR, MNOT,
         LAND, LOR, LNOT, POW,
         MOV, POP, POPC, JT, JF, JMP,
-        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP, LOAD,
+        SAV, BAC, SL, SR, SET_ATTR, GET_ATTR, NEW_FRAME_AND_CALL, CALL, RET, RESIZE, CHANGE, PUSH_FUN, CALL_FUN, IMP, LOAD,
         REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB, PUSH_TRUE, PUSH_FALSE,
         PUSH_OUTER, DEF_FUN, DEF_FUN_AND_PUSH,
+        GET_CP_ATTR, NEW_FRAME_AND_CALL_AND_CALL_FUN, GET_ATTR_STR, GET_CP_ATTR_STR,
 
         LINE = 0xff
     };
@@ -31,8 +32,8 @@ namespace Belish {
         Compiler() : filename("untitled") { }
         Compiler(const string& fn) : filename(fn) { }
         Compiler(const string& fn, const string& s) : script(s), ast(s), filename(fn) { }
-        bool compile(string&);
-        bool compile_(string&, bool = false, std::list<UL>* = nullptr, std::list<UL>* = nullptr);
+        bool compile(string&, bool = false);// releaseType: 设置是否编译出代码行数等信息，true不编译，false编译
+        bool compile_(string&, bool = false, bool = false, std::list<UL>* = nullptr, std::list<UL>* = nullptr);
         bool has(const string& name) { return sym.find(name) != sym.end(); }
         UL get(const string& name) { return sym[name]; }
     private:

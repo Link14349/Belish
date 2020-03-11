@@ -10,7 +10,7 @@ int64_t getCurrentTime() {
 }
 #else
 
-int64_t getCurrentTime()
+int64_t Belish::getCurrentTime()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);

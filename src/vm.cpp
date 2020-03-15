@@ -571,6 +571,15 @@ void Belish::BVM::run() {
                 else for (UL j = 0; j < size - stk->length(); j++) stk->push(new Undefined);
                 break;
             }
+            case LOAD_SUPER_METHOD: {
+                auto class_v = (Object*)stk->top();
+                auto super = (Object*)(class_v)->get(SUPER_CLASS_ATTR_NAME);
+                for (auto& method : super->prop) {
+                    if (method.first == ".name" || method.first == ".super" || method.first == ".ctor") continue;
+                    class_v->set_if_doesnt_have(method.first, method.second);
+                }
+                break;
+            }
             case CALL_FUN: {
                 VM_CALL_FUN:
                 if (stk->top()->type() == NFUNCTION) {
@@ -586,6 +595,7 @@ void Belish::BVM::run() {
                 auto fun = ((Function*)stk->top());
                 UL funIndex(fun->id());
                 if (fun->module) {// 不为0
+                    if ((fun->module - 1) >= modules.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ", wrong function module #" + std::to_string(fun->module - 1) + ")"); return; }
                     auto vm = modules[fun->module - 1];
                     if (funIndex >= vm->functions.size()) { Throw(601, "Unknown function calling(wrong function index #" + std::to_string(qbyte) + ")"); return; }
                     vm->i = vm->functions[funIndex];
@@ -716,6 +726,7 @@ void Belish::BVM::run() {
                     if (value->type() == OBJECT) {
                         objects.erase(value);
                         deathObjects.erase((Object*)value);
+                        ((Object*)value)->stk = stk;
                     }
                     delete value;
                 } else if (value->type() == OBJECT && (!(--objects[value]) || ~objects[value])) {

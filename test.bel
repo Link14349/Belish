@@ -51,11 +51,13 @@ class BinTree {
     }
 };
 
-let tree = new BinTree();
-let C = 100;
-tree.insert(C / 2);
-for (let i = C - 2; i > 0; i--) {
-    tree.insert(C / 2 - i, i ** 2);
-    tree.insert(C / 2 + i, i ** 2);
+class Map(BinTree) {
+    ctor() {
+        super(this);
+    }
 }
-// tree.lRr();
+
+let map = new Map();
+map.insert(123, 123);
+map.insert(321, 321);
+map.lRr();

@@ -212,6 +212,7 @@ namespace Belish {
     class Stack;
     class Object : public Value {
         friend class Stack;
+        friend class BVM;
     private:
         void del(std::set<void*>& objSet) {
 //            std::clog << "d" << this << "\n";
@@ -282,6 +283,13 @@ namespace Belish {
             return prop[k];
         }
         inline void set(const string& k, Value* val);
+        void set_if_doesnt_have(const string& k, Value* val) {
+            auto i = prop.find(k);
+            if (i != prop.end()) return;
+            prop[k] = val;
+            val->linked++;
+            if (val->type() == OBJECT && stk) ((Object*)val)->stk = stk;
+        }
         class Iterator {
         public:
             Iterator(const Iterator& iterator) : binding(iterator.binding), iter(iterator.iter) { }
@@ -408,7 +416,7 @@ namespace Belish {
                     if (value->type() == OBJECT) {
                         objects.erase(value);
                         deathObjects.erase((Object*)value);
-                        ((Object*)value)->stk = this;
+                        ((Object*)value)->stk = nullptr;
                     }
                     delete value;
                 } else if (value->type() == OBJECT && !(--objects[value])) {

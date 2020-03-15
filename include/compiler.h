@@ -23,6 +23,7 @@ namespace Belish {
         REG_EQ, REG_NEQ, REG_LEQ, REG_MEQ, REG_LESS, REG_MORE, MOV_REG, REG_ADD, REG_SUB, PUSH_TRUE, PUSH_FALSE,
         PUSH_OUTER, DEF_FUN, DEF_FUN_AND_PUSH,
         GET_CP_ATTR, NEW_FRAME_AND_CALL_AND_CALL_FUN, GET_ATTR_STR, GET_CP_ATTR_STR,
+        LOAD_SUPER_METHOD,
 
         LINE = 0xff
     };
@@ -69,6 +70,7 @@ namespace Belish {
         std::list<UL> outerUsingList;
         AST ast;
     };
+#define SUPER_CLASS_ATTR_NAME ".super"
 }
 
 #endif //BELISH_COMPILER_H

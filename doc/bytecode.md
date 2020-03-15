@@ -66,6 +66,7 @@
 | 3b | new_frame_and_move_fun | new_frame_and_move_fun <unsigned int> | Create a new frame and move the first n items in the original frame to the new frame and push the function into the new frame |
 | 3c | get_attr_str | get_attr_str <string> | Get the attribute of the first element in the stack |
 | 3d | get_cp_attr_str | get_cp_attr_str <string> | Copy the attribute of the first element in the stack |
+| 3e | load_super_method | load_super_method | Load the super method into the class |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

@@ -69,9 +69,10 @@ void Belish::AST::parse() {
                 root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token '" + token.s + "'", defLine + baseLine);
                 return;
             }
-            root = new node(Lexer::CLASS_TOKEN, token.s, defLine + baseLine);
-            root->insert(Lexer::NO_STATUS, "", defLine + baseLine);
+            string myClassName(token.s);
+            root = new node(Lexer::CLASS_TOKEN, myClassName, defLine + baseLine);
             GET;
+            bool haveSuper = false;
             if (token.t == Lexer::BIG_BRACKETS_LEFT_TOKEN) goto AST_PARSE_CLASS_METHODS_DEF;
             if (token.t != Lexer::BRACKETS_LEFT_TOKEN) {
                 delete root;
@@ -86,16 +87,15 @@ void Belish::AST::parse() {
                     if (token.t == Lexer::BRACKETS_LEFT_TOKEN) bc++;
                     else if (token.t == Lexer::BRACKETS_RIGHT_TOKEN) {
                         bc--;
-                        if (!bc) goto AST_PARSE_PARSE_EX_CLASS_REF;
-                    } else if (token.t == Lexer::COMMA_TOKEN && bc == 1) {
-                        AST_PARSE_PARSE_EX_CLASS_REF:
-                        if (className.empty()) break;
-                        AST ast(className, lexer.line() + baseLine);
-                        ast.parse();
-                        AST_CHECK_PARSING_ERR(ast)
-                        root->get(0)->insert(ast.root);
-                        if (bc) continue;
-                        break;
+                        if (!bc) {
+                            if (className.empty()) break;
+                            AST ast(className, lexer.line() + baseLine);
+                            ast.parse();
+                            AST_CHECK_PARSING_ERR(ast)
+                            root->insert(ast.root);
+                            haveSuper = true;
+                            break;
+                        }
                     } else className += token.s + " ";
                 }
                 GET;
@@ -106,22 +106,37 @@ void Belish::AST::parse() {
                 }
             }
             AST_PARSE_CLASS_METHODS_DEF:
+            if (!root->length()) root->insert(Lexer::NO_STATUS, "", lexer.line() + baseLine);
             UL funDefLine = lexer.line();
             UL sbc = 0;
             UL bbc = 0;
             string funScript = "def ";
+            string methodName;
+            bool finishArgGet = false;
             while (true) {
                 GET;
                 funScript += token.s + " ";
                 switch (token.t) {
+                    case Lexer::UNKNOWN_TOKEN:
+                        if (sbc || bbc || !methodName.empty()) break;
+                        methodName = token.s;
+                        break;
                     case Lexer::BRACKETS_LEFT_TOKEN:
                         sbc++;
                         break;
                     case Lexer::BRACKETS_RIGHT_TOKEN:
                         sbc--;
+                        if (!(sbc || bbc)) finishArgGet = true;
                         break;
                     case Lexer::BIG_BRACKETS_LEFT_TOKEN:
                         bbc++;
+                        if (finishArgGet) {
+                            funScript += "global " + myClassName + ";";
+                            if (methodName == "ctor" && haveSuper) {
+                                funScript += "let super => " + myClassName + R"([".super"]["ctor"];)";
+                            }
+                            finishArgGet = false;
+                        }
                         break;
                     case Lexer::BIG_BRACKETS_RIGHT_TOKEN:
                         if (!bbc) goto AST_PARSE_FINISH_CLASS_PARSE;
@@ -132,6 +147,7 @@ void Belish::AST::parse() {
                             ast.parse();
                             root->insert(ast.root);
                             funScript = "def ";
+                            methodName = "";
                             sbc = bbc = 0;
                         }
                         break;

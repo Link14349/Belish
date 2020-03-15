@@ -54,6 +54,13 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
         if ((*compiled)[filename]) return false;
         (*compiled)[filename] = true;
     }
+    char sign = 0;// 传信变量
+    /*
+     * 1. 用于判断是否在编译new实例化对象
+     *      - 1: 在编译new实例化对象 0: 不在编译new实例化对象
+     *
+     * **: 所有表示否的都是0
+     * */
     while (true) {
 //        st = getCurrentTime();
         if (!ast.child) ast.parse();
@@ -96,8 +103,8 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                     bytecode += (char) DEF_FUN_AND_PUSH;
                     bytecode += transI32S_bin(funOffset);
                     if (ast.root->get(i)->value() == "ctor") {
-                        ast.root->get(i)->insert(Lexer::GLOBAL_TOKEN, "", ast.root->get(i)->get(-1)->line());
-                        ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, className, ast.root->get(i)->get(-1)->line());
+//                        ast.root->get(i)->insert(Lexer::GLOBAL_TOKEN, "", ast.root->get(i)->get(-1)->line());
+//                        ast.root->get(i)->get(-1)->insert(Lexer::UNKNOWN_TOKEN, className, ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->insert(Lexer::SET_TOKEN, "", ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->insert(Lexer::DOT_TOKEN, "", ast.root->get(i)->get(-1)->line());
                         ast.root->get(i)->get(-1)->get(0)->insert(Lexer::UNKNOWN_TOKEN, "this", ast.root->get(i)->get(-1)->line());
@@ -114,6 +121,27 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                 }
                 sym[className] = stkOffset++;
                 newVars.push_back(className);
+                bytecode += (char) PUSH_STR;
+                bytecode += transI32S_bin(string(SUPER_CLASS_ATTR_NAME).length()) + SUPER_CLASS_ATTR_NAME;
+                if (ast.root->get(0)->type() == Lexer::NO_STATUS) {
+                    bytecode += (char) PUSH_UND;
+                    bytecode += (char) SET_ATTR;
+                } else {
+                    Compiler compiler(filename);
+                    COM_COM_SET_NOW_LINE(compiler);
+                    compiler.ast.child = true;
+                    compiler.independent = false;
+                    compiler.ast.root = ast.root->get(0);
+                    compiler.sym = sym;
+                    compiler.regCount = regCount;
+                    compiler.regValue = regValue;
+                    compiler.regVar = regVar;
+                    compiler.functionAdrTab = functionAdrTab;
+                    compiler.macro = macro;
+                    compiler.compile_(bytecode, releaseType);
+                    bytecode += (char) SET_ATTR;
+                    bytecode += (char) LOAD_SUPER_METHOD;
+                }
                 break;
             }
             case Lexer::RETURN_TOKEN:
@@ -349,10 +377,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                         std::cerr << "BLE401: Unexpected global symbol '" << ast.root->get(i)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
                         return true;
                     }
-                    if (needOut[ast.root->get(i)->value()]) {
-                        std::cerr << "BLE402: Reusable global name '" << ast.root->get(i)->value() << "' at <" << filename << ">:" << ast.line() << std::endl;
-                        return true;
-                    }
+                    if (needOut[ast.root->get(i)->value()]) continue;
                     sym[ast.root->get(i)->value()] = stkOffset++;
                     bytecode += (char) PUSH_OUTER;
                     bytecode += transI32S_bin(outerUsingList.size());
@@ -836,9 +861,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
         bytecode[footerAdr + j * 4 + 7] = adrS[3];
         ast.root = *i;
         Compiler compiler(filename);
-        // 这里注释掉的内容是关于函数对定义处变量使用的实现的，这个再后再填回去
-//        compiler.sym = sym;
-//        compiler.stkOffset = stkOffset;
         compiler.parent = this;
         compiler.ast.child = true;
         compiler.argCount = ast.root->get(0)->length();

@@ -76,6 +76,26 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
         }
         COM_A_COM_ORG:
         switch (ast.root->type()) {
+            case Lexer::ARRAY_TOKEN:
+            {
+                for (auto i = 0; i < ast.root->length(); i++) {
+                    Compiler compiler(filename);
+                    COM_COM_SET_NOW_LINE(compiler);
+                    compiler.ast.child = true;
+                    compiler.independent = false;
+                    compiler.ast.root = ast.root->get(i);
+                    compiler.sym = sym;
+                    compiler.regCount = regCount;
+                    compiler.regValue = regValue;
+                    compiler.regVar = regVar;
+                    compiler.functionAdrTab = functionAdrTab;
+                    compiler.macro = macro;
+                    compiler.compile_(bytecode, releaseType);
+                }
+                bytecode += (char) CREATE_ARRAY;
+                bytecode += transI32S_bin(ast.root->length());
+                break;
+            }
             case Lexer::NEW_TOKEN:
             {
                 auto ctorNodeDot = new AST::node(Lexer::DOT_TOKEN, "", ast.root->line());

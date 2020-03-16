@@ -580,6 +580,15 @@ void Belish::BVM::run() {
                 }
                 break;
             }
+            case CREATE_ARRAY: {
+                auto array = new Array;
+                GETQBYTE
+                const auto ST = stk->length() - qbyte;
+                for (UL j = 0; j < qbyte; j++) array->push_back(stk->get(ST + j));
+                stk->pop(qbyte);
+                stk->push(array);
+                break;
+            }
             case CALL_FUN: {
                 VM_CALL_FUN:
                 if (stk->top()->type() == NFUNCTION) {

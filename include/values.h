@@ -15,7 +15,7 @@ using std::vector;
 namespace Belish {
 #define TYPE_VAL_ENUM_DEF(TYPE, ADDTION, BAC) \
     enum TYPE { \
-        NUMBER##BAC, STRING##BAC, OBJECT##BAC, UNDEFINED##BAC, FUNCTION##BAC, INT##BAC, NFUNCTION##BAC, BOOLEAN##BAC, ADDTION##BAC \
+        NUMBER##BAC, STRING##BAC, OBJECT##BAC, UNDEFINED##BAC, FUNCTION##BAC, INT##BAC, NFUNCTION##BAC, BOOLEAN##BAC, ARRAY##BAC, ADDTION##BAC \
     };
     TYPE_VAL_ENUM_DEF(TYPE, , )
     class Value {
@@ -55,6 +55,7 @@ namespace Belish {
         friend class Stack;
         friend class BVM;
         friend class Object;
+        friend class Array;
         UL linked;
     };
     class Number : public Value {
@@ -213,6 +214,7 @@ namespace Belish {
     class Object : public Value {
         friend class Stack;
         friend class BVM;
+        friend class Array;
     private:
         void del(std::set<void*>& objSet) {
 //            std::clog << "d" << this << "\n";
@@ -362,9 +364,55 @@ namespace Belish {
     private:
         void* val;
     };
+    class Array : public Value {
+    public:
+        Array() { linked = 0; }
+        Array(const Array& array) {
+            linked = 0;
+            for (auto& v : array.val) {
+                val.push_back(v);
+                v->linked++;
+                if (v->type() == OBJECT && stk) ((Object*)v)->stk = stk;
+            }
+        }
+        ~Array() { }
+        TYPE type() { return ARRAY; }
+        string toString() {
+            string res("[");
+            for (auto& i : val) res += i->toString() + ", ";
+            res += "]";
+            return res;
+        }
+        string toStringHL() {
+            string res("[");
+            for (auto& i : val) res += i->toStringHL() + ", ";
+            res += "]";
+            return res;
+        }
+        Value* copy() override { return new Array(*this); }
+        bool isTrue() override { return true; }
+        bool isFalse() override { return false; }
+        Value* operator[](uint32_t idx) { return val[idx]; }
+        inline void set(uint32_t idx, Value* value);
+        inline void erase(uint32_t idx);
+        void insert(uint32_t idx, Value* value) {
+            val.insert(val.begin() + idx, value);
+            value->linked++;
+            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
+        }
+        void push_back(Value* value) {
+            val.push_back(value);
+            value->linked++;
+            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
+        }
+    private:
+        std::vector<Value*> val;
+        Stack* stk = nullptr;
+    };
 
     class Stack {
         friend class Object;
+        friend class Array;
     public:
         Stack(std::map<void*, UL>& objs, std::set<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }

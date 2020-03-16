@@ -11,6 +11,12 @@
 #define FINISH_GET_ERROR { delete root; \
 root = new node(Lexer::ERROR_TOKEN, "BLE104: Unexpected token PROGRAM_END"); \
 return; }
+#define AST_PARSE_GET_EXPR_PARSE_BC case Lexer::BRACKETS_LEFT_TOKEN: sbc++; break; \
+            case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; break; \
+            case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; break; \
+            case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; break; \
+            case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; break; \
+            case Lexer::BIG_BRACKETS_RIGHT_TOKEN: bbc--; break;
 
 Belish::AST::~AST() {
     if (!child && root)
@@ -31,15 +37,43 @@ void Belish::AST::parse() {
     auto initialIndex = lexer.index();
     auto GET;
     switch (token.t) {
+        case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN:
+        {
+            UL sbc = 0, mbc = 1, bbc = 0, stline = lexer.line();
+            string element;
+            root = new node(Lexer::ARRAY_TOKEN, "", stline + baseLine);
+            while (mbc) {
+                AST_PARSE_ARR_GET_ELE_TOKEN:
+                GET;
+                switch (token.t) {
+                    AST_PARSE_GET_EXPR_PARSE_BC
+                    case Lexer::COMMA_TOKEN:
+                    {
+                        AST_PARSE_ARR_COMMA:
+                        if (mbc > 1 || sbc || bbc) break;
+                        AST ast(element, stline + baseLine);
+                        ast.parse();
+                        root->insert(ast.root);
+                        stline = lexer.line();
+                        element = "";
+                        if (mbc) goto AST_PARSE_ARR_GET_ELE_TOKEN;
+                        else goto AST_PARSE_ARR_FINISH_GET;
+                    }
+                    FINISH_CASE
+                    {
+                        if (!(sbc || mbc || bbc)) goto AST_PARSE_ARR_FINISH_GET;
+                        break;
+                    }
+                }
+                if (!mbc) goto AST_PARSE_ARR_COMMA;
+                element += token.s;
+            }
+            AST_PARSE_ARR_FINISH_GET:
+            break;
+        }
         case Lexer::NEW_TOKEN:
         {
             string exp;
-#define AST_PARSE_GET_EXPR_PARSE_BC case Lexer::BRACKETS_LEFT_TOKEN: sbc++; break; \
-            case Lexer::BRACKETS_RIGHT_TOKEN: sbc--; break; \
-            case Lexer::MIDDLE_BRACKETS_LEFT_TOKEN: mbc++; break; \
-            case Lexer::MIDDLE_BRACKETS_RIGHT_TOKEN: mbc--; break; \
-            case Lexer::BIG_BRACKETS_LEFT_TOKEN: bbc++; break; \
-            case Lexer::BIG_BRACKETS_RIGHT_TOKEN: bbc--; break;
             UL sbc = 0, mbc = 0, bbc = 0;
             string expr;
             auto defLine = lexer.line();

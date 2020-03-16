@@ -67,6 +67,7 @@
 | 3c | get_attr_str | get_attr_str <string> | Get the attribute of the first element in the stack |
 | 3d | get_cp_attr_str | get_cp_attr_str <string> | Copy the attribute of the first element in the stack |
 | 3e | load_super_method | load_super_method | Load the super method into the class |
+| 3f | create_array | create_array <length> | Create an array object, and the elements from the <length - 1> item of the stack to the top of the stack |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
@@ -74,6 +75,7 @@
 - \<string\>: <Arbitrarily-Length>bits format: 00 \<content\>
 - \<offset\>: 32bits
 - \<unsigned int\>: 32bits
+- \<length\>: 32bits
 
 ## File Formats
 - Magic code(4bytes)

@@ -48,6 +48,7 @@ namespace Belish {
             END_TOKEN,// 语句结束
             ERROR_TOKEN, // 给语法树传达消息的, lexer不使用
             OBJECT_TOKEN, // 给语法树构建用的, lexer不使用
+            ARRAY_TOKEN, // 给语法树构建用的, lexer不使用
             PROGRAM_END
         };
         struct Token {

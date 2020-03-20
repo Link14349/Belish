@@ -1,4 +1,7 @@
 let array = [1, 23, {
     a: [12, 32, [123, "a"]]
 }];
+array += 10;
+debugger;
+array -= 0;
 debugger;

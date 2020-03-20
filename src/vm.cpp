@@ -72,7 +72,7 @@ void Belish::BVM::run() {
         GETBYTE;
         auto op = (OPID)byte;
         auto a = stk->get(stk->length() - 2);
-        auto b = stk->get(stk->length() - 1);
+        auto b = stk->top();
         switch (op) {
             case LINE: {
                 GETQBYTE
@@ -89,6 +89,7 @@ void Belish::BVM::run() {
             case ADD: {
 //                stk->dbg();
                 if (a->type() == b->type()) a->add(b);
+                else if (a->type() == ARRAY) ((Array*)a)->push_back(b);
                 else { Throw(501, "Wrong type to add"); return; }
                 stk->pop(1);
                 break;
@@ -107,6 +108,7 @@ void Belish::BVM::run() {
             }
             case SUB: {
                 if (a->type() == b->type()) a->sub(b);
+                else if (a->type() == ARRAY && b->type() == NUMBER) ((Array*)a)->erase((UL)((Number*)b)->value());
                 else { Throw(501, "Wrong type to sub"); return; }
                 stk->pop(1);
                 break;
@@ -722,7 +724,7 @@ void Belish::BVM::run() {
             }
             case DEB:
                 stk->dbg();
-                getchar();
+//                getchar();
                 break;
         }
     }

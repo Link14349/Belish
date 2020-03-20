@@ -8,6 +8,8 @@ void Belish::Stack::push(Belish::Value *v) {
     }
     if (v->type() == OBJECT) {
         ((Object*)v)->stk = this;
+    } else if (v->type() == ARRAY) {
+        ((Array*)v)->stk = this;
     }
     v->linked++;
 }
@@ -70,7 +72,7 @@ void Belish::Object::set(const string &k, Belish::Value *val) {
     if (val->type() == OBJECT && stk) ((Object*)val)->stk = stk;
 }
 
-void Belish::Array::set(uint32_t idx, Belish::Value *value)  {
+void Belish::Array::set(UL idx, Belish::Value *value)  {
     auto i = val[idx];
     i->linked--;
     if (i->linked == 0) {
@@ -85,15 +87,22 @@ void Belish::Array::set(uint32_t idx, Belish::Value *value)  {
     value->linked++;
     if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
 }
-void Belish::Array::erase(uint32_t idx)  {
-    auto i = val[idx];
-    i->linked--;
-    if (i->linked == 0) {
-        if (stk && i->type() == OBJECT) {
-            stk->deathObjects.erase((Object*)i);
-            stk->objects.erase(i);
-            ((Object*)i)->stk = stk;
+
+void Belish::Stack::set(UL offset, Value *v) {
+    auto& value = val[offset];
+    if (!(--val[offset]->linked)) {
+        if (value->type() == OBJECT) {
+            objects.erase(value);
+            deathObjects.erase((Object*)value);
+            ((Object*)value)->stk = this;
         }
-        delete i;
+        delete value;
+    } else if (value->type() == OBJECT && !(--objects[value])) {
+        deathObjects.insert((Object*)value);
+        objects.erase(value);
     }
+    value = v;
+    v->linked++;
+    if (v->type() == OBJECT) ((Object*)v)->stk = this;
+    else if (v->type() == ARRAY) ((Array*)v)->stk = this;
 }

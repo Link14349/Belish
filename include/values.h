@@ -364,75 +364,14 @@ namespace Belish {
     private:
         void* val;
     };
-    class Array : public Value {
-    public:
-        Array() { linked = 0; }
-        Array(const Array& array) {
-            linked = 0;
-            for (auto& v : array.val) {
-                val.push_back(v);
-                v->linked++;
-                if (v->type() == OBJECT && stk) ((Object*)v)->stk = stk;
-            }
-        }
-        ~Array() { }
-        TYPE type() { return ARRAY; }
-        string toString() {
-            string res("[");
-            for (auto& i : val) res += i->toString() + ", ";
-            res += "]";
-            return res;
-        }
-        string toStringHL() {
-            string res("[");
-            for (auto& i : val) res += i->toStringHL() + ", ";
-            res += "]";
-            return res;
-        }
-        Value* copy() override { return new Array(*this); }
-        bool isTrue() override { return true; }
-        bool isFalse() override { return false; }
-        Value* operator[](uint32_t idx) { return val[idx]; }
-        inline void set(uint32_t idx, Value* value);
-        inline void erase(uint32_t idx);
-        void insert(uint32_t idx, Value* value) {
-            val.insert(val.begin() + idx, value);
-            value->linked++;
-            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
-        }
-        void push_back(Value* value) {
-            val.push_back(value);
-            value->linked++;
-            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
-        }
-    private:
-        std::vector<Value*> val;
-        Stack* stk = nullptr;
-    };
-
+    class Array;
     class Stack {
         friend class Object;
         friend class Array;
     public:
         Stack(std::map<void*, UL>& objs, std::set<Object*>& dobjs) : len(0), objects(objs), deathObjects(dobjs) { val.resize(1024); }
         Value* get(UL offset) { if (offset < len) return val[offset < 0 ? 0 : offset]; else return nullptr; }
-        void set(UL offset, Value* v) {
-            auto& value = val[offset];
-            if (!(--val[offset]->linked)) {
-                if (value->type() == OBJECT) {
-                    objects.erase(value);
-                    deathObjects.erase((Object*)value);
-                    ((Object*)value)->stk = this;
-                }
-                delete value;
-            } else if (value->type() == OBJECT && !(--objects[value])) {
-                deathObjects.insert((Object*)value);
-                objects.erase(value);
-            }
-            value = v;
-            v->linked++;
-            if (v->type() == OBJECT) ((Object*)v)->stk = this;
-        }
+        void set(UL offset, Value* v);
         void push(Value* v);
         void pop(UL offset) {
             len -= offset;
@@ -454,6 +393,7 @@ namespace Belish {
         }
         void dbg();
         Value* top() {
+            if (len < 1) return nullptr;
             return val[len - 1];
         }
         UL length() { return len; }
@@ -480,7 +420,66 @@ namespace Belish {
         vector<Value*> val;
         friend class NFunction;
     };
-}
+    class Array : public Value {
+        friend class Stack;
+    public:
+        Array() { linked = 0; }
+        Array(const Array& array) {
+            linked = 0;
+            for (auto& v : array.val) {
+                val.push_back(v);
+                v->linked++;
+                if (v->type() == OBJECT && stk) ((Object*)v)->stk = stk;
+                else if (v->type() == ARRAY && stk) ((Array*)v)->stk = stk;
+            }
+        }
+        ~Array() { }
+        TYPE type() { return ARRAY; }
+        string toString() {
+            string res("[");
+            for (auto& i : val) res += i->toString() + ", ";
+            res += "]";
+            return res;
+        }
+        string toStringHL() {
+            string res("[");
+            for (auto& i : val) res += i->toStringHL() + ", ";
+            res += "]";
+            return res;
+        }
+        Value* copy() override { return new Array(*this); }
+        bool isTrue() override { return true; }
+        bool isFalse() override { return false; }
+        Value* operator[](UL idx) { return val[idx]; }
+        inline void set(UL idx, Value* value);
+        inline void erase(UL idx) {
+            auto i = val[idx];
+            i->linked--;
+            if (i->linked == 0) {
+                if (stk && i->type() == OBJECT) {
+                    stk->deathObjects.erase((Object*)i);
+                    stk->objects.erase(i);
+                    ((Object*)i)->stk = stk;
+                }
+                delete i;
+            }
+            val.erase(val.begin() + idx);
+        }
+        void insert(UL idx, Value* value) {
+            val.insert(val.begin() + idx, value);
+            value->linked++;
+            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
+        }
+        void push_back(Value* value) {
+            val.push_back(value);
+            value->linked++;
+            if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
+        }
 
+        Stack* stk = nullptr;
+    private:
+        std::vector<Value*> val;
+    };
+}
 
 #endif //BELISH_VALUES_H

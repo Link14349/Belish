@@ -99,7 +99,7 @@ namespace Belish {
         TYPE type() { return INT; }
         string toString() { return std::to_string(val); }
         string toStringHL() { return "\033[33m" + std::to_string(val) + "\033[0m"; }
-        Value* copy() override { return new Number(val); }
+        Value* copy() override { return new Int(val); }
         void add(Value* n) override { val += ((Int*)n)->val; }
         void sub(Value* n) override { val -= ((Int*)n)->val; }
         void mul(Value* n) override { val *= ((Int*)n)->val; }

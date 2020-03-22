@@ -9,6 +9,7 @@
 #include "arg.h"
 
 void Belish::BVM::run(const Arg& arg) {
+#define EXIT_ID 0x65786974
     auto undef = new Undefined;
     Byte byte;
     Dbyte dbyte;
@@ -238,6 +239,7 @@ void Belish::BVM::run(const Arg& arg) {
                 process_argv->set("flags", process_argv_flags);
                 process_argv->set("values", process_argv_values);
                 process->set("argv", process_argv);
+                process->set("exit", new Int(EXIT_ID));
                 stk->push(process);
                 break;
             }
@@ -658,6 +660,7 @@ void Belish::BVM::run(const Arg& arg) {
             }
             case CALL_FUN: {
                 VM_CALL_FUN:
+                if (stk->top()->type() == INT && ((Int*)stk->top())->value() == EXIT_ID) exit(((Number*)stk->get(0))->value());
                 if (stk->top()->type() == NFUNCTION) {
                     auto nfun = ((NFunction*)stk->top());
                     stk->pop(1);

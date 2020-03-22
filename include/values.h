@@ -480,6 +480,22 @@ namespace Belish {
     private:
         std::vector<Value*> val;
     };
+
+    void Array::set(UL idx, Value *value)  {
+        auto i = val[idx];
+        i->linked--;
+        if (i->linked == 0) {
+            if (stk && i->type() == OBJECT) {
+                stk->deathObjects.erase((Object*)i);
+                stk->objects.erase(i);
+                ((Object*)i)->stk = stk;
+            }
+            delete i;
+        }
+        val[idx] = value;
+        value->linked++;
+        if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
+    }
 }
 
 #endif //BELISH_VALUES_H

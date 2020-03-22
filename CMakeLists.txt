@@ -12,6 +12,11 @@ include_directories(
         include
 )
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
+if (APPLE)
+    find_library(CF_FRAMEWORK CoreFoundation)
+    message("CoreFoundation Framework: ${CF_FRAMEWORK}")
+    set(FRAMEWORKS ${CF_FRAMEWORK})
+endif()
 
 if (SHARED)
     message("lib")

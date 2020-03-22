@@ -72,21 +72,6 @@ void Belish::Object::set(const string &k, Belish::Value *val) {
     if (val->type() == OBJECT && stk) ((Object*)val)->stk = stk;
 }
 
-void Belish::Array::set(UL idx, Belish::Value *value)  {
-    auto i = val[idx];
-    i->linked--;
-    if (i->linked == 0) {
-        if (stk && i->type() == OBJECT) {
-            stk->deathObjects.erase((Object*)i);
-            stk->objects.erase(i);
-            ((Object*)i)->stk = stk;
-        }
-        delete i;
-    }
-    val[idx] = value;
-    value->linked++;
-    if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
-}
 
 void Belish::Stack::set(UL offset, Value *v) {
     auto& value = val[offset];

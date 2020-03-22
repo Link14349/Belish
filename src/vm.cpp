@@ -232,8 +232,9 @@ void Belish::BVM::run() {
                 if (val->type() == OBJECT) {
                     stk->push(val);
                     objects[val]++;
-                }
-                else stk->push(val->copy());
+                } else if (val->type() == ARRAY) {
+                    stk->push(val);
+                } else stk->push(val->copy());
                 break;
             }
             case POP: {
@@ -394,9 +395,20 @@ void Belish::BVM::run() {
                 break;
             }
             case SET_ATTR: {
-                string attr_name(((String*)stk->get(stk->length() - 2))->value());
                 auto obj_ = stk->get(stk->length() - 3);
-                if (obj_->type() != OBJECT) { Throw(800, "Wrong type to set attr"); return; }
+                auto attr = stk->get(stk->length() - 2);
+                if (obj_->type() != OBJECT) {
+                    if (obj_->type() == ARRAY && attr->type() == NUMBER) {
+                        auto array = (Array*)obj_;
+                        array->set((UL)((Number*)attr)->value(), stk->top());
+                        stk->pop(1);
+                        stk->pop(1);
+                        break;
+                    } else {
+                        Throw(800, "Wrong type to set attr"); return;
+                    }
+                }
+                string attr_name(attr->toString());
                 auto obj = (Object*)obj_;
                 obj->set(attr_name, stk->top());
                 stk->pop(1);
@@ -404,12 +416,24 @@ void Belish::BVM::run() {
                 break;
             }
             case GET_ATTR: {
-                string attr_name(((String*)stk->top())->value());
+                auto attr_ = stk->top();
                 auto obj_ = stk->get(stk->length() - 2);
-                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
+                if (obj_->type() != OBJECT) {
+                    if (obj_->type() == ARRAY && attr_->type() == NUMBER) {
+                        auto& array = *((Array*)obj_);
+                        stk->pop(1);
+                        stk->pop(1);
+                        stk->push(array[(UL)((Number*)attr_)->value()]);
+                        preValue = nullptr;
+                        break;
+                    }
+                    Throw(801, "Wrong type to get attr");
+                    return;
+                }
                 stk->pop(1);
                 stk->pop(1);
                 auto obj = (Object*)obj_;
+                string attr_name(((String*)attr_)->value());
                 auto attr = obj->get(attr_name);
                 if (attr) {
                     stk->push(attr);
@@ -432,9 +456,26 @@ void Belish::BVM::run() {
                 break;
             }
             case GET_CP_ATTR: {
-                string attr_name(((String*)stk->top())->value());
+                auto attr_ = stk->top();
                 auto obj_ = stk->get(stk->length() - 2);
-                if (obj_->type() != OBJECT) { Throw(801, "Wrong type to get attr"); return; }
+                if (obj_->type() != OBJECT) {
+                    if (obj_->type() == ARRAY && attr_->type() == NUMBER) {
+                        auto& array = *((Array*)obj_);
+                        attr_->linked++;
+                        stk->pop(1);
+                        auto tmp = array[(UL)((Number*)attr_)->value()];
+                        stk->pop(1);
+                        stk->push(tmp);
+                        if (!(--attr_->linked)) {
+                            delete attr_;
+                        }
+                        preValue = nullptr;
+                        break;
+                    }
+                    Throw(801, "Wrong type to get attr");
+                    return;
+                }
+                string attr_name(((String*)attr_)->value());
                 stk->pop(1);
                 stk->pop(1);
                 auto obj = (Object*)obj_;

@@ -6,8 +6,9 @@
 #include "trans.cpp"
 #include "values.h"
 #include "fio.h"
+#include "arg.h"
 
-void Belish::BVM::run() {
+void Belish::BVM::run(const Arg& arg) {
     auto undef = new Undefined;
     Byte byte;
     Dbyte dbyte;
@@ -217,6 +218,29 @@ void Belish::BVM::run() {
                 stk->push(new String(str));
                 break;
             }
+            case INIT_MODULE_INFO: {
+                GETQBYTE
+                UL strlen = qbyte;
+                string str;
+                for (UL j = 0; j < strlen; j++, i++) {
+                    str += bytecode[i];
+                }
+                auto __exports__ = new Object;
+                __exports__->set("filename", new String(str));
+                stk->push(__exports__);
+                auto process = new Object;
+                auto process_argv = new Object;
+                auto process_argv_flags = new Object;
+                auto process_argv_values = new Array;
+                for (auto& val : arg.values) process_argv_flags->set(val.first, new String(val.second));
+                for (auto& val : arg.flags) process_argv_flags->set(val, new Boolean(true));
+                for (auto& val : arg.indValues) process_argv_values->push_back(new String(val));
+                process_argv->set("flags", process_argv_flags);
+                process_argv->set("values", process_argv_values);
+                process->set(process_argv);
+                stk->push(process);
+                break;
+            }
             case PUSH_UND: {
                 stk->push(undef);
                 break;
@@ -379,7 +403,7 @@ void Belish::BVM::run() {
                 auto vm = new BVM(path, buffer, length);
                 vm->importedTab = importedTab;
                 vm->child = true;
-                vm->run();
+                vm->run(arg);
                 if (vm->error) {
                     Throw(700, "The module that you are importing had some errors");
                     return;
@@ -659,7 +683,7 @@ void Belish::BVM::run() {
                     stk = frames[frames.size() - 2];
                     frames.erase(frames.end() - 1);
                     vm->callingLineStk.push_back(0);
-                    vm->run();
+                    vm->run(arg);
                     if (vm->error) {
                         Throw(701, "The module method that you are calling had some errors");
                         return;

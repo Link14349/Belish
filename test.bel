@@ -5,3 +5,4 @@ array += 10;
 array -= 0;
 array[0] = 0;
 io.println(array[0]);
+io.println(process);

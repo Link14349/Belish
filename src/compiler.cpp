@@ -22,15 +22,20 @@ bool Belish::Compiler::compile(string &bytecode, bool releaseType) {
     // ===============
     // 添加__exports__变量
     sym["__exports__"] = stkOffset++;
-    bytecode += (char) PUSH_OBJ;
-    //设置其的属性
-    bytecode += (char) PUSH_STR;
-    bytecode += transI32S_bin(8);
-    bytecode += "filename";
-    bytecode += (char) PUSH_STR;
+    bytecode += (char) INIT_MODULE_INFO;
     bytecode += transI32S_bin(filename.length());
     bytecode += filename;
-    bytecode += (char) SET_ATTR;
+    // 添加process变量
+    sym["process"] = stkOffset++;
+//    bytecode += (char) PUSH_OBJ;
+//    //设置其的属性
+//    bytecode += (char) PUSH_STR;
+//    bytecode += transI32S_bin(8);
+//    bytecode += "filename";
+//    bytecode += (char) PUSH_STR;
+//    bytecode += transI32S_bin(filename.length());
+//    bytecode += filename;
+//    bytecode += (char) SET_ATTR;
     // ===============
     newVars.clear();
     auto state = compile_(bytecode, releaseType, false, nullptr, nullptr);

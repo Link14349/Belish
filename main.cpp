@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     Belish::BVM bvm("test", buffer, length);
     Belish::decompile(buffer, length);
     TIME_START(VM)
-    bvm.run();
+    bvm.run(Belish::Arg(argc, argv));
     TIME_END(VM)
     std::cout << "finish running" << std::endl;
     std::cout << "vm used " << GET_TIME(VM) << "ms, compiler used " << GET_TIME(COMPILER) << "ms" << std::endl;

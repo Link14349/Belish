@@ -7,13 +7,14 @@
 #include "compiler.h"
 #include "dylib.h"
 #include "GC.h"
+#include "arg.h"
 using std::string;
 
 namespace Belish {
     class BVM {
     public:
         BVM(const string& fn, char* bc, ULL l) : filename(fn), bytecode(bc), len(l), gc(this) { modules.reserve(16);frames.reserve(16); }
-        void run();
+        void run(const Arg&);
         void Throw(UL errID, const string& message) {
             std::cerr << "BLE" << errID << ": " << message;
             auto iter = --callingLineStk.cend();

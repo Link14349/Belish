@@ -68,6 +68,7 @@
 | 3d | get_cp_attr_str | get_cp_attr_str <string> | Copy the attribute of the first element in the stack |
 | 3e | load_super_method | load_super_method | Load the super method into the class |
 | 3f | create_array | create_array <length> | Create an array object, and the elements from the <length - 1> item of the stack to the top of the stack |
+| 40 | init_module_info | init_module_info <string: source name> | Init module info object |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats
@@ -96,7 +97,6 @@ MAIN:
 header {
     [version: Main BDK]
     [version: SUB BDK]
-    [string: source name]
     [timestamp: Last edit time]
     [address: Footer address]
 }

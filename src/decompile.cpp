@@ -190,6 +190,7 @@ void Belish::decompile(char* bytecode, ULL len) {
             }
             CASE_OP(GET_ATTR_STR) goto DECOM_PUSH_STR_MAIN;
             CASE_OP(GET_CP_ATTR_STR) goto DECOM_PUSH_STR_MAIN;
+            CASE_OP(INIT_MODULE_INFO) goto DECOM_PUSH_STR_MAIN;
             CASE_OP(PUSH_STR)
             {
                 DECOM_PUSH_STR_MAIN:

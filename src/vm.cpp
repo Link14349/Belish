@@ -237,7 +237,7 @@ void Belish::BVM::run(const Arg& arg) {
                 for (auto& val : arg.indValues) process_argv_values->push_back(new String(val));
                 process_argv->set("flags", process_argv_flags);
                 process_argv->set("values", process_argv_values);
-                process->set(process_argv);
+                process->set("argv", process_argv);
                 stk->push(process);
                 break;
             }

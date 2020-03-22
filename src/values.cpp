@@ -11,7 +11,7 @@ void Belish::Stack::push(Belish::Value *v) {
     } else if (v->type() == ARRAY) {
         ((Array*)v)->stk = this;
     }
-    v->linked++;
+    v->bind();
 }
 
 void Belish::Stack::dbg() {
@@ -49,7 +49,7 @@ void Belish::Object::set(Belish::Value *n)  {
         }
     }
     for (auto & i : obj->prop) {
-        i.second->linked++;
+        i.second->bind();
         prop[i.first] = i.second;
     }
 }
@@ -68,7 +68,7 @@ void Belish::Object::set(const string &k, Belish::Value *val) {
         }
     }
     prop[k] = val;
-    val->linked++;
+    val->bind();
     if (val->type() == OBJECT && stk) ((Object*)val)->stk = stk;
 }
 
@@ -87,7 +87,7 @@ void Belish::Stack::set(UL offset, Value *v) {
         objects.erase(value);
     }
     value = v;
-    v->linked++;
+    v->bind();
     if (v->type() == OBJECT) ((Object*)v)->stk = this;
     else if (v->type() == ARRAY) ((Array*)v)->stk = this;
 }

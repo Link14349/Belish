@@ -7,45 +7,23 @@
 using std::map;
 
 namespace Belish {
-    TYPE_VAL_ENUM_DEF(VTRACKER, UNKNOWN, _T)
-    class TrackerValue {
-    public:
-        TrackerValue() : linked(0) { }
-        void bind() { ++linked; }
-        void unbind() {
-            --linked;
-            if (!linked) delete this;
-        }
-    private:
-        VTRACKER type;
-        UL linked;
-    };
-    class TrackerNumber : public TrackerValue {
-    public:
-        TrackerNumber() : TrackerValue() { }
-        TrackerNumber(double n) : TrackerValue(), val(n) { }
-        double& value() { return val; }
-    private:
-        double val;
-    };
-
     class ValueTracker {
     public:
         ValueTracker() { }
-        void set(const string& name, TrackerValue* val) {
+        void set(const string& name, Value* val) {
             values[name] = val;
             val->bind();
         }
         void set(const string& name, double n) {
-            if (has(name)) get(name)->unbind();
-            auto val = values[name] = new TrackerNumber(n);
+            if (has(name)) get(name)->linked--;
+            auto val = values[name] = new Number(n);
             val->bind();
         }
         bool has(const string& name) { return values.find(name) != values.end(); }
-        void track(AST::node*);
-        TrackerValue* get(const string& name) { return values[name]; }
+        void track(AST::node*, bool = false);
+        Value* get(const string& name) { return values[name]; }
     private:
-        map<string, TrackerValue*> values;
+        map<string, Value*> values;
     };
 }
 

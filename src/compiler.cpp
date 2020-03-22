@@ -19,8 +19,11 @@ bool Belish::Compiler::compile(string &bytecode, bool releaseType) {
     bytecode += "0000";// 占位
     isRoot = true;
     isBlock = true;
+    tracker = new ValueTracker;
     // ===============
     // 添加__exports__变量
+    tracker->set("__exports__", new Unknown);
+    tracker->set("process", new Unknown);
     sym["__exports__"] = stkOffset++;
     bytecode += (char) INIT_MODULE_INFO;
     bytecode += transI32S_bin(filename.length());
@@ -39,6 +42,7 @@ bool Belish::Compiler::compile(string &bytecode, bool releaseType) {
     // ===============
     newVars.clear();
     auto state = compile_(bytecode, releaseType, false, nullptr, nullptr);
+    delete tracker;
     auto footerAdrS = transI32S_bin(footerAdr);
     bytecode[footerAdr_] = footerAdrS[0];
     bytecode[footerAdr_ + 1] = footerAdrS[1];
@@ -54,7 +58,6 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
 #define COM_COM_SET_NOW_LINE(compiler) compiler.nowLine = nowLine;
     std::list<AST::node*> functionAsts;
     std::list<map<string, UL> > functionDefSym;
-    if (!tracker) tracker = new ValueTracker;
     if (isRoot) {
         if ((*compiled)[filename]) return false;
         (*compiled)[filename] = true;
@@ -72,8 +75,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
 //        ed = getCurrentTime();
 //        astTime += ed - st;
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
-        ast.optimization();
-        tracker->track(ast.root);
+        if (tracker) tracker->track(ast.root);
         if (!releaseType && ast.line() > nowLine) {
             nowLine = ast.line();
             bytecode += (char) LINE;

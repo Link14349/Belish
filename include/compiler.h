@@ -42,7 +42,6 @@ namespace Belish {
         bool isEntry = true;
         bool isRoot = false;
         bool isBlock = false;
-        bool pushedFun = false;
         bool compilingForLoopCon = false;
         bool compilingForLoopUpd = false;
         bool parentIsSet = false;
@@ -51,11 +50,10 @@ namespace Belish {
         UL stkOffset = 0;
         UL funOffset = 0;
         UL footerAdr;
-        UL pushedFunID;
         UL argCount = 0;
         UL nowLine = 0;
         UL funStart;
-        ValueTracker* tracker;
+        ValueTracker* tracker = nullptr;
         Compiler* parent = nullptr;
         string funName;
         string filename;

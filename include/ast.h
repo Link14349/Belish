@@ -3,6 +3,7 @@
 
 #include <string>
 #include "lex.h"
+#include "values.h"
 using std::string;
 using std::vector;
 
@@ -21,13 +22,13 @@ namespace Belish {
             if (root) delete root;
             root = nullptr;
         }
-        void optimization();
         string value() { if (root) return root->value(); return ""; }
         ~AST();
     private:
         AST(const string& s, UL l) : root(nullptr), script(s), baseLine(l), child(true), lexer(script) { }
     public:
         class node {
+            friend class ValueTracker;
         public:
             node() : v(""), l(0) {  }
             node(Lexer::TOKENS y, const string& s) : v(s), t(y), l(0) {  }
@@ -59,19 +60,20 @@ namespace Belish {
             void insert(node* n) { children.push_back(n); }
             void insert(Lexer::TOKENS y, const string& v, UL l) { children.push_back(new node(y, v, l)); }
             void clear() { children.clear(); }
-            void optimization();
             ~node() {
                 LL sz = children.size();
                 if (sz <= 0) return;
+                if (nodevalue && !nodevalue->disbind()) delete nodevalue;
                 for (auto i = 0; i < sz; i++) {
                     if (children[i]) delete children[i];
                 }
             }
         private:
-            string v;
             Lexer::TOKENS t;
             UL l;
+            Value* nodevalue = nullptr;
             vector<node*> children;
+            string v;
         };
         bool child;
         UL baseLine;
@@ -80,7 +82,6 @@ namespace Belish {
         Lexer lexer;
         bool isParsingClassMethod = false;
         bool isParsingClassCtorNew = false;
-        ValueTracker* tracker;
         friend class Compiler;
         static inline unsigned short priority(Lexer::TOKENS& tk);
     public:

@@ -17,8 +17,13 @@ namespace Belish {
     enum TYPE { \
         NUMBER##BAC, STRING##BAC, OBJECT##BAC, UNDEFINED##BAC, FUNCTION##BAC, INT##BAC, NFUNCTION##BAC, BOOLEAN##BAC, ARRAY##BAC, ADDTION##BAC \
     };
-    TYPE_VAL_ENUM_DEF(TYPE, , )
+    TYPE_VAL_ENUM_DEF(TYPE, UNKNOWN, )
     class Value {
+        friend class Stack;
+        friend class BVM;
+        friend class Object;
+        friend class Array;
+        friend class ValueTracker;
     public:
         Value() { /*std::clog << "n" << this << "\n";*/ }
         virtual ~Value() { /*std::clog << "d" << this << "\n";*/ }
@@ -50,12 +55,10 @@ namespace Belish {
         virtual bool isTrue( ) { return true; }
         virtual bool isFalse( ) { return false; }
         virtual void set(Value* ) { ; }
-        UL count() { return linked; }
+        UL& bind() { return ++linked; }
+        UL& disbind() { return --linked; }
+        UL& count() { return linked; }
     protected:
-        friend class Stack;
-        friend class BVM;
-        friend class Object;
-        friend class Array;
         UL linked;
     };
     class Number : public Value {
@@ -201,11 +204,23 @@ namespace Belish {
     class Undefined : public Value {
     public:
         Undefined() { linked = 0; }
-        virtual ~Undefined() {}
+        ~Undefined() {}
         TYPE type() { return UNDEFINED; }
         string toString() { return "undefined"; }
         string toStringHL() { return "\033[35mundefined\033[0m"; }
         Value* copy() override { return new Undefined; }
+        bool isTrue() override { return false; }
+        bool isFalse() override { return true; }
+    private:
+    };
+    class Unknown : public Value {
+    public:
+        Unknown() { linked = 0; }
+        ~Unknown() {}
+        TYPE type() { return UNKNOWN; }
+        string toString() { return "unknown"; }
+        string toStringHL() { return "\033[35munknown\033[0m"; }
+        Value* copy() override { return new Unknown; }
         bool isTrue() override { return false; }
         bool isFalse() override { return true; }
     private:
@@ -289,7 +304,7 @@ namespace Belish {
             auto i = prop.find(k);
             if (i != prop.end()) return;
             prop[k] = val;
-            val->linked++;
+            val->bind();
             if (val->type() == OBJECT && stk) ((Object*)val)->stk = stk;
         }
         class Iterator {
@@ -428,7 +443,7 @@ namespace Belish {
             linked = 0;
             for (auto& v : array.val) {
                 val.push_back(v);
-                v->linked++;
+                v->bind();
                 if (v->type() == OBJECT && stk) ((Object*)v)->stk = stk;
                 else if (v->type() == ARRAY && stk) ((Array*)v)->stk = stk;
             }
@@ -467,14 +482,15 @@ namespace Belish {
         }
         void insert(UL idx, Value* value) {
             val.insert(val.begin() + idx, value);
-            value->linked++;
+            value->bind();
             if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
         }
         void push_back(Value* value) {
             val.push_back(value);
-            value->linked++;
+            value->bind();
             if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
         }
+        void add(Value* value) { push_back(value); }
 
         Stack* stk = nullptr;
     private:
@@ -493,7 +509,7 @@ namespace Belish {
             delete i;
         }
         val[idx] = value;
-        value->linked++;
+        value->bind();
         if (value->type() == OBJECT && stk) ((Object*)value)->stk = stk;
     }
 }

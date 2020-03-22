@@ -304,7 +304,7 @@ void Belish::BVM::run(const Arg& arg) {
                 for (unsigned int & funOuter : funOuters) {
                     auto v = stk->get(funOuter);
                     funOutersDef.push_back(v);
-                    v->linked++;
+                    v->bind();
                 }
                 break;
             }
@@ -315,7 +315,7 @@ void Belish::BVM::run(const Arg& arg) {
                 for (unsigned int & funOuter : funOuters) {
                     auto v = stk->get(funOuter);
                     funOutersDef.push_back(v);
-                    v->linked++;
+                    v->bind();
                 }
                 stk->push(new Function(qbyte));
                 break;
@@ -363,6 +363,7 @@ void Belish::BVM::run(const Arg& arg) {
                         case UNDEFINED: ((Undefined*)v)->~Undefined(); break;
                         case OBJECT: ((Object*)v)->~Object(); break;
                         case FUNCTION: ((Function*)v)->~Function(); break;
+                        case ARRAY: ((Array*)v)->~Array(); break;
                     }
                     switch (stk->top()->type()) {
                         case NUMBER: v = new (v)Number; break;
@@ -371,6 +372,7 @@ void Belish::BVM::run(const Arg& arg) {
                         case UNDEFINED: v = new (v)Undefined; break;
                         case OBJECT: v = new (v)Object; break;
                         case FUNCTION: v = new (v)Function; break;
+                        case ARRAY: v = new (v)Array; break;
                     }
                     v->linked = vLinked;
                     v->set(t);
@@ -487,7 +489,7 @@ void Belish::BVM::run(const Arg& arg) {
                 if (obj_->type() != OBJECT) {
                     if (obj_->type() == ARRAY && attr_->type() == NUMBER) {
                         auto& array = *((Array*)obj_);
-                        attr_->linked++;
+                        attr_->bind();
                         stk->pop(1);
                         auto tmp = array[(UL)((Number*)attr_)->value()];
                         stk->pop(1);
@@ -617,7 +619,7 @@ void Belish::BVM::run(const Arg& arg) {
             }
             case NEW_FRAME_AND_CALL_AND_CALL_FUN: {
                 auto fun = cache = stk->top();
-                fun->linked++;
+                fun->bind();
                 stk->pop(1);
                 fun->linked--;
                 GETQBYTE
@@ -705,7 +707,7 @@ void Belish::BVM::run(const Arg& arg) {
             }
             case RET: {
                 auto ret = stk->top();
-                ret->linked++;
+                ret->bind();
                 delete stk;
                 ret->linked--;
                 frames.erase(frames.end() - 1);

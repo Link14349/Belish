@@ -5,6 +5,7 @@
 #include <ctime>
 #include <list>
 #include "fio.h"
+#include "valueTracker.h"
 #include <iostream>
 
 //UL astTime = 0;
@@ -75,7 +76,9 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
 //        ed = getCurrentTime();
 //        astTime += ed - st;
         if (!ast.root || ast.root->type() == Lexer::PROGRAM_END) break;
+#if DEV_VALUE_TRACKER || FIN_VALUE_TRACKER
         if (tracker) tracker->track(ast.root);
+#endif
         if (!releaseType && ast.line() > nowLine) {
             nowLine = ast.line();
             bytecode += (char) LINE;
@@ -701,25 +704,40 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                 compiler.macro = macro;
                 compiler.stkOffset = stkOffset;
                 if (ast.root->type() == Lexer::BRACKETS_LEFT_TOKEN) {
-                    auto oi = functionAdrTab.find(ast.root->get(0)->value());
-                    UL index = -1;
-                    if (oi != functionAdrTab.end()) {
-                        index = oi->second;
-                    }
-                    for (UL i = 1; i < ast.root->length(); i++) {
-                        compiler.ast.root = ast.root->get(i);
+                    if (ast.root->get(0)->value() == "number") {// 强转为number
+#define COM_COM_STRONG_TS_PRE if (ast.root->length() > 2) std::cerr << "BLE203: Unexpected strong rotation type parameter at <" << filename << ">:" << ast.line() << std::endl; \
+                        compiler.ast.root = ast.root->get(1); \
                         if (compiler.compile_(bytecode, releaseType)) return true;
+                        COM_COM_STRONG_TS_PRE
+                        bytecode += (char) TS_NUMBER;
+                        goto COM_COM_FINISH_CALL_COM;
+                    } else if (ast.root->get(0)->value() == "string") {// 强转为string
+                        COM_COM_STRONG_TS_PRE
+                        bytecode += (char) TS_STRING;
+                        goto COM_COM_FINISH_CALL_COM;
                     }
-                    if (~index) {
-                        bytecode += (char) NEW_FRAME_AND_CALL;
-                        bytecode += transI32S_bin(ast.root->length() - 1);
-                        bytecode += transI32S_bin(index);
-                    } else {
-                        compiler.ast.root = ast.root->get(0);
-                        if (compiler.compile_(bytecode, releaseType)) return true;
-                        bytecode += (char) NEW_FRAME_AND_CALL_AND_CALL_FUN;
-                        bytecode += transI32S_bin(ast.root->length() - 1);
+                    {
+                        auto oi = functionAdrTab.find(ast.root->get(0)->value());
+                        UL index = -1;
+                        if (oi != functionAdrTab.end()) {
+                            index = oi->second;
+                        }
+                        for (UL i = 1; i < ast.root->length(); i++) {
+                            compiler.ast.root = ast.root->get(i);
+                            if (compiler.compile_(bytecode, releaseType)) return true;
+                        }
+                        if (~index) {
+                            bytecode += (char) NEW_FRAME_AND_CALL;
+                            bytecode += transI32S_bin(ast.root->length() - 1);
+                            bytecode += transI32S_bin(index);
+                        } else {
+                            compiler.ast.root = ast.root->get(0);
+                            if (compiler.compile_(bytecode, releaseType)) return true;
+                            bytecode += (char) NEW_FRAME_AND_CALL_AND_CALL_FUN;
+                            bytecode += transI32S_bin(ast.root->length() - 1);
+                        }
                     }
+                    COM_COM_FINISH_CALL_COM:
                     if (independent)
                         bytecode += (char)OPID::POP;
                     break;

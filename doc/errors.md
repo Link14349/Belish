@@ -9,6 +9,7 @@
 | BLE200 | Unexpected break | Delete it |
 | BLE201 | Unexpected continue | Delete it |
 | BLE202 | Unexpected condition | Check it |
+| BLE203 | Unexpected strong rotation type parameter | Check it |
 | BLE300 | IOError: Failed to open the module | Check the module path |
 | BLE301 | IOError: Failed to load the library | Check the library path |
 | BLE302 | You cannot import modules or libraries in a sub block | Delete it |

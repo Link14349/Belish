@@ -81,6 +81,36 @@ void Belish::BVM::run(const Arg& arg) {
                 callingLineStk.back() = qbyte;
                 break;
             }
+            case TS_NUMBER: {
+                auto source = stk->top();
+                source->linked++;
+                stk->pop(1);
+                switch (source->type()) {
+                    case NUMBER: stk->push(source->copy()); break;
+                    case STRING: stk->push(new Number(atof(((String*)source)->value().c_str()))); break;
+                    case BOOLEAN: stk->push(new Number(((Boolean*)source)->value())); break;
+                    default: stk->push(new Number); break;
+                }
+                source->linked--;
+                stk->push(source);
+                stk->pop(1);
+                break;
+            }
+            case TS_STRING: {
+                auto source = stk->top();
+                source->linked++;
+                stk->pop(1);
+                switch (source->type()) {
+                    case STRING: stk->push(source->copy()); break;
+                    case NUMBER: stk->push(new String(std::to_string(((Number*)source)->value()))); break;
+                    case BOOLEAN: stk->push(new String(((Boolean*)source)->value() ? "true" : "false")); break;
+                    default: stk->push(new String); break;
+                }
+                source->linked--;
+                stk->push(source);
+                stk->pop(1);
+                break;
+            }
             case PUSH_OUTER: {
 //                stk->dbg();
                 if (!closure) { Throw(600, "Isn't in a function calling"); return; }
@@ -240,6 +270,9 @@ void Belish::BVM::run(const Arg& arg) {
                 process_argv->set("values", process_argv_values);
                 process->set("argv", process_argv);
                 process->set("exit", new Int(EXIT_ID));
+                Object* vmInfo;
+                process->set("vm", vmInfo = new Object);
+                vmInfo->set("version", new String(MBDKV_S SBDKV_S));
                 stk->push(process);
                 break;
             }

@@ -1,17 +1,4 @@
-let a = 100, b = 200;
-let c = a + b;
-let d = "123", e = "321";
-let f = d + e;
-f += f;
-c += a;
-let d = c + 10;
-c = d + 2;
-def test() {
-    global c;
-    return ++c;
-}
-d = test();
-let g = c;
-// let arr = [];
-// let h = arr;
+let a = 100;
+let b = string(a);
+let c = number(b);
 debugger;

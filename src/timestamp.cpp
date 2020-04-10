@@ -3,7 +3,7 @@
 #ifdef I_OS_WIN
 #include <windows.h>
 
-int64_t getCurrentTime() {
+int64_t Belish::getCurrentTime() {
     SYSTEMTIME wtm;
     GetLocalTime(&wtm);
     return wtm.wSecond * 1000LL;

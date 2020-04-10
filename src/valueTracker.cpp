@@ -124,9 +124,7 @@ void Belish::ValueTracker::track(AST::node* node, bool isGettingLvalue) {
     }
     node->nodevalue->bind();
     if (!isGettingLvalue && node->nodevalue) {
-//        std::cout << node->nodevalue->type() << std::endl;
         if (node->nodevalue->type() == UNKNOWN) return;
-//        std::cout << "[=]" << std::endl;
         for (auto i = 0; i < node->length(); i++) {
             if (node->children[i]) delete node->children[i];
         }

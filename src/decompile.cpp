@@ -135,6 +135,8 @@ void Belish::decompile(char* bytecode, ULL len) {
             CASE_OP(JMP) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(CHANGE) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(PUSH_OUTER) goto DECOM_SWITCH_REFER_PUSH_CASE;
+            CASE_OP(TS_NUMBER) goto DECOM_SWITCH_REFER_PUSH_CASE;
+            CASE_OP(TS_STRING) goto DECOM_SWITCH_REFER_PUSH_CASE;
             CASE_OP(PUSH)
             {
                 DECOM_SWITCH_REFER_PUSH_CASE:

@@ -10,6 +10,8 @@ using std::map;
 
 #define MBDKV "\x01"
 #define SBDKV "\x01"
+#define MBDKV_S "0x01"
+#define SBDKV_S "01"
 
 namespace Belish {
 #define REG_COUNT 32
@@ -25,6 +27,7 @@ namespace Belish {
         GET_CP_ATTR, NEW_FRAME_AND_CALL_AND_CALL_FUN, GET_ATTR_STR, GET_CP_ATTR_STR,
         LOAD_SUPER_METHOD, CREATE_ARRAY,
         INIT_MODULE_INFO,
+        TS_NUMBER, TS_STRING,
 
         LINE = 0xff
     };

@@ -6,6 +6,9 @@
 #include "ast.h"
 using std::map;
 
+#define DEV_VALUE_TRACKER 0
+#define FIN_VALUE_TRACKER 0
+
 namespace Belish {
     class ValueTracker {
     public:

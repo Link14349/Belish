@@ -242,6 +242,8 @@ Belish::Lexer::Token Belish::Lexer::get() {
         t.t = CLASS_TOKEN;
     } else if (t.s == "new") {
         t.t = NEW_TOKEN;
+    } else if (t.s == "const") {
+        t.t = CONST_TOKEN;
     } else if (t.s == "//" || t.s == "#") {
         t.t = NOTE_TOKEN;
         while (true) {

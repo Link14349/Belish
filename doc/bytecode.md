@@ -71,6 +71,8 @@
 | 40 | init_module_info | init_module_info <string: source name> | Init module info object |
 | 41 | number | number <offset> | Trans type to number |
 | 42 | string | string <offset> | Trans type to string |
+| 43 | machine_code | machine <offset>, <offset> | Jmp to machine code<offset>1, then back to <offset>2 |
+| 44 | int_only | int_only | The top is int only |
 | ff | LINE | LINE <unsigned int> | Set the line of the source |
 
 ## Formats

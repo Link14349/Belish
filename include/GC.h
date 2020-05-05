@@ -1,6 +1,8 @@
 #ifndef BELISH_GC_H
 #define BELISH_GC_H
 
+#include "vm.h"
+
 namespace Belish {
     class BVM;
     class GC {

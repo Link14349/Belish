@@ -6,7 +6,6 @@ using std::ios;
 
 int main(int argc, char* argv[]) {
     remove("testmodule.belc");
-    ULL ct;
     string script;
     Belish::readFile("test.bel", script);
     Belish::Compiler compiler("test", script);

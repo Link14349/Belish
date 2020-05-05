@@ -1,4 +1,1 @@
-let a = 100;
-let b = string(a);
-let c = number(b);
-debugger;
+for (let i ionly = 0; i < 10000; i++) {}

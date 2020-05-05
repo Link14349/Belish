@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <map>
 #include "compiler.h"
 #include "vm.h"
 #include "trans.h"
@@ -7,6 +8,7 @@
 #include "values.h"
 #include "fio.h"
 #include "arg.h"
+#include <MAsmJit.h>
 
 void Belish::BVM::run(const Arg& arg) {
 #define EXIT_ID 0x65786974
@@ -20,6 +22,7 @@ void Belish::BVM::run(const Arg& arg) {
     vector<vector<UL> > outers;
     vector<vector<Value*> > outersDefs;
     vector<Value*>* closure = nullptr;
+    map<UL, UL> BCCounter;
     if (importedTab) (*importedTab)[filename] = true;
     else importedTab = new map<string, bool>;
     if (callModuleMethod) goto CALL_MODULE_METHOED;
@@ -309,19 +312,23 @@ void Belish::BVM::run(const Arg& arg) {
             }
             case JT: {
                 GETQBYTE
-                if (stk->top()->isTrue()) i = qbyte;
+                UL tmp = i;
+#define BELISH_VM_JMP { if (++BCCounter[i = qbyte] > THRESHOLD) jitCompile(qbyte, tmp); };
+                if (stk->top()->isTrue()) BELISH_VM_JMP
                 stk->pop(1);
                 break;
             }
             case JF: {
                 GETQBYTE
-                if (stk->top()->isFalse()) i = qbyte;
+                UL tmp = i;
+                if (stk->top()->isFalse()) BELISH_VM_JMP
                 stk->pop(1);
                 break;
             }
             case JMP: {
                 GETQBYTE
-                i = qbyte;
+                UL tmp = i;
+                BELISH_VM_JMP
                 break;
             }
             case CHANGE: {
@@ -825,6 +832,28 @@ void Belish::BVM::run(const Arg& arg) {
                 regs[byte] = stk->get(qbyte);
                 break;
             }
+            case INT_ONLY:
+            {
+                ints.insert(stk->top());
+                break;
+            }
+            case MACHINE_CODE:
+            {
+                GETQBYTE
+                auto tmp = asmJit.getIndex();
+                asmJit.setIndex(qbyte);
+//                for (int t = 0; t < tmp; t++) printf("0x%02x, ", asmJit.machineCodeAdr[t]);
+//                printf("\n");
+                asmJit.runAI();
+                asmJit.setIndex(tmp);
+                GETQBYTE
+                if (change_target_bcadr_flag) {
+                    change_target_bcadr_flag = false;
+                    break;
+                }
+                i = qbyte;
+                break;
+            }
             case DEB:
                 stk->dbg();
 //                getchar();
@@ -861,4 +890,90 @@ void Belish::BVM::run(const Arg& arg) {
         delete stk;
         stk = nullptr;
     }
+}
+void Belish::BVM::jitCompile(size_t start, size_t end) {
+#define BELISH_VM_MEMBER_I_RBP_OFFSET 6944
+#define BELISH_VM_MEMBER_CTBF_RBP_OFFSET 6932
+    using MAsmJit::REG64BIT;
+    if (start > end) std::swap(start, end);
+    if (end - start < 9) return;
+    auto machinecodeEntry = asmJit.getIndex();
+    Byte byte;
+    Dbyte dbyte;
+    Qbyte qbyte;
+    Ebyte ebyte;
+    map<Value*, MAsmJit::REG64BIT> valToRegTab;
+    const REG64BIT int_regs[] = { REG64BIT::RAX, REG64BIT::RBX, REG64BIT::RCX, REG64BIT::RDX };
+#define JIT_INT_REG_COUNT (sizeof(int_regs) / sizeof(REG64BIT))
+    Value* regToValTab[JIT_INT_REG_COUNT];
+    size_t i = start;
+    uint8_t int_reg_id = 0;
+    map<Qbyte, size_t> bytecodeAdrToMachinecodeAdr;
+    while (i < end) {
+        bytecodeAdrToMachinecodeAdr.insert(std::pair<Qbyte, size_t>(i, asmJit.getIndex()));
+        auto op = bytecode[i++];
+        COMPILE:switch (op) {
+            case REG_LESS:// REG_XX指令只能是循环变量使用的
+            {
+                GETBYTE;
+                auto regId = byte;
+                GETEBYTE
+                int32_t val = *(double*)&ebyte;
+                if (ints.find(regs[regId]) == ints.end()) break;
+                if (valToRegTab[regs[regId]]) asmJit.cmp(valToRegTab[regs[regId]], val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.cmp(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
+                else break;
+                op = bytecode[i++];
+                if (op == JT) {
+                } else if (op == JF) {
+                    GETQBYTE
+                    if (qbyte >= end || qbyte < start) {
+                        asmJit.jl(asmJit.sizeof_movl_to_rbp() + asmJit.sizeof_movb_to_rbp());
+                        asmJit.movl_to_rbp(BELISH_VM_MEMBER_I_RBP_OFFSET, qbyte);
+                        asmJit.movb_to_rbp(BELISH_VM_MEMBER_CTBF_RBP_OFFSET, 1);
+                        asmJit.ret();
+                        break;
+                    }
+                } else goto COMPILE;
+            }
+            case REG_ADD:
+            {
+                GETBYTE;
+                auto regId = byte;
+                GETEBYTE
+                int32_t val = *(double*)&ebyte;
+                if (ints.find(regs[regId]) == ints.end()) break;
+                if (valToRegTab[regs[regId]]) asmJit.addq(valToRegTab[regs[regId]], val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.addq(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
+                else break;
+                break;
+            }
+            case JMP:
+            {
+                GETQBYTE
+                if (qbyte >= end || qbyte < start) {
+                    asmJit.movl_to_rbp(BELISH_VM_MEMBER_I_RBP_OFFSET, qbyte);
+                    asmJit.movb_to_rbp(BELISH_VM_MEMBER_CTBF_RBP_OFFSET, 1);
+                    asmJit.ret();
+                    break;
+                }
+                asmJit.jmp((uint32_t)(bytecodeAdrToMachinecodeAdr[qbyte] - asmJit.getIndex() - 5));
+                break;
+            }
+        }
+    }
+    for (uint8_t j = 0; j < int_reg_id; j++) {
+        asmJit.movabsq_to_rcx((uint64_t)regToValTab[j]);
+        asmJit.mov_to_rcx_adr(int_regs[j]);
+    }
+    asmJit.ret();
+    bytecode[start] = MACHINE_CODE;
+    bytecode[start + 1] = (machinecodeEntry >> 24) & 0xff;
+    bytecode[start + 2] = (machinecodeEntry >> 16) & 0xff;
+    bytecode[start + 3] = (machinecodeEntry >> 8) & 0xff;
+    bytecode[start + 4] = machinecodeEntry & 0xff;
+    bytecode[start + 5] = (end >> 24) & 0xff;
+    bytecode[start + 6] = (end >> 16) & 0xff;
+    bytecode[start + 7] = (end >> 8) & 0xff;
+    bytecode[start + 8] = end & 0xff;
 }

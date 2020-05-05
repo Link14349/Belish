@@ -210,13 +210,20 @@ void Belish::AST::parse() {
             break;
         }
         case Lexer::LET_TOKEN:
+        case Lexer::CONST_TOKEN:
         {
-            root = new node(Lexer::LET_TOKEN, "", initialLine);
+            root = new node(token.t, "", initialLine);
             while (true) {
                 GET;
                 if (token.t == Lexer::END_TOKEN || token.t == Lexer::PROGRAM_END) break;
                 root->insert(Lexer::UNKNOWN_TOKEN, token.s, lexer.line() + baseLine);
                 GET;
+                bool ionly = false;
+                if (token.s == "ionly") {
+                    root->value(root->value() + ".");
+                    ionly = true;
+                    GET;
+                }
                 if (token.t == Lexer::COMMA_TOKEN) {
                     root->insert(Lexer::UNDEFINED_TOKEN, "", lexer.line() + baseLine);
                     continue;
@@ -244,7 +251,7 @@ void Belish::AST::parse() {
                 if (op.t == Lexer::PN_IREFER_TOKEN) ast.root = new node(Lexer::NO_STATUS, value, baseLine + defLine);
                 else ast.parse();
                 AST_CHECK_PARSING_ERR(ast)
-                root->insert(op.t, "", baseLine + defLine);
+                root->insert(op.t,  ionly ? "ionly" : "", baseLine + defLine);
                 root->get(-1)->insert(ast.root);
                 if (FINISH_GET) break;
             }

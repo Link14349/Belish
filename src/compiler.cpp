@@ -523,6 +523,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                         macro[ast.root->get(i)->value()] = ast.root->get(i + 1)->get(0)->value();
                         continue;
                     }
+                    bool int_only = ast.root->get(i + 1)->value() == "ionly";
                     Compiler compiler(filename);
                     COM_COM_SET_NOW_LINE(compiler);
                     compiler.ast.child = true;
@@ -538,6 +539,7 @@ bool Belish::Compiler::compile_(string &bytecode, bool releaseType, bool inOPTOE
                     if (compiler.compile_(bytecode, releaseType, ast.root->get(i + 1)->type() == Lexer::PN_DREFER_TOKEN)) return true;
                     newVars.push_back(ast.root->get(i)->value());
                     sym[ast.root->get(i)->value()] = stkOffset++;
+                    bytecode += (char) INT_ONLY;
                 }
                 break;
             }

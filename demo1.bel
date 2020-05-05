@@ -1,0 +1,32 @@
+class BTreeNode {
+    ctor(key, value) {
+        this.key = key;
+        this.value = value;
+        this.left = undefined;
+        this.right = undefined;
+    }
+    insert(key, value) {
+        if (key > this.key) {
+             if(this.right) { this.right.insert(key, value); }
+             else { this.right = new BTreeNode(key, value); }
+        } else {
+             if(this.left) { this.left.insert(key, value); }
+             else { this.left = new BTreeNode(key, value); }
+        }
+    }
+}
+class BTree {
+    ctor() {
+        this.root = undefined;
+    }
+    insert(key, value) {
+        global BTreeNode;
+        if (this.root) { this.root.insert(key, value); }
+        else { this.root = new BTreeNode(key, value); }
+    }
+}
+let bt = new BTree();
+bt.insert(1, "haha");
+bt.insert(0, "emm");
+bt.insert(2, "2333");
+debugger;

@@ -24,6 +24,7 @@ namespace Belish {
             IMPORT_TOKEN,
             NUMBER_TOKEN, STRING_TOKEN, NULL_TOKEN, UNDEFINED_TOKEN, DEBUGGER_TOKEN, GLOBAL_TOKEN,
             CLASS_TOKEN, NEW_TOKEN,
+            CONST_TOKEN,
             // 注释token
             NOTE_TOKEN,
             // 符号token
@@ -52,6 +53,8 @@ namespace Belish {
             PROGRAM_END
         };
         struct Token {
+            Token() { }
+            Token(TOKENS a, const string& b) : t(a), s(b) { }
             TOKENS t;
             string s;
         };

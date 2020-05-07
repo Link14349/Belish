@@ -909,6 +909,11 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
     size_t i = start;
     uint8_t int_reg_id = 0;
     map<Qbyte, size_t> bytecodeAdrToMachinecodeAdr;
+    auto movVarToReg = [&](uint8_t regId) {
+        asmJit.movabsq_to_r8((uint64_t)&((Number*)regs[regId])->value());
+        asmJit.cvttsd2si_r8_to_rxx(int_regs[int_reg_id]);
+        return valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++];
+    };
     while (i < end) {
         bytecodeAdrToMachinecodeAdr.insert(std::pair<Qbyte, size_t>(i, asmJit.getIndex()));
         auto op = bytecode[i++];
@@ -921,7 +926,7 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
                 int32_t val = *(double*)&ebyte;
                 if (ints.find(regs[regId]) == ints.end()) break;
                 if (valToRegTab[regs[regId]]) asmJit.cmp(valToRegTab[regs[regId]], val);
-                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.cmp(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.cmp(movVarToReg(regId), val);
                 else break;
                 op = bytecode[i++];
                 if (op == JT) {
@@ -944,7 +949,7 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
                 int32_t val = *(double*)&ebyte;
                 if (ints.find(regs[regId]) == ints.end()) break;
                 if (valToRegTab[regs[regId]]) asmJit.addq(valToRegTab[regs[regId]], val);
-                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.addq(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.addq(movVarToReg(regId), val);
                 else break;
                 break;
             }
@@ -963,8 +968,9 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
         }
     }
     for (uint8_t j = 0; j < int_reg_id; j++) {
-        asmJit.movabsq_to_rcx((uint64_t)regToValTab[j]);
-        asmJit.mov_to_rcx_adr(int_regs[j]);
+        asmJit.movabsq_to_r8((uint64_t)(&((Number*)regToValTab[j])->value()));
+        asmJit.cvtsi2sd_toxmm0(int_regs[j]);
+        asmJit.movsd_xmm0_to_r8();
     }
     asmJit.ret();
     bytecode[start] = MACHINE_CODE;

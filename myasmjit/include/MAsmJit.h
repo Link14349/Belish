@@ -181,21 +181,45 @@ namespace MAsmJit {
                     ADD_SOURCE: MAJ_APP_32(val)
             }
         }
-        uint8_t sizeof_movabsq_to_rcx() { return 10; }
-        void movabsq_to_rcx(uint64_t adr) {
-            MAJ_APP = 0x48;
-            MAJ_APP = 0xb9;
-            MAJ_APP_64(adr);
+        uint8_t sizeof_movabsq_to_r8() { return 10; }
+        void movabsq_to_r8(uint64_t val) {
+            MAJ_APP = 0x49;
+            MAJ_APP = 0xb8;
+            MAJ_APP_64(val)
         }
-        uint8_t sizeof_mov_to_rcx_adr() { return 3; }
-        void mov_to_rcx_adr(REG64BIT reg) {
+        uint8_t sizeof_cvtsi2sd_toxmm0() { return 5; }
+        void cvtsi2sd_toxmm0(REG64BIT reg) {
+            MAJ_APP = 0xf2;
             MAJ_APP = 0x48;
-            MAJ_APP = 0x89;
+            MAJ_APP = 0x0f;
+            MAJ_APP = 0x2a;
             switch (reg) {
-                case RAX: MAJ_APP = 0x01; break;
-                case RBX: MAJ_APP = 0x19; break;
-                case RCX: MAJ_APP = 0x09; break;
-                case RDX: MAJ_APP = 0x0a; break;
+                case RAX: MAJ_APP = 0xc0; break;
+                case RBX: MAJ_APP = 0xc3; break;
+                case RCX: MAJ_APP = 0xc1; break;
+                case RDX: MAJ_APP = 0xc2; break;
+            }
+        }
+        MASMJIT_SIZE_NORM(movsd_xmm0_to_r8, 5)
+        void movsd_xmm0_to_r8() {
+            MAJ_APP = 0xf2;
+            MAJ_APP = 0x41;
+            MAJ_APP = 0x0f;
+            MAJ_APP = 0x11;
+            MAJ_APP = 0x00;
+        }
+        MASMJIT_SIZE_NORM(cvttsd2si_r8_to_rxx, 5)
+        void cvttsd2si_r8_to_rxx(REG64BIT reg) {
+            // f2 49 0f 2c
+            MAJ_APP = 0xf2;
+            MAJ_APP = 0x49;
+            MAJ_APP = 0x0f;
+            MAJ_APP = 0x2c;
+            switch (reg) {
+                case RAX: MAJ_APP = 0x00; break;
+                case RBX: MAJ_APP = 0x18; break;
+                case RCX: MAJ_APP = 0x08; break;
+                case RDX: MAJ_APP = 0x10; break;
             }
         }
         void db(std::initializer_list<uint8_t> il) {

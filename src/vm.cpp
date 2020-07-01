@@ -842,8 +842,8 @@ void Belish::BVM::run(const Arg& arg) {
                 GETQBYTE
                 auto tmp = asmJit.getIndex();
                 asmJit.setIndex(qbyte);
-//                for (int t = 0; t < tmp; t++) printf("0x%02x, ", asmJit.machineCodeAdr[t]);
-//                printf("\n");
+                for (int t = 0; t < tmp; t++) printf("0x%02x, ", asmJit.machineCodeAdr[t]);
+                printf("\n");
                 asmJit.runAI();
                 asmJit.setIndex(tmp);
                 GETQBYTE
@@ -892,8 +892,8 @@ void Belish::BVM::run(const Arg& arg) {
     }
 }
 void Belish::BVM::jitCompile(size_t start, size_t end) {
-#define BELISH_VM_MEMBER_I_RBP_OFFSET 6944
-#define BELISH_VM_MEMBER_CTBF_RBP_OFFSET 6932
+    auto i_adr = (uint64_t)&i;
+    auto ctbf_adr = (uint64_t)&change_target_bcadr_flag;
     using MAsmJit::REG64BIT;
     if (start > end) std::swap(start, end);
     if (end - start < 9) return;
@@ -909,10 +909,7 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
     size_t i = start;
     uint8_t int_reg_id = 0;
     map<Qbyte, size_t> bytecodeAdrToMachinecodeAdr;
-    auto movVarToReg = [&](uint8_t regId) {
-        asmJit.movabsq_to_r8((uint64_t)&((Number*)regs[regId])->value());
-        asmJit.cvttsd2si_r8_to_rxx(int_regs[int_reg_id]);
-        return valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++];
+    auto movVarToReg = [&]() {
     };
     while (i < end) {
         bytecodeAdrToMachinecodeAdr.insert(std::pair<Qbyte, size_t>(i, asmJit.getIndex()));
@@ -926,7 +923,7 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
                 int32_t val = *(double*)&ebyte;
                 if (ints.find(regs[regId]) == ints.end()) break;
                 if (valToRegTab[regs[regId]]) asmJit.cmp(valToRegTab[regs[regId]], val);
-                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.cmp(movVarToReg(regId), val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.cmp(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
                 else break;
                 op = bytecode[i++];
                 if (op == JT) {
@@ -934,8 +931,8 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
                     GETQBYTE
                     if (qbyte >= end || qbyte < start) {
                         asmJit.jl(asmJit.sizeof_movl_to_rbp() + asmJit.sizeof_movb_to_rbp());
-                        asmJit.movl_to_rbp(BELISH_VM_MEMBER_I_RBP_OFFSET, qbyte);
-                        asmJit.movb_to_rbp(BELISH_VM_MEMBER_CTBF_RBP_OFFSET, 1);
+                        asmJit.movabsq_to_r8(ctbf_adr);
+//                        asmJit.movq_to_adr_rax();
                         asmJit.ret();
                         break;
                     }
@@ -949,7 +946,7 @@ void Belish::BVM::jitCompile(size_t start, size_t end) {
                 int32_t val = *(double*)&ebyte;
                 if (ints.find(regs[regId]) == ints.end()) break;
                 if (valToRegTab[regs[regId]]) asmJit.addq(valToRegTab[regs[regId]], val);
-                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.addq(movVarToReg(regId), val);
+                else if (int_reg_id < JIT_INT_REG_COUNT) asmJit.addq(valToRegTab[regToValTab[int_reg_id] = regs[regId]] = int_regs[int_reg_id++], val);
                 else break;
                 break;
             }

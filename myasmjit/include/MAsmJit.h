@@ -79,6 +79,19 @@ namespace MAsmJit {
             // Note, low byte order!
             MAJ_APP_64(source)
         }
+        MASMJIT_SIZE_NORM(movq_to_adr_rax, 7)
+        void movq_to_adr_rax(uint32_t source) {
+            MAJ_APP = 0x48;
+            MAJ_APP = 0xc7;
+            MAJ_APP = 0x00;
+            MAJ_APP_32(source)
+        }
+        MASMJIT_SIZE_NORM(movb_to_adr_rax, 3)
+        void movb_to_adr_rax(uint8_t source) {
+            MAJ_APP = 0xc6;
+            MAJ_APP = 0x00;
+            MAJ_APP_8(source)
+        }
         uint8_t sizeof_cmp(REG64BIT reg) {
             if (reg == RAX) return 6;
             return 7;
@@ -320,7 +333,7 @@ namespace MAsmJit {
             munmap(machineCodeAdr, codeLength);
 #endif
         }
-    private:
+//    private:
         size_t machineCodeIndex;
         size_t codeLength;
         uint8_t *machineCodeAdr;
